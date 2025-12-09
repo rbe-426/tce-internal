@@ -1,10 +1,18 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "rewrites": [
+  "env": {
+    "VITE_API_URL": "https://tce-serv-rbe-serveurs.up.railway.app"
+  },
+  "headers": [
     {
       "source": "/api/(.*)",
-      "destination": "https://tce-serv-rbe-serveurs.up.railway.app/api/$1"
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
     }
   ]
 }
