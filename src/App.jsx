@@ -11,7 +11,7 @@ import MainLayout from './layouts/MainLayout';
 import MonProfil from "./pages/MonProfil";
 import MaMessagerie from "./pages/MaMessagerie";
 import MonCasier from "./pages/MonCasier";
-import JURHE from './pages/JURHE';
+import JURHE from './pages/jurhe';
 import TC360 from './pages/TC360';
 import AbribusHome from './pages/AbribusHome';
 import Statistiques from './pages/abribus/Statistiques';
