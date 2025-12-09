@@ -9,6 +9,20 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TC Outil - Voyages TC Essonnes</title>
+    <script>
+      // Set API URL at runtime before app loads
+      window.RUNTIME_API_URL = (() => {
+        const hostname = window.location.hostname;
+        if (hostname.includes('tce-interne.fr') || hostname.includes('vercel.app')) {
+          return 'https://tce-serv-rbe-serveurs.up.railway.app';
+        }
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+          return 'http://localhost:8081';
+        }
+        return 'https://tce-serv-rbe-serveurs.up.railway.app';
+      })();
+      console.log('[HTML] RUNTIME_API_URL:', window.RUNTIME_API_URL);
+    </script>
   </head>
   <body>
 <div id="root"></div>
