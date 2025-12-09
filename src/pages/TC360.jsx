@@ -59,7 +59,7 @@ const TC360 = () => {
     const updateDateAndServices = async () => {
       // Récupérer la date de Paris depuis le serveur
       try {
-        const todayResponse = await fetch(`${API_URL}_URL}/api/today`);
+        const todayResponse = await fetch(`${API_URL}/api/today`);
         const { today } = await todayResponse.json();
         setCurrentDateStr(today);
       } catch (err) {
@@ -95,7 +95,7 @@ const TC360 = () => {
       setLoading(true);
       
       // Obtenir la date d'aujourd'hui depuis le serveur (en heure de Paris)
-      const todayResponse = await fetch(`${API_URL}_URL}/api/today`);
+      const todayResponse = await fetch(`${API_URL}/api/today`);
       const { today } = await todayResponse.json();
       
       const response = await fetch(`${API_URL}_URL}/api/lignes`);
