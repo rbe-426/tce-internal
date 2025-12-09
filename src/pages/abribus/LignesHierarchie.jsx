@@ -29,8 +29,8 @@ import {
   Text,
 } from '@chakra-ui/react';
 import { AddIcon, DeleteIcon, EditIcon, ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
+import { API_URL } from '../../config';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const typesVehicules = ['Autobus', 'Minibus', 'Autocar', 'Van'];
 
 const LignesHierarchie = () => {

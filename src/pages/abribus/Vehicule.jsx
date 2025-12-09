@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Header from "../../components/Header.jsx";
+import { API_URL } from "../../config";
 
-const API = import.meta.env?.VITE_API_URL || "http://localhost:5000";
+const API = API_URL;
 
 const getStatusColor = (statut = "") => {
   switch (statut) {

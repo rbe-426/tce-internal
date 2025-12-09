@@ -52,8 +52,7 @@ import {
 import { AddIcon, EditIcon, DeleteIcon, WarningIcon, CloseIcon } from '@chakra-ui/icons';
 import { FaUser, FaCertificate, FaCalendarAlt, FaIdCard, FaTrophy, FaFileContract, FaClipboardList, FaChartBar, FaLock } from 'react-icons/fa';
 import { formatDateFr } from '../utils/dateFormat';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from '../config';
 
 const JURHE = () => {
   const [conducteursList, setConducteursList] = useState([]);

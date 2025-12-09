@@ -36,8 +36,9 @@ import {
   FaTrophy,
   FaChartBar,
 } from 'react-icons/fa';
+import { API_URL } from '../../config';
 
-const API = import.meta.env?.VITE_API_URL || 'http://localhost:5000';
+const API = API_URL;
 
 const TC360Stats = () => {
   const [stats, setStats] = useState(null);

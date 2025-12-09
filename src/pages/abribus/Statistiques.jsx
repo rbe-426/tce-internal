@@ -24,8 +24,9 @@ import {
 } from '@chakra-ui/react';
 import { FaCarAlt, FaCheckCircle, FaExclamationTriangle, FaClock } from 'react-icons/fa';
 import TC360Stats from './TC360Stats';
+import { API_URL } from '../../config';
 
-const API = import.meta.env?.VITE_API_URL || "http://localhost:5000";
+const API = API_URL;
 
 const Statistiques = () => {
   const [stats, setStats] = useState(null);

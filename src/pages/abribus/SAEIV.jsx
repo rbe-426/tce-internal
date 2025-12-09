@@ -33,8 +33,7 @@ import {
   Select,
 } from '@chakra-ui/react';
 import { AddIcon, EditIcon, DeleteIcon } from '@chakra-ui/icons';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from '../../config';
 
 const SAEIV = () => {
   const [saeivs, setSaeivs] = useState([]);

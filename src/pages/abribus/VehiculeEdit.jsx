@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../../components/Header.jsx";
+import { API_URL } from "../../config";
 import {
   FaBus, FaFan, FaWheelchair, FaWifi, FaCamera, FaVolumeUp, FaPhone,
   FaSign, FaLightbulb, FaUsb, FaCheck, FaTimes
 } from "react-icons/fa";
 
-const API = import.meta.env?.VITE_API_URL || "http://localhost:5000";
+const API = API_URL;
 
 const section = { background:"#fff", borderRadius:12, padding:16, boxShadow:"0 8px 18px rgba(0,0,0,.06)" };
 const labelCss = { fontWeight:600, color:"#2c3e50", display:"block", marginBottom:6 };

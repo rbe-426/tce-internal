@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
 import { FaWheelchair } from "react-icons/fa";
 import React, { useState, useEffect } from "react";
-import { vehiculesBase } from "../../data/vehiculesBase.js"; // fallback local si API KO
+import { vehiculesBase } from "../../data/vehiculesBase.js";
+import { API_URL } from "../../config";
 
-// tout en haut du fichier (si pas déjà présent)
-const API = import.meta.env?.VITE_API_URL || "http://localhost:5000";
+const API = API_URL;
 
 const getStatusColor = (statut) => {
   switch (statut) {

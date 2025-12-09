@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
-import "./pages/style/VehiculeDetail.css";                    // ← CHEMIN CORRECT
+import { API_URL } from "../config";
+import "./pages/style/VehiculeDetail.css";
 
-const API = import.meta.env?.VITE_API_URL || "http://localhost:5000";
+const API = API_URL;
 
 const Badge = ({ text, color }) => (
   <span style={{padding:"4px 10px",borderRadius:8,background:color,color:"#fff",fontWeight:700,fontSize:12}}>

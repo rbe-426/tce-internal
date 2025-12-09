@@ -32,10 +32,9 @@ import {
   Spinner,
 } from '@chakra-ui/react';
 import { AddIcon, DeleteIcon, EditIcon } from '@chakra-ui/icons';
+import { API_URL } from '../../config';
 
 const typesVehicules = ['Autobus', 'Minibus', 'Autocar', 'Van'];
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const Lignes = () => {
   const [lignes, setLignes] = useState([]);
