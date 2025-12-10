@@ -10,38 +10,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TC Outil - Voyages TC Essonnes</title>
     <script>
-      // Détection dynamique de l'API
-      window.getApiUrl = async () => {
+      // Sélection dynamique de l'API avec override possible (query param ou localStorage)
+      (() => {
+        const searchParams = new URLSearchParams(window.location.search);
+        const overrideFromQuery = searchParams.get('api');
+        if (overrideFromQuery) {
+          try {
+            const url = new URL(overrideFromQuery).toString();
+            localStorage.setItem('API_URL_OVERRIDE', url);
+            window.RUNTIME_API_URL = url;
+            console.log('[HTML] RUNTIME_API_URL (query override):', window.RUNTIME_API_URL);
+            return;
+          } catch (e) {
+            console.warn('[HTML] API override invalide, ignoré:', overrideFromQuery);
+          }
+        }
+
+        const overrideFromStorage = localStorage.getItem('API_URL_OVERRIDE');
+        if (overrideFromStorage) {
+          window.RUNTIME_API_URL = overrideFromStorage;
+          console.log('[HTML] RUNTIME_API_URL (storage override):', window.RUNTIME_API_URL);
+          return;
+        }
+
         const hostname = window.location.hostname;
-        
-        // En développement local, utilise localhost
         if (hostname === 'localhost' || hostname === '127.0.0.1') {
-          return 'http://localhost:8081';
+          window.RUNTIME_API_URL = 'http://localhost:8081';
+        } else {
+          // Production: valeur par défaut (à remplacer par le backend actif)
+          window.RUNTIME_API_URL = 'https://tce-serv-rbe-serveurs.up.railway.app';
         }
-        
-        // En production, teste Railway d'abord, puis fallback
-        try {
-          const response = await fetch('https://tce-serv-rbe-serveurs.up.railway.app/health', {
-            method: 'HEAD',
-            mode: 'no-cors'
-          });
-          // Si Railway répond (même sans CORS), l'utilise
-          return 'https://tce-serv-rbe-serveurs.up.railway.app';
-        } catch {
-          // Sinon, utilise un fallback (à mettre à jour avec Render ou autre service)
-          return 'https://tce-api.example.com'; // TODO: mettre à jour avec Render
-        }
-      };
-      
-      // Initialise l'API URL en fonction de l'environnement
-      const hostname = window.location.hostname;
-      if (hostname === 'localhost' || hostname === '127.0.0.1') {
-        window.RUNTIME_API_URL = 'http://localhost:8081';
-      } else {
-        // Production: utilise Railway
-        window.RUNTIME_API_URL = 'https://tce-serv-rbe-serveurs.up.railway.app';
-      }
-      console.log('[HTML] RUNTIME_API_URL:', window.RUNTIME_API_URL);
+        console.log('[HTML] RUNTIME_API_URL:', window.RUNTIME_API_URL);
+      })();
     </script>
   </head>
   <body>
