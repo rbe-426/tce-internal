@@ -33,8 +33,14 @@
         }
       };
       
-      // Initialise l'API URL
-      window.RUNTIME_API_URL = 'https://tce-serv-rbe-serveurs.up.railway.app'; // Default pour maintenant
+      // Initialise l'API URL en fonction de l'environnement
+      const hostname = window.location.hostname;
+      if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        window.RUNTIME_API_URL = 'http://localhost:8081';
+      } else {
+        // Production: utilise Railway
+        window.RUNTIME_API_URL = 'https://tce-serv-rbe-serveurs.up.railway.app';
+      }
       console.log('[HTML] RUNTIME_API_URL:', window.RUNTIME_API_URL);
     </script>
   </head>
