@@ -98,7 +98,7 @@ const TC360 = () => {
       const todayResponse = await fetch(`${API_URL}/api/today`);
       const { today } = await todayResponse.json();
       
-      const response = await fetch(`${API_URL}_URL}/api/lignes`);
+      const response = await fetch(`${API_URL}/api/lignes`);
       if (!response.ok) throw new Error('Erreur lors de la récupération des services');
 
       const lignesData = await response.json();
@@ -181,7 +181,7 @@ const TC360 = () => {
         chronometerChecked: pointageForm.chronometerChecked,
       };
 
-      const response = await fetch(`${API_URL}_URL}/api/pointages`, {
+      const response = await fetch(`${API_URL}/api/pointages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(pointageData),
