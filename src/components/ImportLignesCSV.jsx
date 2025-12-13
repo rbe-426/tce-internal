@@ -123,16 +123,24 @@ Centre-Aero,3,Aéroport,8`;
               <Code display="block" p={2} borderRadius="md" overflow="auto" fontSize="xs" whiteSpace="pre-wrap">
                 {`[LIGNES]
 numéro de ligne,Nom de la ligne,Jours...,type,premier départ,dernier arrivé...,Sens,Direction,Trajet,Description Trajet,Service 1 Début,Service 1 Fin
-4201,SEMAINE_4201,L; M; M; J; V,autobus,04h37,00h10,Aller,Gare SNCF → Centre,Gare-Centre,Itinéraire,06h30,14h00
+4201,SEMAINE_4201,L; M; M; J; V,Standard,04h37,00h10,Aller,Gare SNCF → Centre,Gare-Centre,Itinéraire,06h30,14h00
+4201,SEMAINE_4201,L; M; M; J; V,Standard,04h37,00h10,Retour,Centre → Gare,Centre-Gare,Retour,07h00,15h00
 
 [ARRETS]
 Trajet,Ordre,Nom Arrêt,Temps depuis arrêt précédent (min)
 Gare-Centre,1,Gare SNCF,0
-Gare-Centre,2,Place Centrale,5`}
+Centre-Gare,1,Marché,0`}
               </Code>
             </Box>
 
             <Box fontSize="sm" color="gray.600">
+              <Text mb={2} fontWeight="bold" color="blue.600">
+                💡 Astuce importante : Même numéro de ligne = ajouter un sens
+              </Text>
+              <Text ml={4} mb={3}>
+                Si vous répétez le même numéro de ligne avec un sens différent, le système ajoutera simplement un nouveau sens/itinéraire à la ligne existante (sans créer une nouvelle ligne).
+              </Text>
+
               <Text mb={1} fontWeight="bold">Section [LIGNES] - Colonnes requises :</Text>
               <Text ml={4} mb={2}>
                 numéro de ligne, Nom de la ligne, Jours de fonctionnement, type, premier départ, dernier arrivé au dépôt

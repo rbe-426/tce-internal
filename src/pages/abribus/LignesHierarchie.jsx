@@ -940,6 +940,9 @@ const LignesHierarchie = () => {
                         <Badge colorScheme={ligne.statut === 'Actif' ? 'green' : 'gray'}>
                           {ligne.statut}
                         </Badge>
+                        <Badge colorScheme="blue" variant="subtle">
+                          {(ligne.sens || []).length} sens
+                        </Badge>
                       </HStack>
                       <HStack spacing={2} mt={2} fontSize="sm">
                         {parseJSON(ligne.typesVehicules).map((type, idx) => (
