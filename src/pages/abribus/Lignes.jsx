@@ -34,7 +34,7 @@ import {
 import { AddIcon, DeleteIcon, EditIcon } from '@chakra-ui/icons';
 import { API_URL } from '../../config';
 
-const typesVehicules = ['Autobus', 'Minibus', 'Autocar', 'Van'];
+const typesAutobus = ['Standard', 'Articulés', 'Midibus', 'minibus', 'Standard BHNS', 'Articulés BHNS'];
 
 const Lignes = () => {
   const [lignes, setLignes] = useState([]);
@@ -319,7 +319,7 @@ const Lignes = () => {
                 <Tr>
                   <Th>Numéro</Th>
                   <Th>Nom de la ligne</Th>
-                  <Th>Types de véhicules</Th>
+                  <Th>Types d'autobus autorisés</Th>
                   <Th>Statut</Th>
                   <Th>Actions</Th>
                 </Tr>
@@ -404,9 +404,9 @@ const Lignes = () => {
                 />
               </FormControl>
               <FormControl>
-                <FormLabel>Types de véhicules assignés</FormLabel>
+                <FormLabel>Types d'autobus autorisés</FormLabel>
                 <Stack spacing={2}>
-                  {typesVehicules.map((type) => (
+                  {typesAutobus.map((type) => (
                     <Checkbox
                       key={type}
                       isChecked={newLigne.typesVehicules.includes(type)}
@@ -468,9 +468,9 @@ const Lignes = () => {
                   />
                 </FormControl>
                 <FormControl>
-                  <FormLabel>Types de véhicules assignés</FormLabel>
+                  <FormLabel>Types d'autobus autorisés</FormLabel>
                   <Stack spacing={2}>
-                    {typesVehicules.map((type) => (
+                    {typesAutobus.map((type) => (
                       <Checkbox
                         key={type}
                         isChecked={editingLigne.typesVehicules.includes(type)}

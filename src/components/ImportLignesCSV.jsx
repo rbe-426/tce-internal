@@ -75,10 +75,10 @@ const ImportLignesCSV = ({ isOpen, onClose, onSuccess }) => {
   const downloadTemplate = () => {
     const template = `[LIGNES]
 numéro de ligne,Nom de la ligne,Jours de fonctionnement,type,premier départ,dernier arrivé au dépôt,Sens,Direction,Trajet,Description Trajet,Service 1 Début,Service 1 Fin,Service 2 Début,Service 2 Fin
-4201,SEMAINE_4201,L; M; M; J; V,autobus,04h37,00h10,Aller,Gare SNCF → Centre Ville,Gare-Centre,Itinéraire gare vers centre,06h30,14h00,14h30,22h45
-4201,SEMAINE_4201,L; M; M; J; V,autobus,04h37,00h10,Retour,Centre Ville → Gare SNCF,Centre-Gare,Retour vers la gare,07h00,15h00,15h30,23h00
-4202,SEMAINE_4202,L; M; M; J; V,autobus,05h00,23h30,Aller,Aéroport → Centre,Aero-Centre,Vers le centre depuis aéroport,06h00,15h30,16h00,23h00
-4202,SEMAINE_4202,L; M; M; J; V,autobus,05h00,23h30,Retour,Centre → Aéroport,Centre-Aero,Vers aéroport depuis centre,06h30,16h00,16h30,23h30
+4201,SEMAINE_4201,L; M; M; J; V,Standard,04h37,00h10,Aller,Gare SNCF → Centre Ville,Gare-Centre,Itinéraire gare vers centre,06h30,14h00,14h30,22h45
+4201,SEMAINE_4201,L; M; M; J; V,Standard,04h37,00h10,Retour,Centre Ville → Gare SNCF,Centre-Gare,Retour vers la gare,07h00,15h00,15h30,23h00
+4202,SEMAINE_4202,L; M; M; J; V,Articulés,05h00,23h30,Aller,Aéroport → Centre,Aero-Centre,Vers le centre depuis aéroport,06h00,15h30,16h00,23h00
+4202,SEMAINE_4202,L; M; M; J; V,Articulés,05h00,23h30,Retour,Centre → Aéroport,Centre-Aero,Vers aéroport depuis centre,06h30,16h00,16h30,23h30
 
 [ARRETS]
 Trajet,Ordre,Nom Arrêt,Temps depuis arrêt précédent (min)
@@ -157,7 +157,7 @@ Gare-Centre,2,Place Centrale,5`}
                 <strong>Heures :</strong> Format HHhMM (ex: 06h30, 14h00)
               </Text>
               <Text mb={1}>
-                <strong>Type :</strong> autobus, minibus, autocar, van
+                <strong>Type :</strong> Standard, Articulés, Midibus, minibus, Standard BHNS, Articulés BHNS
               </Text>
               <Text mb={1}>
                 <strong>Trajet :</strong> Doit être unique et utilisé dans la section [ARRETS] pour lier les arrêts

@@ -289,7 +289,9 @@ const PlanningsCalendar = () => {
             return false; // La ligne ne fonctionne pas ce jour
           }
         } catch (e) {
-          // Si le parsing échoue, inclure le service quand même
+          // Si le parsing échoue, exclure le service
+          console.warn('Erreur parsing calendrier pour service:', s.id, e);
+          return false;
         }
       }
       
