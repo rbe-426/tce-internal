@@ -31,9 +31,8 @@ import {
   useToast,
   Spinner,
 } from '@chakra-ui/react';
-import { AddIcon, DeleteIcon, EditIcon, DownloadIcon } from '@chakra-ui/icons';
+import { AddIcon, DeleteIcon, EditIcon } from '@chakra-ui/icons';
 import { API_URL } from '../../config';
-import ImportLignesCSV from '../../components/ImportLignesCSV';
 
 const typesVehicules = ['Autobus', 'Minibus', 'Autocar', 'Van'];
 
@@ -45,7 +44,6 @@ const Lignes = () => {
   const [editingLigne, setEditingLigne] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: isEditOpen, onOpen: onEditOpen, onClose: onEditClose } = useDisclosure();
-  const { isOpen: isImportOpen, onOpen: onImportOpen, onClose: onImportClose } = useDisclosure();
   const toast = useToast();
 
   // Charger les lignes depuis le serveur
@@ -83,9 +81,7 @@ const Lignes = () => {
     } catch (error) {
       console.error('Erreur:', error);
     }
-  };
-
-  const parseJSON = (jsonStr) => {
+  };  const parseJSON = (jsonStr) => {
     try {
       return jsonStr ? JSON.parse(jsonStr) : [];
     } catch {
@@ -297,23 +293,13 @@ const Lignes = () => {
           </Heading>
           <HStack justify="space-between">
             <Box>Total : <strong>{lignes.length}</strong> lignes ({lignes.filter(l => l.statut === 'Actif').length} actives)</Box>
-            <HStack>
-              <Button
-                leftIcon={<DownloadIcon />}
-                colorScheme="green"
-                variant="outline"
-                onClick={onImportOpen}
-              >
-                Importer CSV
-              </Button>
-              <Button
-                leftIcon={<AddIcon />}
-                colorScheme="blue"
-                onClick={onOpen}
-              >
-                Ajouter une ligne
-              </Button>
-            </HStack>
+            <Button
+              leftIcon={<AddIcon />}
+              colorScheme="blue"
+              onClick={onOpen}
+            >
+              Ajouter une ligne
+            </Button>
           </HStack>
         </Box>
 
@@ -534,13 +520,6 @@ const Lignes = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
-
-      {/* Modal Import CSV */}
-      <ImportLignesCSV
-        isOpen={isImportOpen}
-        onClose={onImportClose}
-        onSuccess={handleImportSuccess}
-      />
     </Container>
   );
 };

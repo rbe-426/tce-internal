@@ -28,8 +28,9 @@ import {
   IconButton,
   Text,
 } from '@chakra-ui/react';
-import { AddIcon, DeleteIcon, EditIcon, ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
+import { AddIcon, DeleteIcon, EditIcon, ChevronDownIcon, ChevronUpIcon, DownloadIcon } from '@chakra-ui/icons';
 import { API_URL } from '../../config';
+import ImportLignesCSV from '../../components/ImportLignesCSV';
 
 const typesVehicules = ['Autobus', 'Minibus', 'Autocar', 'Van'];
 
@@ -48,6 +49,7 @@ const LignesHierarchie = () => {
   const { isOpen: isAddServiceOpen, onOpen: onAddServiceOpen, onClose: onAddServiceClose } = useDisclosure();
   const { isOpen: isAddTrajetOpen, onOpen: onAddTrajetOpen, onClose: onAddTrajetClose } = useDisclosure();
   const { isOpen: isAddArretOpen, onOpen: onAddArretOpen, onClose: onAddArretClose } = useDisclosure();
+  const { isOpen: isImportOpen, onOpen: onImportOpen, onClose: onImportClose } = useDisclosure();
   
   // Form states
   const [newLigne, setNewLigne] = useState({ numero: '', nom: '', typesVehicules: [] });
@@ -104,6 +106,11 @@ const LignesHierarchie = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleImportSuccess = async () => {
+    // Recharger les lignes après import
+    await fetchLignes();
   };
 
   const parseJSON = (jsonStr) => {
@@ -884,13 +891,23 @@ const LignesHierarchie = () => {
           </Text>
           <HStack justify="space-between">
             <Box>Total : <strong>{lignes.length}</strong> lignes</Box>
-            <Button
-              leftIcon={<AddIcon />}
-              colorScheme="blue"
-              onClick={onAddLigneOpen}
-            >
-              Ajouter une ligne
-            </Button>
+            <HStack>
+              <Button
+                leftIcon={<DownloadIcon />}
+                colorScheme="green"
+                variant="outline"
+                onClick={onImportOpen}
+              >
+                Importer CSV
+              </Button>
+              <Button
+                leftIcon={<AddIcon />}
+                colorScheme="blue"
+                onClick={onAddLigneOpen}
+              >
+                Ajouter une ligne
+              </Button>
+            </HStack>
           </HStack>
         </Box>
 
@@ -1494,6 +1511,13 @@ const LignesHierarchie = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      {/* Modal Import CSV */}
+      <ImportLignesCSV
+        isOpen={isImportOpen}
+        onClose={onImportClose}
+        onSuccess={handleImportSuccess}
+      />
     </Container>
   );
 };
