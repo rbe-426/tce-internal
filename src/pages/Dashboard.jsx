@@ -79,7 +79,10 @@ const Dashboard = () => {
 
       // Filtrer les services d'aujourd'hui
       const todayServicesData = services.filter(s => {
-        const serviceDate = new Date(s.date).toISOString().split('T')[0];
+        // Parse date string directly to avoid UTC conversion issues
+        const serviceDate = s.date instanceof String || typeof s.date === 'string' 
+          ? s.date.split('T')[0]
+          : new Date(s.date).toISOString().split('T')[0];
         return serviceDate === today;
       });
 

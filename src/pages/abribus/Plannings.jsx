@@ -267,7 +267,12 @@ const PlanningsCalendar = () => {
   const getFilteredServices = () => {
     const weekDays = getWeekDays();
     return services.filter(s => {
-      const serviceDate = new Date(s.date).toISOString().split('T')[0];
+      // Parse date directly without timezone conversion
+      // If s.date is "2025-12-15T00:00:00Z", extract just the date part
+      const serviceDate = s.date instanceof String || typeof s.date === 'string' 
+        ? s.date.split('T')[0]
+        : new Date(s.date).toISOString().split('T')[0];
+      
       if (!weekDays.includes(serviceDate)) return false;
       
       // Vérifier les contraintes
