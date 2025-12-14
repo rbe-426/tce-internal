@@ -165,7 +165,7 @@ Centre-Gare,1,Marché,0`}
                 <strong>Heures :</strong> Format HHhMM (ex: 06h30, 14h00)
               </Text>
               <Text mb={1}>
-                <strong>Type :</strong> Standard, Articulés, Midibus, minibus, Standard BHNS, Articulés BHNS
+                <strong>Type :</strong> TCP - Autocars BC/NOC/EXPRESS, TCP - Autobus Standard, TCP - Autobus articulé, TCP - Autobus Standard BHNS, TCP - Autobus articulé BHNS, TCP - Midibus, TCP - Midibus L (Heuliez), TCP - Minibus
               </Text>
               <Text mb={1}>
                 <strong>Trajet :</strong> Doit être unique et utilisé dans la section [ARRETS] pour lier les arrêts

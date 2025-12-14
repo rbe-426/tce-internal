@@ -32,7 +32,7 @@ import { AddIcon, DeleteIcon, EditIcon, ChevronDownIcon, ChevronUpIcon, Download
 import { API_URL } from '../../config';
 import ImportLignesCSV from '../../components/ImportLignesCSV';
 
-const typesVehicules = ['Autobus', 'Minibus', 'Autocar', 'Van'];
+const typesVehicules = ['TCP - Autocars BC/NOC/EXPRESS', 'TCP - Autobus Standard', 'TCP - Autobus articulé', 'TCP - Autobus Standard BHNS', 'TCP - Autobus articulé BHNS', 'TCP - Midibus', 'TCP - Midibus L (Heuliez)', 'TCP - Minibus'];
 
 const LignesHierarchie = () => {
   const [lignes, setLignes] = useState([]);

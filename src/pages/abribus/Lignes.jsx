@@ -34,7 +34,7 @@ import {
 import { AddIcon, DeleteIcon, EditIcon } from '@chakra-ui/icons';
 import { API_URL } from '../../config';
 
-const typesAutobus = ['Standard', 'Articulés', 'Midibus', 'minibus', 'Standard BHNS', 'Articulés BHNS'];
+const typesAutobus = ['TCP - Autocars BC/NOC/EXPRESS', 'TCP - Autobus Standard', 'TCP - Autobus articulé', 'TCP - Autobus Standard BHNS', 'TCP - Autobus articulé BHNS', 'TCP - Midibus', 'TCP - Midibus L (Heuliez)', 'TCP - Minibus'];
 
 const Lignes = () => {
   const [lignes, setLignes] = useState([]);
