@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { FaWheelchair } from "react-icons/fa";
 import React, { useState, useEffect } from "react";
+import { useDisclosure } from "@chakra-ui/react";
 import { vehiculesBase } from "../../data/vehiculesBase.js";
 import { API_URL } from "../../config";
+import ImportVehiclesCSV from "../../components/ImportVehiclesCSV";
 
 const API = API_URL;
 
@@ -31,6 +33,7 @@ const Vehicules = () => {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+  const { isOpen: isImportOpen, onOpen: onImportOpen, onClose: onImportClose } = useDisclosure();
 
   // Formulaire d'ajout (on garde tes champs, même si tous ne partent pas au backend)
   const [newVeh, setNewVeh] = useState({
@@ -52,30 +55,33 @@ const Vehicules = () => {
     photos: [],
   });
 
+  // Fonction pour charger les véhicules
+  const fetchVehicles = async () => {
+    try {
+      const r = await fetch(`${API}/api/vehicles`);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const data = await r.json();
+      setVehicles(data);
+      localStorage.setItem("vehicules_cache", JSON.stringify(data));
+    } catch (e) {
+      // Fallback si API KO : cache localStorage puis vehiculesBase
+      const cache = localStorage.getItem("vehicules_cache");
+      if (cache) {
+        setVehicles(JSON.parse(cache));
+      } else {
+        setVehicles(vehiculesBase || []);
+      }
+      setErr("API indisponible, affichage du cache/local.");
+      console.error("Fetch vehicles failed:", e);
+    }
+  };
+
   // 1) Charger depuis l'API (persistance) avec fallback local
   useEffect(() => {
     let alive = true;
     (async () => {
-      try {
-        const r = await fetch(`${API}/api/vehicles`);
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        const data = await r.json();
-        if (!alive) return;
-        setVehicles(data);
-        localStorage.setItem("vehicules_cache", JSON.stringify(data));
-      } catch (e) {
-        // Fallback si API KO : cache localStorage puis vehiculesBase
-        const cache = localStorage.getItem("vehicules_cache");
-        if (cache) {
-          setVehicles(JSON.parse(cache));
-        } else {
-          setVehicles(vehiculesBase || []);
-        }
-        setErr("API indisponible, affichage du cache/local.");
-        console.error("Fetch vehicles failed:", e);
-      } finally {
-        if (alive) setLoading(false);
-      }
+      await fetchVehicles();
+      if (alive) setLoading(false);
     })();
     return () => { alive = false; }
   }, []);
@@ -230,22 +236,40 @@ const handleAddVehicle = async () => {
           <h1 style={{ fontWeight: "700", fontSize: "2rem", color: "#2c3e50" }}>
             Page des véhicules
           </h1>
-          <button
-            onClick={() => setShowAddModal(true)}
-            style={{
-              padding: "10px 22px",
-              fontWeight: "600",
-              fontSize: "1rem",
-              color: "#fff",
-              backgroundColor: "#2980b9",
-              border: "none",
-              borderRadius: "8px",
-              cursor: "pointer",
-              boxShadow: "0 3px 8px rgba(41, 128, 185, 0.5)",
-            }}
-          >
-            Déclarer un véhicule sur le Parc
-          </button>
+          <div style={{ display: "flex", gap: "12px" }}>
+            <button
+              onClick={onImportOpen}
+              style={{
+                padding: "10px 22px",
+                fontWeight: "600",
+                fontSize: "1rem",
+                color: "#fff",
+                backgroundColor: "#27ae60",
+                border: "none",
+                borderRadius: "8px",
+                cursor: "pointer",
+                boxShadow: "0 3px 8px rgba(39, 174, 96, 0.5)",
+              }}
+            >
+              Importer CSV
+            </button>
+            <button
+              onClick={() => setShowAddModal(true)}
+              style={{
+                padding: "10px 22px",
+                fontWeight: "600",
+                fontSize: "1rem",
+                color: "#fff",
+                backgroundColor: "#2980b9",
+                border: "none",
+                borderRadius: "8px",
+                cursor: "pointer",
+                boxShadow: "0 3px 8px rgba(41, 128, 185, 0.5)",
+              }}
+            >
+              Déclarer un véhicule sur le Parc
+            </button>
+          </div>
         </div>
 
         {err && (
@@ -496,6 +520,11 @@ const handleAddVehicle = async () => {
           </div>
         )}
       </main>
+      <ImportVehiclesCSV 
+        isOpen={isImportOpen} 
+        onClose={onImportClose}
+        onSuccess={fetchVehicles}
+      />
     </>
   );
 };
