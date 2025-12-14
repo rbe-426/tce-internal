@@ -40,6 +40,7 @@ import {
   useToast,
 } from '@chakra-ui/react';
 import { DeleteIcon, EditIcon, AddIcon } from '@chakra-ui/icons';
+import { API_URL } from '../config';
 
 const JURHE = () => {
   const [employes, setEmployes] = useState([]);
@@ -88,7 +89,7 @@ const JURHE = () => {
       if (filterPoste) query.append('poste', filterPoste);
       if (filterStatut) query.append('statut', filterStatut);
 
-      const response = await fetch(`http://localhost:3000/api/employes?${query}`);
+      const response = await fetch(`${API_URL}/api/employes?${query}`);
       if (response.ok) {
         const data = await response.json();
         setEmployes(data);
@@ -152,7 +153,7 @@ const JURHE = () => {
       let response;
       if (isEditMode && selectedEmploye) {
         // Update
-        response = await fetch(`http://localhost:3000/api/employes/${selectedEmploye.id}`, {
+        response = await fetch(`${API_URL}/api/employes/${selectedEmploye.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -162,7 +163,7 @@ const JURHE = () => {
         });
       } else {
         // Create
-        response = await fetch('http://localhost:3000/api/employes', {
+        response = await fetch(`${API_URL}/api/employes`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -203,7 +204,7 @@ const JURHE = () => {
 
   const handleDeleteEmploye = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/employes/${selectedEmploye.id}`, {
+      const response = await fetch(`${API_URL}/api/employes/${selectedEmploye.id}`, {
         method: 'DELETE',
       });
 
