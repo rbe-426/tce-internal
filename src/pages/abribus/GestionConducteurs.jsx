@@ -33,7 +33,7 @@ import {
   GridItem,
   Spinner,
 } from '@chakra-ui/react';
-import { AddIcon, EditIcon, DeleteIcon, SyncIcon } from '@chakra-ui/icons';
+import { AddIcon, EditIcon, DeleteIcon, RepeatIcon } from '@chakra-ui/icons';
 import { FaUser, FaPhone, FaEnvelope, FaCalendarAlt } from 'react-icons/fa';
 import { API_URL } from '../../config';
 
@@ -213,7 +213,7 @@ const GestionConducteurs = () => {
             <option value="Inactif">Inactif</option>
           </select>
           <Button
-            leftIcon={<SyncIcon />}
+            leftIcon={<RepeatIcon />}
             colorScheme="blue"
             onClick={syncWithJurhe}
             isLoading={syncing}

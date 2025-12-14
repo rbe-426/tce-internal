@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <link
+  href="https://fonts.googleapis.com/css2?family=Montserrat&display=swap"
+  rel="stylesheet"
+/>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TC Outil - Voyages TC Essonnes</title>
+    <script>
+      // Sélection dynamique de l'API avec override possible (query param ou localStorage)
+      (() => {
+        const searchParams = new URLSearchParams(window.location.search);
+        const overrideFromQuery = searchParams.get('api');
+        if (overrideFromQuery) {
+          try {
+            const url = new URL(overrideFromQuery).toString();
+            localStorage.setItem('API_URL_OVERRIDE', url);
+            window.RUNTIME_API_URL = url;
+            console.log('[HTML] RUNTIME_API_URL (query override):', window.RUNTIME_API_URL);
+            return;
+          } catch (e) {
+            console.warn('[HTML] API override invalide, ignoré:', overrideFromQuery);
+          }
+        }
+
+        const overrideFromStorage = localStorage.getItem('API_URL_OVERRIDE');
+        if (overrideFromStorage) {
+          window.RUNTIME_API_URL = overrideFromStorage;
+          console.log('[HTML] RUNTIME_API_URL (storage override):', window.RUNTIME_API_URL);
+          return;
+        }
+
+        const hostname = window.location.hostname;
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+          window.RUNTIME_API_URL = 'http://localhost:8081';
+        } else {
+          // Production: valeur par défaut (à remplacer par le backend actif)
+          window.RUNTIME_API_URL = 'https://tce-serv-rbe-serveurs.up.railway.app';
+        }
+        console.log('[HTML] RUNTIME_API_URL:', window.RUNTIME_API_URL);
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/index-05e71a88.js"></script>
+  </head>
+  <body>
+<div id="root"></div>
+    
+  </body>
+</html>
