@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Heading,
@@ -31,23 +31,78 @@ import {
   SimpleGrid,
   Grid,
   GridItem,
+  Spinner,
 } from '@chakra-ui/react';
-import { AddIcon, EditIcon, DeleteIcon } from '@chakra-ui/icons';
+import { AddIcon, EditIcon, DeleteIcon, SyncIcon } from '@chakra-ui/icons';
 import { FaUser, FaPhone, FaEnvelope, FaCalendarAlt } from 'react-icons/fa';
-import conducteurs from '../../data/conducteurs';
+import { API_URL } from '../../config';
 
 const GestionConducteurs = () => {
-  const [conducteursList, setConducteursList] = useState(conducteurs);
+  const [conducteursList, setConducteursList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatut, setFilterStatut] = useState('');
   const [selectedConducteur, setSelectedConducteur] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
 
+  // Charger les conducteurs depuis l'API
+  useEffect(() => {
+    fetchConducteurs();
+  }, []);
+
+  const fetchConducteurs = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_URL}/api/conducteurs`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      setConducteursList(data);
+    } catch (error) {
+      console.error('Erreur chargement conducteurs:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger les conducteurs',
+        status: 'error',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const syncWithJurhe = async () => {
+    try {
+      setSyncing(true);
+      const response = await fetch(`${API_URL}/api/conducteurs/jurhe/sync`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const result = await response.json();
+      
+      // Mettre à jour la liste
+      setConducteursList(result.conducteurs || []);
+      
+      toast({
+        title: 'Synchronisation JURHE',
+        description: result.message || `${result.imported || 0} conducteurs synchronisés`,
+        status: result.conducteurs ? 'success' : 'warning',
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error('Erreur sync JURHE:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de synchroniser avec JURHE',
+        status: 'error',
+      });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const filteredConducteurs = conducteursList.filter(c =>
-    (c.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.matricule.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (c.nom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.prenom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.matricule?.toLowerCase().includes(searchTerm.toLowerCase())) &&
     (!filterStatut || c.statut === filterStatut)
   );
 
@@ -76,7 +131,7 @@ const GestionConducteurs = () => {
 
   const calculerHeuresSemaine = (conducteur) => {
     // Calcul simplifié - en production, cela viendrait de la base de données
-    return Math.floor(Math.random() * (conducteur.heuresRéglementaires + 5));
+    return Math.floor(Math.random() * ((conducteur.heuresRéglementaires || 35) + 5));
   };
 
   return (
@@ -134,7 +189,7 @@ const GestionConducteurs = () => {
           </Card>
         </SimpleGrid>
 
-        {/* Filtres */}
+        {/* Filtres et Actions */}
         <HStack spacing={4} wrap="wrap">
           <Input
             placeholder="Rechercher par nom, prénom ou matricule..."
@@ -157,9 +212,27 @@ const GestionConducteurs = () => {
             <option value="En congé">En congé</option>
             <option value="Inactif">Inactif</option>
           </select>
+          <Button
+            leftIcon={<SyncIcon />}
+            colorScheme="blue"
+            onClick={syncWithJurhe}
+            isLoading={syncing}
+            loadingText="Synchronisation..."
+          >
+            Sync JURHE
+          </Button>
         </HStack>
 
+        {/* Loading state */}
+        {loading && (
+          <Box textAlign="center" py={8}>
+            <Spinner size="lg" color="blue.500" />
+            <Text mt={4}>Chargement des conducteurs...</Text>
+          </Box>
+        )}
+
         {/* Tableau des conducteurs */}
+        {!loading && (
         <Card>
           <CardBody>
             <Box overflowX="auto">
