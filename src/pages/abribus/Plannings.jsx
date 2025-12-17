@@ -71,6 +71,19 @@ const PlanningsCalendar = () => {
     return "SEMAINE"; // Lundi à vendredi
   };
 
+  // Obtenir le jour de fonctionnement pour une date donnée
+  const getJourFonctionnementForDate = (dateStr) => {
+    const date = new Date(dateStr + 'T00:00:00');
+    const dayOfWeek = date.getDay(); // 0 = dimanche, 1 = lundi, etc.
+    
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      // Dimanche ou samedi
+      if (dayOfWeek === 6) return "SAMEDI";
+      return "DIMANCHE_FERIES";
+    }
+    return "SEMAINE"; // Lundi à vendredi
+  };
+
   // Vérifier la synchronisation date système ↔ navigateur
   useEffect(() => {
     const checkSystemDate = async () => {
@@ -182,16 +195,12 @@ const PlanningsCalendar = () => {
       setAvailableConstraints(Array.from(constraintsSet).sort());
 
       // Aplatir la structure hiérarchique Ligne → Sens → Services
-      // Filtrer les sens selon le jour de fonctionnement actuel
-      const jourFonctionnement = getJourFonctionnement();
+      // NE PAS filtrer par jour ici - filtrer par la date SÉLECTIONNÉE dans getFilteredServices()
       const flatServices = [];
       for (const ligne of lignesData) {
         if (ligne.sens && Array.isArray(ligne.sens)) {
           for (const sens of ligne.sens) {
-            // Vérifier si le sens fonctionne aujourd'hui
-            const sensFonctionneAujourdhui = !sens.jourFonctionnement || sens.jourFonctionnement === jourFonctionnement;
-            if (!sensFonctionneAujourdhui) continue;
-            
+            // Charger TOUS les sens (on filtrera par date sélectionnée plus tard)
             if (sens.services && Array.isArray(sens.services)) {
               for (const service of sens.services) {
                 flatServices.push({
@@ -284,6 +293,7 @@ const PlanningsCalendar = () => {
   // Filter services based on selected date and ligne filters
   const getFilteredServices = () => {
     const selectedDateObj = new Date(selectedDate);
+    const jourSelectionne = getJourFonctionnementForDate(selectedDate);
     
     return services.filter(s => {
       // 1. Extraire la date du service
@@ -293,6 +303,11 @@ const PlanningsCalendar = () => {
       
       // 2. PREMIER FILTRE: Le service doit être du jour sélectionné EXACTEMENT
       if (serviceDate !== selectedDate) return false;
+
+      // 2b. FILTRE PAR JOUR DE FONCTIONNEMENT: Le sens doit être configuré pour ce jour
+      if (s.sens && s.sens.jourFonctionnement && s.sens.jourFonctionnement !== jourSelectionne) {
+        return false;
+      }
       
       // 3. DEUXIÈME FILTRE: Vérifier les contraintes (si des filtres sont appliqués)
       if (!ligneMatchesFilter(s.ligne)) return false;
