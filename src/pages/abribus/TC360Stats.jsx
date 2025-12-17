@@ -112,16 +112,27 @@ const TC360Stats = () => {
       const endDate = `${year}-${String(month).padStart(2, '0')}-${String(day + 1).padStart(2, '0')}`;
       
       const url = `${API}/api/services?dateFrom=${startDate}&dateTo=${endDate}`;
+      console.log('[TC360Stats] Fetching unassured services from:', url);
+      
       const response = await fetch(url);
-      if (!response.ok) throw new Error('Erreur de récupération');
+      if (!response.ok) throw new Error(`Erreur ${response.status}: Récupération des services`);
       
       const services = await response.json();
-      // Filtrer les services qui ne sont pas validés/pointés
-      const notValidated = services.filter(s => s.statut !== 'Validé' && !s.motifNonAssurance);
+      console.log('[TC360Stats] Services fetched:', services.length);
+      
+      // Filtrer les services qui ne sont pas encore "Validé" ou "Non assuré"
+      // On cherche les services "Planifiée" sans motif d'assurance encore assigné
+      const notValidated = services.filter(s => 
+        s.statut === 'Planifiée' || 
+        (s.statut === 'Non assuré' && !s.motifNonAssurance)
+      );
+      
+      console.log('[TC360Stats] Filtered services:', notValidated.length);
       setUnassuredServices(notValidated);
       setSelectedServices({});
       setMotifs({});
     } catch (err) {
+      console.error('[TC360Stats] Error fetching unassured:', err);
       toast({ title: 'Erreur', description: err.message, status: 'error' });
     }
   };
@@ -134,6 +145,8 @@ const TC360Stats = () => {
 
     try {
       setSavingServices(prev => ({ ...prev, [serviceId]: true }));
+      console.log('[TC360Stats] Marking service', serviceId, 'as unassured with motif:', motif);
+      
       const response = await fetch(`${API}/api/services/${serviceId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -143,11 +156,20 @@ const TC360Stats = () => {
         })
       });
 
-      if (!response.ok) throw new Error('Erreur de mise à jour');
+      if (!response.ok) {
+        const errData = await response.text();
+        throw new Error(`Erreur ${response.status}: ${errData}`);
+      }
+      
+      console.log('[TC360Stats] Service marked successfully');
       
       // Retirer le service de la liste
       setUnassuredServices(prev => prev.filter(s => s.id !== serviceId));
       setSelectedServices(prev => {
+        const { [serviceId]: _, ...rest } = prev;
+        return rest;
+      });
+      setMotifs(prev => {
         const { [serviceId]: _, ...rest } = prev;
         return rest;
       });
@@ -161,6 +183,7 @@ const TC360Stats = () => {
       // Rafraîchir les stats
       fetchStats();
     } catch (err) {
+      console.error('[TC360Stats] Error marking:', err);
       toast({ title: 'Erreur', description: err.message, status: 'error' });
     } finally {
       setSavingServices(prev => {

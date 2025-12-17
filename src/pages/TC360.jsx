@@ -27,6 +27,7 @@ import {
   Grid,
   GridItem,
   SimpleGrid,
+  Input,
 } from '@chakra-ui/react';
 import { FaClock, FaCheckCircle, FaUser, FaBus, FaShieldAlt, FaMapPin } from 'react-icons/fa';
 import { UserContext } from '../context/UserContext';
@@ -40,6 +41,8 @@ const TC360 = () => {
   const [error, setError] = useState(null);
   const [selectedService, setSelectedService] = useState(null);
   const [currentDateStr, setCurrentDateStr] = useState('');
+  const [searchText, setSearchText] = useState('');
+  const [showExpired, setShowExpired] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
 
@@ -265,6 +268,34 @@ const TC360 = () => {
           </Text>
         </Box>
 
+        {/* Info pointage */}
+        <Alert status="info" variant="subtle" borderRadius="md">
+          <AlertIcon />
+          <Box>
+            <Box fontWeight="bold" mb={2}>Pointage TC 360+ - {formatDateFrLong(currentDateStr)}</Box>
+            <Input
+              placeholder="Rechercher une ligne, un conducteur..."
+              size="sm"
+              mb={2}
+              onChange={(e) => setSearchText(e.target.value)}
+            />
+            <Box fontSize="sm">
+              Les services affichés sont ceux avec départ prévu dans les 20 prochaines minutes.
+              Cliquez sur un service pour le valider.
+            </Box>
+          </Box>
+        </Alert>
+
+        {/* Bouton afficher services expirés non assurés */}
+        <Button
+          onClick={() => setShowExpired(!showExpired)}
+          colorScheme={showExpired ? "orange" : "blue"}
+          size="sm"
+          variant="outline"
+        >
+          {showExpired ? "Masquer" : "Afficher"} les services expirés non assurés
+        </Button>
+
         {/* Rôle utilisateur */}
         {user && (
           <Card bg="blue.50" borderColor="blue.200" borderWidth="1px">
@@ -283,18 +314,6 @@ const TC360 = () => {
             </CardBody>
           </Card>
         )}
-
-        {/* Info pointage */}
-        <Alert status="info" variant="subtle" borderRadius="md">
-          <AlertIcon />
-          <Box>
-            <Box fontWeight="bold" mb={1}>Pointage TC 360+ - {formatDateFrLong(currentDateStr)}</Box>
-            <Box fontSize="sm">
-              Les services affichés sont ceux avec départ prévu dans les 20 prochaines minutes.
-              Cliquez sur un service pour le valider.
-            </Box>
-          </Box>
-        </Alert>
 
         {/* Liste des services */}
         {error && (
@@ -316,12 +335,19 @@ const TC360 = () => {
             {services.filter(s => s.statut !== 'Terminée').length > 0 && (
               <Box>
                 <Heading size="md" mb={6}>
-                  Services du jour ({services.filter(s => s.statut !== 'Terminée').length})
+                  Services du jour ({services.filter(s => s.statut !== 'Terminée').filter(s => {
+                    const status = getServiceStatus(s.heureDebut);
+                    return showExpired || status.status !== 'expired';
+                  }).length})
                 </Heading>
                 <VStack spacing={6} align="stretch">
                   {(() => {
                     const groupedByLine = {};
-                    services.filter(s => s.statut !== 'Terminée').forEach(service => {
+                    // Filtrer les services : exclure les expirés sauf si showExpired est true
+                    services.filter(s => s.statut !== 'Terminée').filter(s => {
+                      const status = getServiceStatus(s.heureDebut);
+                      return showExpired || status.status !== 'expired';
+                    }).forEach(service => {
                       const lineNum = service.ligne?.numero || '?';
                       if (!groupedByLine[lineNum]) {
                         groupedByLine[lineNum] = [];

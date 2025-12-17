@@ -1,12 +1,5 @@
 const users = [
   {
-    matricule: 'w.belaidi',
-    password: 'rbe91100#',
-    role: 'DG',
-    prenom: 'Waiyl',
-    nom: 'Belaidi'
-  },
-  {
     matricule: 'b.vansteen',
     password: 'vansteenwinckel77',
     role: 'exploitation, maintenance',
