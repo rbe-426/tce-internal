@@ -59,6 +59,18 @@ const PlanningsCalendar = () => {
   const { isOpen: isCalendarOpen, onOpen: onCalendarOpen, onClose: onCalendarClose } = useDisclosure();
   const toast = useToast();
 
+  const getJourFonctionnement = () => {
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0 = dimanche, 1 = lundi, etc.
+    
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      // Dimanche ou samedi
+      if (dayOfWeek === 6) return "SAMEDI";
+      return "DIMANCHE_FERIES";
+    }
+    return "SEMAINE"; // Lundi à vendredi
+  };
+
   // Vérifier la synchronisation date système ↔ navigateur
   useEffect(() => {
     const checkSystemDate = async () => {
@@ -170,10 +182,16 @@ const PlanningsCalendar = () => {
       setAvailableConstraints(Array.from(constraintsSet).sort());
 
       // Aplatir la structure hiérarchique Ligne → Sens → Services
+      // Filtrer les sens selon le jour de fonctionnement actuel
+      const jourFonctionnement = getJourFonctionnement();
       const flatServices = [];
       for (const ligne of lignesData) {
         if (ligne.sens && Array.isArray(ligne.sens)) {
           for (const sens of ligne.sens) {
+            // Vérifier si le sens fonctionne aujourd'hui
+            const sensFonctionneAujourdhui = !sens.jourFonctionnement || sens.jourFonctionnement === jourFonctionnement;
+            if (!sensFonctionneAujourdhui) continue;
+            
             if (sens.services && Array.isArray(sens.services)) {
               for (const service of sens.services) {
                 flatServices.push({

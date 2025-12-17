@@ -108,6 +108,18 @@ const TC360 = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  const getJourFonctionnement = () => {
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0 = dimanche, 1 = lundi, etc.
+    
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      // Dimanche ou samedi
+      if (dayOfWeek === 6) return "SAMEDI";
+      return "DIMANCHE_FERIES";
+    }
+    return "SEMAINE"; // Lundi à vendredi
+  };
+
   const fetchServices = async () => {
     try {
       setLoading(true);
@@ -121,11 +133,19 @@ const TC360 = () => {
 
       const lignesData = await response.json();
       
+      // Obtenir le jour de fonctionnement actuel
+      const jourFonctionnement = getJourFonctionnement();
+      
       // Aplatir la structure hiérarchique Ligne → Sens → Services
+      // Filtrer les sens selon le jour de fonctionnement actuel
       const allServices = [];
       for (const ligne of lignesData) {
         if (ligne.sens && Array.isArray(ligne.sens)) {
           for (const sens of ligne.sens) {
+            // Vérifier si le sens fonctionne aujourd'hui
+            const sensFonctionneAujourdhui = !sens.jourFonctionnement || sens.jourFonctionnement === jourFonctionnement;
+            if (!sensFonctionneAujourdhui) continue;
+            
             if (sens.services && Array.isArray(sens.services)) {
               for (const service of sens.services) {
                 allServices.push({
