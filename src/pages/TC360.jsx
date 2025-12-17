@@ -220,7 +220,8 @@ const TC360 = () => {
     } else if (minutesDiff > -60) {
       return { status: 'late', label: 'Passé', color: 'orange', canPointage: true }; // TEST: permettre pointage
     } else {
-      return { status: 'expired', label: 'Expiré', color: 'red', canPointage: false };
+      // Services expirés peuvent encore être modifiés (retard -> absence, etc.)
+      return { status: 'expired', label: 'Expiré', color: 'red', canPointage: true };
     }
   };
 
@@ -606,7 +607,7 @@ const TC360 = () => {
                                             colorScheme="orange" 
                                             size="sm"
                                             variant="ghost"
-                                            isDisabled={service.statut === 'Non-Assuré' || serviceStatus.status === 'expired'}
+                                            isDisabled={service.statut === 'Non-Assuré'}
                                             onClick={() => {
                                               if (service.statut !== 'Non-Assuré') {
                                                 setSelectedService(service);
