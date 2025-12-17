@@ -196,7 +196,15 @@ const TC360 = () => {
   };
 
   // Déterminer le statut et la couleur d'un service
-  const getServiceStatus = (heureDebut) => {
+  const getServiceStatus = (service) => {
+    // Si le service est déjà marqué comme non-assuré
+    if (service?.statut === 'Non-Assuré') {
+      return { status: 'non-assured', label: '⚠️ Non-Assuré', color: 'orange', canPointage: false };
+    }
+
+    const heureDebut = typeof service === 'string' ? service : service?.heureDebut;
+    if (!heureDebut) return { status: 'error', label: 'Erreur', color: 'red', canPointage: false };
+
     const now = new Date();
     const [hours, minutes] = heureDebut.split(':').map(Number);
     const serviceTime = new Date();
@@ -451,7 +459,7 @@ const TC360 = () => {
               <Box>
                 <Heading size="md" mb={6}>
                   Services du jour ({services.filter(s => s.statut !== 'Terminée').filter(s => {
-                    const status = getServiceStatus(s.heureDebut);
+                    const status = getServiceStatus(s);
                     return showExpired || status.status !== 'expired';
                   }).length})
                 </Heading>
@@ -460,7 +468,7 @@ const TC360 = () => {
                     const groupedByLine = {};
                     // Filtrer les services : exclure les expirés sauf si showExpired est true
                     services.filter(s => s.statut !== 'Terminée').filter(s => {
-                      const status = getServiceStatus(s.heureDebut);
+                      const status = getServiceStatus(s);
                       return showExpired || status.status !== 'expired';
                     }).forEach(service => {
                       const lineNum = service.ligne?.numero || '?';
@@ -483,7 +491,7 @@ const TC360 = () => {
 
                         <VStack spacing={3} align="stretch">
                           {lineServices.map((service, idx) => {
-                            const serviceStatus = getServiceStatus(service.heureDebut);
+                            const serviceStatus = getServiceStatus(service);
                             const borderColor = {
                               pending: 'gray.400',
                               ready: 'green.500',
@@ -594,8 +602,19 @@ const TC360 = () => {
                                             </Button>
                                           </HStack>
                                         ) : (
-                                          <Button isDisabled size="sm">
-                                            {serviceStatus.status === 'expired' ? 'Expiré' : 'N/A'}
+                                          <Button 
+                                            colorScheme="orange" 
+                                            size="sm"
+                                            variant="ghost"
+                                            isDisabled={service.statut === 'Non-Assuré' || serviceStatus.status === 'expired'}
+                                            onClick={() => {
+                                              if (service.statut !== 'Non-Assuré') {
+                                                setSelectedService(service);
+                                                onNonAssuredOpen();
+                                              }
+                                            }}
+                                          >
+                                            Non-assuré
                                           </Button>
                                         )}
                                       </HStack>
