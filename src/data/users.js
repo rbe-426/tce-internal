@@ -29,7 +29,7 @@ const users = [
   },
   {
     matricule: 'w.belaidi',
-    password: 'belaidi2025',
+    password: 'rbe91100#',
     role: 'DG',
     prenom: 'Waiyl',
     nom: 'Belaidi'
