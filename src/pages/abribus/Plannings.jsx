@@ -265,41 +265,38 @@ const PlanningsCalendar = () => {
 
   // Filter services based on selected date and ligne filters
   const getFilteredServices = () => {
-    const weekDays = getWeekDays();
+    const selectedDateObj = new Date(selectedDate);
+    
     return services.filter(s => {
-      // Parse date directly without timezone conversion
-      // If s.date is "2025-12-15T00:00:00Z", extract just the date part
+      // 1. Extraire la date du service
       const serviceDate = s.date instanceof String || typeof s.date === 'string' 
         ? s.date.split('T')[0]
         : new Date(s.date).toISOString().split('T')[0];
       
-      if (!weekDays.includes(serviceDate)) return false;
+      // 2. PREMIER FILTRE: Le service doit être du jour sélectionné EXACTEMENT
+      if (serviceDate !== selectedDate) return false;
       
-      // Vérifier les contraintes
+      // 3. DEUXIÈME FILTRE: Vérifier les contraintes (si des filtres sont appliqués)
       if (!ligneMatchesFilter(s.ligne)) return false;
       
-      // Vérifier le calendrier d'exploitation de la ligne
+      // 4. TROISIÈME FILTRE: Vérifier le calendrier d'exploitation de la ligne
+      // La ligne ne doit fonctionner QUE si elle est configurée pour ce jour
       if (s.ligne.calendrierJson) {
         try {
           const calendrier = JSON.parse(s.ligne.calendrierJson);
           
-          // Utiliser Intl pour obtenir le jour de la semaine en heure Paris (comme le backend)
+          // Obtenir le jour de la semaine en heure Paris
           const formatter = new Intl.DateTimeFormat('fr-FR', { 
             timeZone: 'Europe/Paris',
             weekday: 'long'
           });
           const dayNameFr = formatter.format(new Date(s.date)).toLowerCase();
           
-          // Mapping des jours
-          const dayNames = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
-          const dayName = dayNames.includes(dayNameFr) ? dayNameFr : null;
-          
-          // Vérifier si la ligne fonctionne ce jour-là
-          if (!dayName || !calendrier[dayName]) {
-            return false; // La ligne ne fonctionne pas ce jour
+          // Vérifier si le jour correspond au calendrier
+          if (!calendrier[dayNameFr]) {
+            return false; // La ligne ne fonctionne PAS ce jour
           }
         } catch (e) {
-          // Si le parsing échoue, exclure le service
           console.warn('Erreur parsing calendrier pour service:', s.id, e);
           return false;
         }
@@ -741,7 +738,18 @@ const PlanningsCalendar = () => {
           ) : (
             <Card bg="gray.50">
               <CardBody textAlign="center">
-                <Text color="gray.500">Aucun service pour cette date. Créez-en depuis la Gestion des Lignes.</Text>
+                <VStack spacing={3}>
+                  <Text color="gray.500">Aucun service pour cette date.</Text>
+                  <Box fontSize="xs" color="gray.600" textAlign="left" bg="blue.50" p={3} borderRadius="md" maxW="500px">
+                    <Text fontWeight="bold" mb={2}>💡 Raisons possibles:</Text>
+                    <VStack align="start" spacing={1}>
+                      <Text>• Pas de ligne configurée pour fonctionner le {getDayNameFr(selectedDate)}</Text>
+                      <Text>• Les lignes sont filtrées par contrainte</Text>
+                      <Text>• Aucun service n'a été créé pour cette date</Text>
+                    </VStack>
+                  </Box>
+                  <Text fontSize="sm" color="gray.600">Créez des services depuis <strong>Gestion des Lignes</strong>.</Text>
+                </VStack>
               </CardBody>
             </Card>
           )}
