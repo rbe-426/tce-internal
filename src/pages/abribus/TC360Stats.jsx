@@ -123,11 +123,11 @@ const TC360Stats = () => {
       const services = await response.json();
       console.log('[TC360Stats] Services fetched:', services.length);
       
-      // Filtrer les services qui ne sont pas encore "Validé" ou "Non assuré"
-      // On cherche les services "Planifiée" sans motif d'assurance encore assigné
+      // Filtrer les services qui ne sont pas encore "Validé"
+      // On cherche les services "Planifiée" ou "Non-Assuré" (avec motif)
       const notValidated = services.filter(s => 
         s.statut === 'Planifiée' || 
-        (s.statut === 'Non assuré' && !s.motifNonAssurance)
+        s.statut === 'Non-Assuré'
       );
       
       console.log('[TC360Stats] Filtered services:', notValidated.length);
