@@ -25,6 +25,19 @@ import {
   Button,
   Input,
   Flex,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  useDisclosure,
+  Select,
+  Checkbox,
+  CheckboxGroup,
+  Stack,
+  useToast,
 } from '@chakra-ui/react';
 import {
   FaCheckCircle,
@@ -40,13 +53,30 @@ import { API_URL } from '../../config';
 
 const API = API_URL;
 
+const MOTIFS = [
+  'Absence',
+  'Refus pointage',
+  'Refus permis/CNI',
+  'Absence véhicule',
+  'Absence conducteur'
+];
+
 const TC360Stats = () => {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const toast = useToast();
+  
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split('T')[0]
   );
+  
+  // État pour la modale de marquage des services non assurés
+  const [unassuredServices, setUnassuredServices] = useState([]);
+  const [selectedServices, setSelectedServices] = useState({});
+  const [motifs, setMotifs] = useState({});
+  const [savingServices, setSavingServices] = useState({});
 
   useEffect(() => {
     fetchStats();
@@ -72,6 +102,71 @@ const TC360Stats = () => {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUnassuredServices = async () => {
+    try {
+      const [year, month, day] = selectedDate.split('-').map(Number);
+      const startDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const endDate = `${year}-${String(month).padStart(2, '0')}-${String(day + 1).padStart(2, '0')}`;
+      
+      const url = `${API}/api/services?dateFrom=${startDate}&dateTo=${endDate}`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Erreur de récupération');
+      
+      const services = await response.json();
+      // Filtrer les services qui ne sont pas validés/pointés
+      const notValidated = services.filter(s => s.statut !== 'Validé' && !s.motifNonAssurance);
+      setUnassuredServices(notValidated);
+      setSelectedServices({});
+      setMotifs({});
+    } catch (err) {
+      toast({ title: 'Erreur', description: err.message, status: 'error' });
+    }
+  };
+
+  const markAsUnassured = async (serviceId, motif) => {
+    if (!motif) {
+      toast({ title: 'Erreur', description: 'Sélectionnez un motif', status: 'warning' });
+      return;
+    }
+
+    try {
+      setSavingServices(prev => ({ ...prev, [serviceId]: true }));
+      const response = await fetch(`${API}/api/services/${serviceId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          statut: 'Non assuré',
+          motifNonAssurance: motif,
+        })
+      });
+
+      if (!response.ok) throw new Error('Erreur de mise à jour');
+      
+      // Retirer le service de la liste
+      setUnassuredServices(prev => prev.filter(s => s.id !== serviceId));
+      setSelectedServices(prev => {
+        const { [serviceId]: _, ...rest } = prev;
+        return rest;
+      });
+
+      toast({
+        title: 'Succès',
+        description: `Service marqué comme non assuré: ${motif}`,
+        status: 'success'
+      });
+      
+      // Rafraîchir les stats
+      fetchStats();
+    } catch (err) {
+      toast({ title: 'Erreur', description: err.message, status: 'error' });
+    } finally {
+      setSavingServices(prev => {
+        const { [serviceId]: _, ...rest } = prev;
+        return rest;
+      });
     }
   };
 
@@ -289,11 +384,23 @@ const TC360Stats = () => {
           <Card bg="red.50" borderColor="red.200" borderWidth="2px">
             <CardBody>
               <VStack align="start" spacing={4}>
-                <HStack>
-                  <Box fontSize="xl" color="red.600">
-                    ⚠️
-                  </Box>
-                  <Heading size="sm">Services Non Assurés</Heading>
+                <HStack justify="space-between" w="full">
+                  <HStack>
+                    <Box fontSize="xl" color="red.600">
+                      ⚠️
+                    </Box>
+                    <Heading size="sm">Services Non Assurés</Heading>
+                  </HStack>
+                  <Button 
+                    size="sm" 
+                    colorScheme="red"
+                    onClick={() => {
+                      fetchUnassuredServices();
+                      onOpen();
+                    }}
+                  >
+                    Assigner Motifs
+                  </Button>
                 </HStack>
                 
                 <HStack w="full" justify="space-between" bg="white" p={3} borderRadius="md">
@@ -592,6 +699,89 @@ const TC360Stats = () => {
             </CardBody>
           </Card>
         )}
+
+        {/* Modale pour assigner les motifs */}
+        <Modal isOpen={isOpen} onClose={onClose} size="2xl" scrollBehavior="inside">
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>
+              Marquer Services Comme Non Assurés - {selectedDate}
+            </ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              {unassuredServices.length === 0 ? (
+                <Text textAlign="center" color="gray.500" py={8}>
+                  Aucun service à marquer pour cette date
+                </Text>
+              ) : (
+                <VStack spacing={4} align="stretch">
+                  <Text fontSize="sm" color="gray.600">
+                    {unassuredServices.length} service(s) en attente de motif
+                  </Text>
+                  {unassuredServices.map(service => (
+                    <Box 
+                      key={service.id}
+                      p={4}
+                      borderRadius="md"
+                      bg="white"
+                      borderWidth="1px"
+                      borderColor="gray.200"
+                    >
+                      <HStack justify="space-between" mb={3}>
+                        <VStack align="start" spacing={0}>
+                          <Text fontWeight="bold">
+                            Ligne {service.ligne.numero} - {service.heureDebut}
+                          </Text>
+                          <Text fontSize="sm" color="gray.600">
+                            {service.ligne.nom}
+                          </Text>
+                        </VStack>
+                        <Badge colorScheme="gray">
+                          {service.statut || 'Prévu'}
+                        </Badge>
+                      </HStack>
+
+                      <HStack spacing={3} align="flex-end">
+                        <Box flex={1}>
+                          <Text fontSize="xs" fontWeight="bold" mb={2} color="gray.600">
+                            Motif:
+                          </Text>
+                          <Select
+                            value={motifs[service.id] || ''}
+                            onChange={(e) => 
+                              setMotifs(prev => ({ ...prev, [service.id]: e.target.value }))
+                            }
+                            placeholder="Sélectionner un motif"
+                            size="sm"
+                          >
+                            {MOTIFS.map(motif => (
+                              <option key={motif} value={motif}>
+                                {motif}
+                              </option>
+                            ))}
+                          </Select>
+                        </Box>
+                        <Button
+                          size="sm"
+                          colorScheme="red"
+                          isLoading={savingServices[service.id]}
+                          onClick={() => markAsUnassured(service.id, motifs[service.id])}
+                        >
+                          Marquer
+                        </Button>
+                      </HStack>
+                    </Box>
+                  ))}
+                </VStack>
+              )}
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="ghost" onClick={onClose}>
+                Fermer
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
       </VStack>
     </Container>
   );
