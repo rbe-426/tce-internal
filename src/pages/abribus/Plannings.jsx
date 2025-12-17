@@ -389,6 +389,7 @@ const PlanningsCalendar = () => {
         // Même jour : vérifier qu'il n'y a pas de chevauchement
         const chevauchement = !(minutesFin <= minutesDDebut || minutesDebut >= minutesDFin);
         if (chevauchement) {
+          console.warn(`❌ Chevauchement détecté: ${serviceActuel.heureDebut}-${serviceActuel.heureFin} ↔ ${service.heureDebut}-${service.heureFin}`);
           return false; // Chevauchement direct
         }
         
@@ -397,10 +398,41 @@ const PlanningsCalendar = () => {
         const timeBetweenStart = minutesDebut - minutesDFin;
         
         if ((timeBetweenEnd >= 0 && timeBetweenEnd < 720) || (timeBetweenStart >= 0 && timeBetweenStart < 720)) {
+          console.warn(`❌ Moins de 12h entre services sur même jour`);
           return false; // Moins de 12h entre les services
         }
       }
     }
+    
+    // Vérifier limite heures par semaine (44h)
+    const semaineLundi = new Date(serviceActuel.date);
+    semaineLundi.setDate(semaineLundi.getDate() - semaineLundi.getDay() + 1); // Lundi de la semaine
+    const semaineVendredi = new Date(semaineLundi);
+    semaineVendredi.setDate(semaineVendredi.getDate() + 6); // Dimanche de la semaine
+    
+    const servicesWeek = services.filter(s => {
+      const sDate = new Date(s.date);
+      return s.conducteurId === conducteurId && sDate >= semaineLundi && sDate <= semaineVendredi;
+    });
+    
+    let heuresWeek = 0;
+    servicesWeek.forEach(s => {
+      const [h1, m1] = s.heureDebut.split(':').map(Number);
+      const [h2, m2] = s.heureFin.split(':').map(Number);
+      const minutes1 = h1 * 60 + m1;
+      const minutes2 = h2 * 60 + m2;
+      heuresWeek += (minutes2 - minutes1) / 60;
+    });
+    
+    // Ajouter les heures du service actuel
+    const minutesServiceActuel = minutesFin - minutesDebut;
+    heuresWeek += minutesServiceActuel / 60;
+    
+    if (heuresWeek > REGLEMENTATIONS.heuresMaxParSemaine) {
+      console.warn(`❌ Dépassement heures semaine: ${heuresWeek}h > ${REGLEMENTATIONS.heuresMaxParSemaine}h`);
+      return false;
+    }
+
     return true;
   };
 
@@ -741,11 +773,25 @@ const PlanningsCalendar = () => {
                           onChange={(e) => assignerConducteur(service.id, e.target.value || null)}
                           isDisabled={isDegradedMode}
                         >
-                          {conducteurs.map(c => (
-                            <option key={c.id} value={c.id}>
-                              {c.prenom} {c.nom}
-                            </option>
-                          ))}
+                          {conducteurs.map(c => {
+                            const canAssign = canAssignConductor(service.id, c.id);
+                            const servicesExistants = services.filter(s => s.conducteurId === c.id && s.id !== service.id);
+                            const conflitInfo = !canAssign && servicesExistants.length > 0 
+                              ? `${servicesExistants.length} service(s) en conflit`
+                              : '';
+                            
+                            return (
+                              <option 
+                                key={c.id} 
+                                value={c.id}
+                                disabled={!canAssign}
+                                title={conflitInfo}
+                              >
+                                {c.prenom} {c.nom}
+                                {!canAssign ? ' (❌ Non disponible)' : ''}
+                              </option>
+                            );
+                          })}
                         </Select>
                       </Box>
 
@@ -757,6 +803,35 @@ const PlanningsCalendar = () => {
                           <Badge colorScheme={getConducteurStatut(service.conducteurId) === 'Actif' ? 'green' : 'yellow'} fontSize="xs">
                             {getConducteurStatut(service.conducteurId)}
                           </Badge>
+                        </Box>
+                      )}
+
+                      {/* Afficher les autres services du conducteur si assigné */}
+                      {service.conducteurId && (
+                        <Box w="full" bg="blue.50" p={2} borderRadius="md" fontSize="xs">
+                          {(() => {
+                            const otherServices = services.filter(
+                              s => s.conducteurId === service.conducteurId && s.id !== service.id
+                            );
+                            if (otherServices.length === 0) return null;
+                            
+                            return (
+                              <VStack align="start" spacing={1}>
+                                <Text fontWeight="bold" color="blue.700">Autres services assignés :</Text>
+                                {otherServices.map(s => (
+                                  <HStack key={s.id} fontSize="xs" color="blue.600">
+                                    <FaClock size={12} />
+                                    <Text>
+                                      {s.heureDebut} - {s.heureFin}
+                                      {new Date(s.date).toISOString().split('T')[0] !== new Date(service.date).toISOString().split('T')[0] 
+                                        ? ` (${formatDateFr(s.date)})`
+                                        : ' (même jour ⚠️)'}
+                                    </Text>
+                                  </HStack>
+                                ))}
+                              </VStack>
+                            );
+                          })()}
                         </Box>
                       )}
 
