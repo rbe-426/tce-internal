@@ -45,7 +45,24 @@ const TC360 = () => {
   const [showExpired, setShowExpired] = useState(false);
   const [conducteurs, setConducteurs] = useState([]);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isNonAssuredOpen, onOpen: onNonAssuredOpen, onClose: onNonAssuredClose } = useDisclosure();
   const toast = useToast();
+
+  // États pour la modal non-assuré
+  const [nonAssuredForm, setNonAssuredForm] = useState({
+    motif: '',
+    notes: '',
+  });
+
+  // Motifs possibles
+  const MOTIFS_NON_ASSURANCE = [
+    'Conducteur malade',
+    'Véhicule en panne',
+    'Conditions météo',
+    'Problème administratif',
+    'Demande client',
+    'Autres'
+  ];
 
   // Pointage form state
   const [pointageForm, setPointageForm] = useState({
@@ -254,6 +271,56 @@ const TC360 = () => {
       onClose();
       
       // Rafraîchir les services pour voir les mises à jour (le service passe à "Terminée")
+      await fetchServices();
+    } catch (err) {
+      toast({
+        title: 'Erreur',
+        description: err.message,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  // Marquer un service comme non-assuré
+  const handleMarkNonAssured = async () => {
+    try {
+      if (!selectedService || !nonAssuredForm.motif) {
+        toast({
+          title: 'Erreur',
+          description: 'Veuillez sélectionner un motif',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/api/services/${selectedService.id}/non-assured`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          motifNonAssurance: nonAssuredForm.motif,
+          notes: nonAssuredForm.notes,
+          markedBy: user?.role || 'Régulateur',
+        }),
+      });
+
+      if (!response.ok) throw new Error('Erreur lors de la mise à jour');
+
+      toast({
+        title: 'Service marqué',
+        description: `Service ligne ${selectedService.ligne?.numero} marqué comme non-assuré`,
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+
+      onNonAssuredClose();
+      setNonAssuredForm({ motif: '', notes: '' });
+      
+      // Rafraîchir les services
       await fetchServices();
     } catch (err) {
       toast({
@@ -503,12 +570,29 @@ const TC360 = () => {
                                           {serviceStatus.label}
                                         </Badge>
                                         {serviceStatus.canPointage ? (
-                                          <Button 
-                                            colorScheme="green" 
-                                            size="sm"
-                                          >
-                                            Pointer
-                                          </Button>
+                                          <HStack spacing={1}>
+                                            <Button 
+                                              colorScheme="green" 
+                                              size="sm"
+                                              onClick={() => {
+                                                setSelectedService(service);
+                                                onOpen();
+                                              }}
+                                            >
+                                              Pointer
+                                            </Button>
+                                            <Button 
+                                              colorScheme="orange" 
+                                              size="sm"
+                                              variant="outline"
+                                              onClick={() => {
+                                                setSelectedService(service);
+                                                onNonAssuredOpen();
+                                              }}
+                                            >
+                                              Non-assuré
+                                            </Button>
+                                          </HStack>
                                         ) : (
                                           <Button isDisabled size="sm">
                                             {serviceStatus.status === 'expired' ? 'Expiré' : 'N/A'}
@@ -777,6 +861,82 @@ const TC360 = () => {
                 </Button>
                 <Button colorScheme="green" onClick={handlePointage}>
                   Valider le pointage
+                </Button>
+              </HStack>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        {/* Modal pour marquer comme non-assuré */}
+        <Modal isOpen={isNonAssuredOpen} onClose={onNonAssuredClose} size="md">
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>
+              <HStack spacing={2}>
+                <span>⚠️ Marquer comme non-assuré</span>
+              </HStack>
+            </ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              {selectedService && (
+                <VStack spacing={4} align="stretch">
+                  {/* Infos du service */}
+                  <Box bg="blue.50" p={4} borderRadius="md">
+                    <Text fontSize="sm" color="gray.600" mb={1}>Service</Text>
+                    <HStack spacing={2}>
+                      <Badge colorScheme="blue">Ligne {selectedService.ligne?.numero}</Badge>
+                      <Text fontWeight="bold">{selectedService.heureDebut} - {selectedService.heureFin}</Text>
+                    </HStack>
+                  </Box>
+
+                  <Divider />
+
+                  {/* Motif */}
+                  <Box>
+                    <Text fontWeight="bold" mb={2}>Motif de non-assurance</Text>
+                    <select
+                      value={nonAssuredForm.motif}
+                      onChange={(e) => setNonAssuredForm({ ...nonAssuredForm, motif: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        borderRadius: '4px',
+                        border: '1px solid #ccc',
+                        fontSize: '14px',
+                      }}
+                    >
+                      <option value="">-- Sélectionner un motif --</option>
+                      {MOTIFS_NON_ASSURANCE.map(motif => (
+                        <option key={motif} value={motif}>{motif}</option>
+                      ))}
+                    </select>
+                  </Box>
+
+                  {/* Notes optionnelles */}
+                  <Box>
+                    <Text fontWeight="bold" mb={2}>Notes (optionnel)</Text>
+                    <Input
+                      placeholder="Ajouter des détails..."
+                      value={nonAssuredForm.notes}
+                      onChange={(e) => setNonAssuredForm({ ...nonAssuredForm, notes: e.target.value })}
+                      size="sm"
+                    />
+                  </Box>
+
+                  <Box bg="orange.50" p={3} borderRadius="md" fontSize="sm">
+                    <Text fontWeight="bold" mb={1}>Conséquence :</Text>
+                    <Text>Ce service sera marqué comme non-assuré et exclu des statistiques de ponctualité.</Text>
+                  </Box>
+                </VStack>
+              )}
+            </ModalBody>
+            <ModalFooter>
+              <HStack spacing={2}>
+                <Button variant="outline" onClick={onNonAssuredClose}>
+                  Annuler
+                </Button>
+                <Button colorScheme="orange" onClick={handleMarkNonAssured}>
+                  Confirmer
                 </Button>
               </HStack>
             </ModalFooter>

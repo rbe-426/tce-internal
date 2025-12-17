@@ -26,6 +26,13 @@ const users = [
     role: 'chauffeur_vtc',
     prenom: 'Méthusan',
     nom: 'Ravichandran'
+  },
+  {
+    matricule: 'w.belaidi',
+    password: 'belaidi2025',
+    role: 'DG',
+    prenom: 'Waiyl',
+    nom: 'Belaidi'
   }
 ];
 
