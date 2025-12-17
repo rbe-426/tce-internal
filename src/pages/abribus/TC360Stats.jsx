@@ -54,11 +54,14 @@ import { API_URL } from '../../config';
 const API = API_URL;
 
 const MOTIFS = [
-  'Absence',
-  'Refus pointage',
-  'Refus permis/CNI',
-  'Absence véhicule',
-  'Absence conducteur'
+  'RETARD CR',
+  'REFUS POINTAGE',
+  'REFUS CNI/PERMIS',
+  'ABSENCE VEHICULE',
+  'ABSENCE CONDUCTEUR',
+  'DROIT DE RETRAIT CONDUCTEUR',
+  'GREVE NON AUTORISEE',
+  'GREVE AUTORISEE'
 ];
 
 const TC360Stats = () => {

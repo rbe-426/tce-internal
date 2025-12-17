@@ -56,12 +56,14 @@ const TC360 = () => {
 
   // Motifs possibles
   const MOTIFS_NON_ASSURANCE = [
-    'Conducteur malade',
-    'Véhicule en panne',
-    'Conditions météo',
-    'Problème administratif',
-    'Demande client',
-    'Autres'
+    'RETARD CR',
+    'REFUS POINTAGE',
+    'REFUS CNI/PERMIS',
+    'ABSENCE VEHICULE',
+    'ABSENCE CONDUCTEUR',
+    'DROIT DE RETRAIT CONDUCTEUR',
+    'GREVE NON AUTORISEE',
+    'GREVE AUTORISEE'
   ];
 
   // Pointage form state
