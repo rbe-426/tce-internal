@@ -62,6 +62,7 @@ const JURHE = () => {
     prenom: '',
     email: '',
     telephone: '',
+    matricule: '',
     poste: 'Conducteur',
     statut: 'Actif',
     dateEmbauche: new Date().toISOString().split('T')[0],
@@ -123,6 +124,7 @@ const JURHE = () => {
         prenom: employe.prenom,
         email: employe.email || '',
         telephone: employe.telephone || '',
+        matricule: employe.matricule || '',
         poste: employe.poste,
         statut: employe.statut,
         dateEmbauche: employe.dateEmbauche ? new Date(employe.dateEmbauche).toISOString().split('T')[0] : '',
@@ -150,9 +152,20 @@ const JURHE = () => {
         return;
       }
 
+      // Si c'est un conducteur et qu'on n'a pas de matricule, l'utiliser ou le générer
+      if (formData.poste === 'Conducteur' && !formData.matricule) {
+        toast({
+          title: 'Validation',
+          description: 'Le matricule est obligatoire pour un conducteur',
+          status: 'warning',
+          duration: 3000,
+        });
+        return;
+      }
+
       let response;
       if (isEditMode && selectedEmploye) {
-        // Update
+        // Update Employe
         response = await fetch(`${API_URL}/api/employes/${selectedEmploye.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -162,7 +175,7 @@ const JURHE = () => {
           }),
         });
       } else {
-        // Create
+        // Create Employe
         response = await fetch(`${API_URL}/api/employes`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -174,6 +187,35 @@ const JURHE = () => {
       }
 
       if (response.ok) {
+        // Si c'est un conducteur, créer aussi l'entrée Conducteur
+        if (formData.poste === 'Conducteur') {
+          const conducteurData = {
+            nom: formData.nom,
+            prenom: formData.prenom,
+            matricule: formData.matricule,
+            permis: formData.permis,
+            embauche: new Date(formData.dateEmbauche).toISOString(),
+            statut: formData.statut,
+            typeContrat: formData.typeContrat,
+            phone: formData.telephone || null,
+            email: formData.email || null,
+          };
+
+          try {
+            const conducteurResponse = await fetch(`${API_URL}/api/conducteurs`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(conducteurData),
+            });
+
+            if (!conducteurResponse.ok) {
+              console.warn('Conducteur créé partiellement (Employe OK, Conducteur KO)');
+            }
+          } catch (err) {
+            console.warn('Erreur création conducteur:', err);
+          }
+        }
+
         toast({
           title: 'Succès',
           description: isEditMode ? 'Employé mis à jour' : 'Employé créé',
@@ -400,6 +442,15 @@ const JURHE = () => {
                 <Input
                   value={formData.telephone}
                   onChange={(e) => setFormData({ ...formData, telephone: e.target.value })}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Matricule {formData.poste === 'Conducteur' && '*'}</FormLabel>
+                <Input
+                  placeholder="Ex: JD001"
+                  value={formData.matricule}
+                  onChange={(e) => setFormData({ ...formData, matricule: e.target.value })}
                 />
               </FormControl>
 
