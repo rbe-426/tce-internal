@@ -254,6 +254,18 @@ const TC360 = () => {
         return;
       }
 
+      // Vérifier si la carte chrono est obligatoire et cocher le checkbox
+      if (selectedService.ligne?.demandeChrono && !pointageForm.chronometerChecked) {
+        toast({
+          title: 'Erreur',
+          description: 'La vérification de la carte chrono est obligatoire pour cette ligne',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
       const pointageData = {
         serviceId: selectedService.id,
         conducteurId: pointageForm.conducteurId, // Utiliser le conducteur sélectionné du form
@@ -846,15 +858,25 @@ const TC360 = () => {
                       </Box>
 
                       {/* Chrono/Tachograph */}
-                      {selectedService.ligne && JSON.parse(selectedService.ligne.typesVehicules || '[]').includes('Autocar') && (
+                      {selectedService.ligne && (JSON.parse(selectedService.ligne.typesVehicules || '[]').includes('TCP - Autocars BC/NOC/EXPRESS') || selectedService.ligne?.demandeChrono) && (
                         <Box>
+                          {selectedService.ligne?.demandeChrono && (
+                            <Alert status="warning" mb={2} borderRadius="md" fontSize="sm">
+                              <AlertIcon />
+                              <VStack align="start" spacing={0}>
+                                <Text fontWeight="bold">Carte chrono obligatoire</Text>
+                                <Text fontSize="xs">Cette ligne nécessite la vérification de la carte chrono</Text>
+                              </VStack>
+                            </Alert>
+                          )}
                           <Checkbox
                             isChecked={pointageForm.chronometerChecked}
                             onChange={(e) => setPointageForm({ ...pointageForm, chronometerChecked: e.target.checked })}
+                            isRequired={selectedService.ligne?.demandeChrono}
                           >
                             <HStack spacing={2} ml={2}>
                               <FaClock color="purple" />
-                              <span>Chrono/Tachographe vérifié</span>
+                              <span>Chrono/Tachographe vérifié{selectedService.ligne?.demandeChrono ? ' *' : ''}</span>
                             </HStack>
                           </Checkbox>
                         </Box>

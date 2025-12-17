@@ -40,7 +40,7 @@ const Lignes = () => {
   const [lignes, setLignes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [newLigne, setNewLigne] = useState({ numero: '', nom: '', typesVehicules: [] });
+  const [newLigne, setNewLigne] = useState({ numero: '', nom: '', typesVehicules: [], demandeChrono: false });
   const [editingLigne, setEditingLigne] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: isEditOpen, onOpen: onEditOpen, onClose: onEditClose } = useDisclosure();
@@ -114,6 +114,7 @@ const Lignes = () => {
           numero: newLigne.numero,
           nom: newLigne.nom,
           typesVehicules: newLigne.typesVehicules,
+          demandeChrono: newLigne.demandeChrono,
           statut: 'Actif',
         }),
       });
@@ -122,7 +123,7 @@ const Lignes = () => {
       const created = await response.json();
 
       setLignes([...lignes, created]);
-      setNewLigne({ numero: '', nom: '', typesVehicules: [] });
+      setNewLigne({ numero: '', nom: '', typesVehicules: [], demandeChrono: false });
       onClose();
 
       toast({
@@ -178,6 +179,7 @@ const Lignes = () => {
       numero: ligne.numero,
       nom: ligne.nom,
       typesVehicules: parseJSON(ligne.typesVehicules),
+      demandeChrono: ligne.demandeChrono || false,
       statut: ligne.statut,
     });
     onEditOpen();
@@ -203,6 +205,7 @@ const Lignes = () => {
           numero: editingLigne.numero,
           nom: editingLigne.nom,
           typesVehicules: editingLigne.typesVehicules,
+          demandeChrono: editingLigne.demandeChrono,
           statut: editingLigne.statut,
         }),
       });
@@ -244,6 +247,7 @@ const Lignes = () => {
           numero: ligne.numero,
           nom: ligne.nom,
           typesVehicules: parseJSON(ligne.typesVehicules),
+          demandeChrono: ligne.demandeChrono,
           statut: nouveauStatut,
         }),
       });
@@ -429,6 +433,14 @@ const Lignes = () => {
                   ))}
                 </Stack>
               </FormControl>
+              <FormControl>
+                <Checkbox
+                  isChecked={newLigne.demandeChrono}
+                  onChange={(e) => setNewLigne({ ...newLigne, demandeChrono: e.target.checked })}
+                >
+                  Demander la carte chrono
+                </Checkbox>
+              </FormControl>
             </VStack>
           </ModalBody>
           <ModalFooter>
@@ -492,6 +504,14 @@ const Lignes = () => {
                       </Checkbox>
                     ))}
                   </Stack>
+                </FormControl>
+                <FormControl>
+                  <Checkbox
+                    isChecked={editingLigne.demandeChrono}
+                    onChange={(e) => setEditingLigne({ ...editingLigne, demandeChrono: e.target.checked })}
+                  >
+                    Demander la carte chrono
+                  </Checkbox>
                 </FormControl>
                 <FormControl>
                   <FormLabel>Statut</FormLabel>
