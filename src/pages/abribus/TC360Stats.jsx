@@ -55,13 +55,16 @@ const TC360Stats = () => {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const response = await fetch(
-        `${API}/api/pointages/stats/daily?date=${selectedDate}`
-      );
+      const url = `${API}/api/pointages/stats/daily?date=${selectedDate}`;
+      console.log('[TC360Stats] Fetching:', url);
+      
+      const response = await fetch(url);
       if (!response.ok)
         throw new Error('Erreur lors de la récupération des statistiques');
 
       const data = await response.json();
+      console.log('[TC360Stats] Data received:', data);
+      
       setStats(data);
       setError(null);
     } catch (err) {
