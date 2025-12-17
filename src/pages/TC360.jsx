@@ -43,6 +43,7 @@ const TC360 = () => {
   const [currentDateStr, setCurrentDateStr] = useState('');
   const [searchText, setSearchText] = useState('');
   const [showExpired, setShowExpired] = useState(false);
+  const [conducteurs, setConducteurs] = useState([]);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
 
@@ -51,11 +52,25 @@ const TC360 = () => {
     vehicleType: '',
     permisChecked: false,
     chronometerChecked: false,
+    conducteurId: '', // Ajouter le conducteurId
   });
 
   useEffect(() => {
     fetchServices();
+    fetchConducteurs();
   }, []);
+
+  const fetchConducteurs = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/conducteurs`);
+      if (response.ok) {
+        const data = await response.json();
+        setConducteurs(data);
+      }
+    } catch (err) {
+      console.error('Erreur lors du chargement des conducteurs:', err);
+    }
+  };
 
   // Mettre à jour la date à minuit et initialiser currentDateStr
   useEffect(() => {
@@ -170,6 +185,7 @@ const TC360 = () => {
       vehicleType: '',
       permisChecked: false,
       chronometerChecked: false,
+      conducteurId: '',
     });
     onOpen();
   };
@@ -178,9 +194,21 @@ const TC360 = () => {
     try {
       if (!selectedService) return;
 
+      // Valider que le conducteurId est sélectionné
+      if (!pointageForm.conducteurId) {
+        toast({
+          title: 'Erreur',
+          description: 'Veuillez sélectionner un conducteur',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
       const pointageData = {
         serviceId: selectedService.id,
-        conducteurId: selectedService.conducteurId,
+        conducteurId: pointageForm.conducteurId, // Utiliser le conducteur sélectionné du form
         validatedBy: user?.role || 'Régulateur',
         vehicleType: pointageForm.vehicleType,
         permisChecked: pointageForm.permisChecked,
@@ -594,6 +622,36 @@ const TC360 = () => {
                         <Text>{selectedService.ligne?.nom}</Text>
                       </GridItem>
                     </Grid>
+                  </Box>
+
+                  <Divider />
+
+                  {/* Sélection du conducteur */}
+                  <Box>
+                    <Heading size="sm" mb={3}>
+                      <HStack spacing={2}>
+                        <FaUser />
+                        <span>Sélectionner le conducteur</span>
+                      </HStack>
+                    </Heading>
+                    <select
+                      value={pointageForm.conducteurId}
+                      onChange={(e) => setPointageForm({ ...pointageForm, conducteurId: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        borderRadius: '4px',
+                        border: '1px solid #ccc',
+                        fontSize: '14px',
+                      }}
+                    >
+                      <option value="">-- Choisir un conducteur --</option>
+                      {conducteurs.map(c => (
+                        <option key={c.id} value={c.id}>
+                          {c.prenom} {c.nom} ({c.matricule})
+                        </option>
+                      ))}
+                    </select>
                   </Box>
 
                   <Divider />
