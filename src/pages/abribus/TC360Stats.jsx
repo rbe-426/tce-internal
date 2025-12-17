@@ -281,6 +281,56 @@ const TC360Stats = () => {
           </Card>
         </SimpleGrid>
 
+        {/* Services non assurés */}
+        {stats.nonAssuuredStats && (
+          <Card bg="red.50" borderColor="red.200" borderWidth="2px">
+            <CardBody>
+              <VStack align="start" spacing={4}>
+                <HStack>
+                  <Box fontSize="xl" color="red.600">
+                    ⚠️
+                  </Box>
+                  <Heading size="sm">Services Non Assurés</Heading>
+                </HStack>
+                
+                <HStack w="full" justify="space-between" bg="white" p={3} borderRadius="md">
+                  <Text fontWeight="bold">Total non assuré(s):</Text>
+                  <Badge colorScheme={stats.nonAssuuredStats.total > 0 ? 'red' : 'gray'} fontSize="lg">
+                    {stats.nonAssuuredStats.total}
+                  </Badge>
+                </HStack>
+
+                {stats.nonAssuuredStats.total > 0 && (
+                  <SimpleGrid columns={{ base: 2, md: 5 }} spacing={2} w="full">
+                    {Object.entries(stats.nonAssuuredStats.byReason || {}).map(([reason, count]) => (
+                      <Box key={reason} p={3} bg="white" borderRadius="md" borderLeft="3px solid red.400">
+                        <Text fontSize="xs" fontWeight="bold" color="gray.600" mb={1}>
+                          {reason}
+                        </Text>
+                        <Text fontSize="2xl" fontWeight="bold" color="red.600">
+                          {count}
+                        </Text>
+                      </Box>
+                    ))}
+                  </SimpleGrid>
+                )}
+
+                {stats.expiredServices > 0 && (
+                  <Box bg="orange.50" p={3} borderRadius="md" borderLeft="3px solid orange.400" w="full">
+                    <HStack justify="space-between">
+                      <Text fontSize="sm" fontWeight="bold">Pointages expirés (mode manuel):</Text>
+                      <Badge colorScheme="orange">{stats.expiredServices}</Badge>
+                    </HStack>
+                    <Text fontSize="xs" color="gray.600" mt={2}>
+                      Assureur/Régulateur à mettre les motifs manuellement
+                    </Text>
+                  </Box>
+                )}
+              </VStack>
+            </CardBody>
+          </Card>
+        )}
+
         {/* Top conducteurs */}
         {stats.topConductors && stats.topConductors.length > 0 && (
           <Card bg="green.50" borderColor="green.200" borderWidth="2px">
