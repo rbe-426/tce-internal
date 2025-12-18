@@ -105,6 +105,9 @@ const Header = () => {
               <MenuItem as={Link} to="/MonCasier" _hover={{ bg: 'gray.800', color: 'white' }}>
                 Mon Casier
               </MenuItem>
+              <MenuItem as={Link} to="/parametres-site" _hover={{ bg: 'gray.800', color: 'white' }}>
+                ⚙️ Paramètres du site
+              </MenuItem>
               <MenuItem
                 onClick={handleLogout}
                 _hover={{ bg: 'red.700', color: 'white' }}
