@@ -22,7 +22,7 @@ const theme = extendTheme({
     Heading: {
       variants: {
         pageTitle: {
-          fontSize: "3xl",
+          fontSize: "35px",
           fontWeight: 700,
           textAlign: "center",
           marginBottom: 6,
