@@ -170,7 +170,11 @@ const FRAISE = () => {
       const res = await fetch(`${API_URL}/api/fraise/vehicules`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(vehiculeForm),
+        body: JSON.stringify({
+          ...vehiculeForm,
+          annee: vehiculeForm.annee || 0,
+          kilometre: vehiculeForm.kilometre || 0
+        }),
       });
       if (res.ok) {
         const newVehicule = await res.json();
@@ -178,6 +182,9 @@ const FRAISE = () => {
         setVehiculeForm({ dossierId: '', immatriculation: '', marque: '', modele: '', annee: 0, kilometre: 0 });
         onVehiculeClose();
         toast({ title: 'Véhicule ajouté', status: 'success' });
+      } else {
+        const errorData = await res.json();
+        toast({ title: 'Erreur', description: errorData.error || 'Erreur lors de la création', status: 'error' });
       }
     } catch (err) {
       toast({ title: 'Erreur', description: err.message, status: 'error' });
@@ -660,11 +667,11 @@ const FRAISE = () => {
               </FormControl>
               <FormControl>
                 <FormLabel>Année</FormLabel>
-                <Input type="number" value={vehiculeForm.annee} onChange={(e) => setVehiculeForm({ ...vehiculeForm, annee: parseInt(e.target.value) })} />
+                <Input type="number" value={vehiculeForm.annee || ''} onChange={(e) => setVehiculeForm({ ...vehiculeForm, annee: e.target.value ? parseInt(e.target.value) : 0 })} />
               </FormControl>
               <FormControl>
                 <FormLabel>Kilométrage</FormLabel>
-                <Input type="number" value={vehiculeForm.kilometre} onChange={(e) => setVehiculeForm({ ...vehiculeForm, kilometre: parseInt(e.target.value) })} />
+                <Input type="number" value={vehiculeForm.kilometre || ''} onChange={(e) => setVehiculeForm({ ...vehiculeForm, kilometre: e.target.value ? parseInt(e.target.value) : 0 })} />
               </FormControl>
             </VStack>
           </ModalBody>
