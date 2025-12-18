@@ -528,7 +528,8 @@ const PlanningsCalendar = () => {
     if (eligibleVehiclesByLine[ligneId]) {
       return eligibleVehiclesByLine[ligneId];
     }
-    return vehicles;
+    // Par défaut: filtrer les véhicules qui ne sont pas en atelier/CT/indisponibles
+    return vehicles.filter(v => v.statut === 'Disponible');
   };
 
   // Charger les véhicules éligibles pour une ligne (avec cache)
@@ -550,7 +551,8 @@ const PlanningsCalendar = () => {
     } catch (error) {
       console.error('Erreur lors du chargement des véhicules éligibles:', error);
     }
-    return vehicles;
+    // Fallback: retourner seulement les véhicules disponibles
+    return vehicles.filter(v => v.statut === 'Disponible');
   };
 
   const supprimerService = async (serviceId) => {
