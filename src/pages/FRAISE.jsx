@@ -166,6 +166,24 @@ const FRAISE = () => {
   };
 
   const handleAddVehicule = async () => {
+    // Validation
+    if (!vehiculeForm.dossierId) {
+      toast({ title: 'Erreur', description: 'Veuillez sélectionner un dossier', status: 'error' });
+      return;
+    }
+    if (!vehiculeForm.immatriculation) {
+      toast({ title: 'Erreur', description: 'Veuillez entrer une immatriculation', status: 'error' });
+      return;
+    }
+    if (!vehiculeForm.marque) {
+      toast({ title: 'Erreur', description: 'Veuillez entrer une marque', status: 'error' });
+      return;
+    }
+    if (!vehiculeForm.modele) {
+      toast({ title: 'Erreur', description: 'Veuillez entrer un modèle', status: 'error' });
+      return;
+    }
+
     try {
       const res = await fetch(`${API_URL}/api/fraise/vehicules`, {
         method: 'POST',
