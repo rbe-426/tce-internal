@@ -51,6 +51,7 @@ const PlanningsCalendar = () => {
   const [lignes, setLignes] = useState([]);
   const [conducteurs, setConducteurs] = useState([]);
   const [vehicles, setVehicles] = useState([]);
+  const [eligibleVehiclesByLine, setEligibleVehiclesByLine] = useState({}); // Cache des véhicules éligibles par ligne
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [selectedConstraints, setSelectedConstraints] = useState([]);
@@ -504,6 +505,36 @@ const PlanningsCalendar = () => {
     }
   };
 
+  // Récupérer les véhicules éligibles pour une ligne donnée
+  const getEligibleVehicles = (ligne) => {
+    if (eligibleVehiclesByLine[ligne]) {
+      return eligibleVehiclesByLine[ligne];
+    }
+    return vehicles;
+  };
+
+  // Charger les véhicules éligibles pour une ligne (avec cache)
+  const loadEligibleVehiclesForLine = async (ligne) => {
+    if (eligibleVehiclesByLine[ligne]) {
+      return eligibleVehiclesByLine[ligne];
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/api/vehicles/eligible/${ligne}`);
+      if (response.ok) {
+        const data = await response.json();
+        setEligibleVehiclesByLine(prev => ({
+          ...prev,
+          [ligne]: data.vehicles || [],
+        }));
+        return data.vehicles || [];
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des véhicules éligibles:', error);
+    }
+    return vehicles;
+  };
+
   const supprimerService = async (serviceId) => {
     try {
       // Utiliser le nouvel endpoint /api/services-hierarchie
@@ -881,13 +912,17 @@ const PlanningsCalendar = () => {
                           value={service.vehiculeAssigne || ''}
                           onChange={(e) => assignerVehicule(service.id, e.target.value || null)}
                           isDisabled={isDegradedMode}
+                          onFocus={() => loadEligibleVehiclesForLine(service.ligne)}
                         >
-                          {vehicles.map(v => (
+                          {getEligibleVehicles(service.ligne).map(v => (
                             <option key={v.parc} value={v.parc}>
-                              {v.parc} - {v.modele} ({v.statut})
+                              {v.parc} - {v.modele} ({v.statut}) [{v.type}]
                             </option>
                           ))}
                         </Select>
+                        <Text fontSize="xs" color="gray.500" mt={1}>
+                          Ligne {service.ligne}: {getEligibleVehicles(service.ligne).length} véhicule(s) éligible(s)
+                        </Text>
                       </Box>
 
                       {service.vehiculeAssigne && (
