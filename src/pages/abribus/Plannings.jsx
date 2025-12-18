@@ -200,6 +200,7 @@ const PlanningsCalendar = () => {
       setAvailableConstraints(Array.from(constraintsSet).sort());
 
       // Aplatir la structure hiérarchique Ligne → Sens → Services
+      // Stocker seulement les services sans les objets imbriqués pour éviter les erreurs React #31
       // NE PAS filtrer par jour ici - filtrer par la date SÉLECTIONNÉE dans getFilteredServices()
       const flatServices = [];
       for (const ligne of lignesData) {
@@ -210,8 +211,8 @@ const PlanningsCalendar = () => {
               for (const service of sens.services) {
                 flatServices.push({
                   ...service,
-                  ligne,
-                  sens,
+                  ligneId: ligne.id,
+                  sensId: sens.id,
                 });
               }
             }
@@ -219,6 +220,7 @@ const PlanningsCalendar = () => {
         }
       }
       setServices(flatServices);
+      setLignes(lignesData);
     } catch (error) {
       console.error('Erreur:', error);
       toast({
@@ -506,26 +508,40 @@ const PlanningsCalendar = () => {
   };
 
   // Récupérer les véhicules éligibles pour une ligne donnée
-  const getEligibleVehicles = (ligne) => {
-    if (eligibleVehiclesByLine[ligne]) {
-      return eligibleVehiclesByLine[ligne];
+  // Get ligne object from state by ligneId
+  const getLigneById = (ligneId) => {
+    return lignes.find(l => l.id === ligneId);
+  };
+
+  // Get sens object from ligne by sensId
+  const getSensById = (ligneId, sensId) => {
+    const ligne = getLigneById(ligneId);
+    if (ligne && ligne.sens) {
+      return ligne.sens.find(s => s.id === sensId);
+    }
+    return null;
+  };
+
+  const getEligibleVehicles = (ligneId) => {
+    if (eligibleVehiclesByLine[ligneId]) {
+      return eligibleVehiclesByLine[ligneId];
     }
     return vehicles;
   };
 
   // Charger les véhicules éligibles pour une ligne (avec cache)
-  const loadEligibleVehiclesForLine = async (ligne) => {
-    if (eligibleVehiclesByLine[ligne]) {
-      return eligibleVehiclesByLine[ligne];
+  const loadEligibleVehiclesForLine = async (ligneId) => {
+    if (eligibleVehiclesByLine[ligneId]) {
+      return eligibleVehiclesByLine[ligneId];
     }
 
     try {
-      const response = await fetch(`${API_URL}/api/vehicles/eligible/${ligne}`);
+      const response = await fetch(`${API_URL}/api/vehicles/eligible/${ligneId}`);
       if (response.ok) {
         const data = await response.json();
         setEligibleVehiclesByLine(prev => ({
           ...prev,
-          [ligne]: data.vehicles || [],
+          [ligneId]: data.vehicles || [],
         }));
         return data.vehicles || [];
       }
@@ -785,18 +801,21 @@ const PlanningsCalendar = () => {
           <Heading size="md" mb={4}>Services du {formatDateFr(selectedDate)}</Heading>
           {servicesJour.length > 0 ? (
             <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
-              {servicesJour.map(service => (
+              {servicesJour.map(service => {
+                const ligne = getLigneById(service.ligneId);
+                const sens = getSensById(service.ligneId, service.sensId);
+                return (
                 <Card key={`${service.id}-${service.date}`} borderLeft="4px" borderLeftColor="blue.500">
                   <CardBody>
                     <VStack align="start" spacing={3}>
                       <HStack justify="space-between" w="full">
                         <VStack align="start" spacing={0}>
                           <Badge colorScheme="blue" fontSize="md">
-                            Ligne {service.ligne?.numero || '?'}
+                            Ligne {ligne?.numero || '?'}
                           </Badge>
-                          {service.sens && (
+                          {sens && (
                             <Badge colorScheme="green" fontSize="xs" mt={1}>
-                              📍 {service.sens.nom}
+                              📍 {sens.nom}
                             </Badge>
                           )}
                         </VStack>
@@ -822,9 +841,9 @@ const PlanningsCalendar = () => {
                         <Text fontSize="xs" color="gray.600">
                           Durée : {calculerDureeService(service.heureDebut, service.heureFin)}h
                         </Text>
-                        {service.sens?.direction && (
+                        {sens?.direction && (
                           <Text fontSize="xs" color="gray.600" mt={1}>
-                            {service.sens.direction}
+                            {sens.direction}
                           </Text>
                         )}
                       </Box>
@@ -912,16 +931,16 @@ const PlanningsCalendar = () => {
                           value={service.vehiculeAssigne || ''}
                           onChange={(e) => assignerVehicule(service.id, e.target.value || null)}
                           isDisabled={isDegradedMode}
-                          onFocus={() => loadEligibleVehiclesForLine(service.ligne)}
+                          onFocus={() => loadEligibleVehiclesForLine(service.ligneId)}
                         >
-                          {getEligibleVehicles(service.ligne).map(v => (
+                          {getEligibleVehicles(service.ligneId).map(v => (
                             <option key={v.parc} value={v.parc}>
                               {v.parc} - {v.modele} ({v.statut}) [{v.type}]
                             </option>
                           ))}
                         </Select>
                         <Text fontSize="xs" color="gray.500" mt={1}>
-                          Ligne {service.ligne}: {getEligibleVehicles(service.ligne).length} véhicule(s) éligible(s)
+                          Ligne {service.ligneId}: {getEligibleVehicles(service.ligneId).length} véhicule(s) éligible(s)
                         </Text>
                       </Box>
 
@@ -939,7 +958,8 @@ const PlanningsCalendar = () => {
                     </VStack>
                   </CardBody>
                 </Card>
-              ))}
+              );
+              })}
             </SimpleGrid>
           ) : (
             <Card bg="gray.50">
