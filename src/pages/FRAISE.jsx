@@ -64,12 +64,18 @@ const FRAISE = () => {
   const [vehicules, setVehicules] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [stats, setStats] = useState(null);
+  const [interactions, setInteractions] = useState([]);
+  const [budgets, setBudgets] = useState([]);
+  const [documents, setDocuments] = useState([]);
   
   const { isOpen: isClientOpen, onOpen: onClientOpen, onClose: onClientClose } = useDisclosure();
   const { isOpen: isDossierOpen, onOpen: onDossierOpen, onClose: onDossierClose } = useDisclosure();
   const { isOpen: isDemandeOpen, onOpen: onDemandeOpen, onClose: onDemandeClose } = useDisclosure();
   const { isOpen: isVehiculeOpen, onOpen: onVehiculeOpen, onClose: onVehiculeClose } = useDisclosure();
   const { isOpen: isTransactionOpen, onOpen: onTransactionOpen, onClose: onTransactionClose } = useDisclosure();
+  const { isOpen: isInteractionOpen, onOpen: onInteractionOpen, onClose: onInteractionClose } = useDisclosure();
+  const { isOpen: isBudgetOpen, onOpen: onBudgetOpen, onClose: onBudgetClose } = useDisclosure();
+  const { isOpen: isDocumentOpen, onOpen: onDocumentOpen, onClose: onDocumentClose } = useDisclosure();
   
   const toast = useToast();
 
@@ -78,6 +84,9 @@ const FRAISE = () => {
   const [demandeForm, setDemandeForm] = useState({ dossierId: '', titre: '', type: 'Devis', montant: 0 });
   const [vehiculeForm, setVehiculeForm] = useState({ dossierId: '', immatriculation: '', marque: '', modele: '', annee: 0, kilometre: 0, carburant: 'Diesel', boite: 'Automatique', couleur: '', etat: 'Bon' });
   const [transactionForm, setTransactionForm] = useState({ dossierId: '', clientId: '', type: 'Paiement', montant: 0, methode: 'Virement' });
+  const [interactionForm, setInteractionForm] = useState({ clientId: '', type: 'Appel', titre: '', description: '', resultat: 'Positif' });
+  const [budgetForm, setBudgetForm] = useState({ dossierId: '', titre: '', montantHT: 0, montantTVA: 0, montantTTC: 0, statut: 'Brouillon' });
+  const [documentForm, setDocumentForm] = useState({ dossierId: '', titre: '', typeDocument: 'Autre', urlDocument: '' });
 
   useEffect(() => {
     fetchAllData();
@@ -86,13 +95,16 @@ const FRAISE = () => {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const [clientRes, dossierRes, demandeRes, vehiculeRes, transactionRes, statsRes] = await Promise.all([
+      const [clientRes, dossierRes, demandeRes, vehiculeRes, transactionRes, statsRes, interactionRes, budgetRes, documentRes] = await Promise.all([
         fetch(`${API_URL}/api/fraise/clients`),
         fetch(`${API_URL}/api/fraise/dossiers`),
         fetch(`${API_URL}/api/fraise/demandes`),
         fetch(`${API_URL}/api/fraise/vehicules`),
         fetch(`${API_URL}/api/fraise/transactions`),
         fetch(`${API_URL}/api/fraise/stats`),
+        fetch(`${API_URL}/api/fraise/interactions`),
+        fetch(`${API_URL}/api/fraise/budgets`),
+        fetch(`${API_URL}/api/fraise/documents`),
       ]);
 
       if (clientRes.ok) setClients(await clientRes.json());
@@ -101,6 +113,9 @@ const FRAISE = () => {
       if (vehiculeRes.ok) setVehicules(await vehiculeRes.json());
       if (transactionRes.ok) setTransactions(await transactionRes.json());
       if (statsRes.ok) setStats(await statsRes.json());
+      if (interactionRes.ok) setInteractions(await interactionRes.json());
+      if (budgetRes.ok) setBudgets(await budgetRes.json());
+      if (documentRes.ok) setDocuments(await documentRes.json());
     } catch (err) {
       toast({ title: 'Erreur', description: err.message, status: 'error' });
     } finally {
@@ -234,6 +249,63 @@ const FRAISE = () => {
     }
   };
 
+  const handleAddInteraction = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/fraise/interactions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(interactionForm),
+      });
+      if (res.ok) {
+        const newInteraction = await res.json();
+        setInteractions([...interactions, newInteraction]);
+        setInteractionForm({ clientId: '', type: 'Appel', titre: '', description: '', resultat: 'Positif' });
+        onInteractionClose();
+        toast({ title: 'Interaction ajoutée', status: 'success' });
+      }
+    } catch (err) {
+      toast({ title: 'Erreur', description: err.message, status: 'error' });
+    }
+  };
+
+  const handleAddBudget = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/fraise/budgets`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(budgetForm),
+      });
+      if (res.ok) {
+        const newBudget = await res.json();
+        setBudgets([...budgets, newBudget]);
+        setBudgetForm({ dossierId: '', titre: '', montantHT: 0, montantTVA: 0, montantTTC: 0, statut: 'Brouillon' });
+        onBudgetClose();
+        toast({ title: 'Budget créé', status: 'success' });
+      }
+    } catch (err) {
+      toast({ title: 'Erreur', description: err.message, status: 'error' });
+    }
+  };
+
+  const handleAddDocument = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/fraise/documents`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(documentForm),
+      });
+      if (res.ok) {
+        const newDocument = await res.json();
+        setDocuments([...documents, newDocument]);
+        setDocumentForm({ dossierId: '', titre: '', typeDocument: 'Autre', urlDocument: '' });
+        onDocumentClose();
+        toast({ title: 'Document ajouté', status: 'success' });
+      }
+    } catch (err) {
+      toast({ title: 'Erreur', description: err.message, status: 'error' });
+    }
+  };
+
   if (loading) {
     return (
       <Container maxW="container.xl" py={8}>
@@ -319,6 +391,9 @@ const FRAISE = () => {
                 <Tab>Demandes</Tab>
                 <Tab>Véhicules</Tab>
                 <Tab>Finances</Tab>
+                <Tab>Interactions</Tab>
+                <Tab>Budgets</Tab>
+                <Tab>Documents</Tab>
               </TabList>
 
               <TabPanels>
@@ -525,6 +600,104 @@ const FRAISE = () => {
                                 {trans.statut}
                               </Badge>
                             </Td>
+                          </Tr>
+                        ))}
+                      </Tbody>
+                    </Table>
+                  </VStack>
+                </TabPanel>
+
+                {/* Interactions Tab */}
+                <TabPanel>
+                  <VStack spacing={4} align="stretch">
+                    <HStack justify="space-between">
+                      <Heading size="md">Interactions Clients</Heading>
+                      <Button leftIcon={<AddIcon />} colorScheme="green" onClick={onInteractionOpen}>
+                        Ajouter Interaction
+                      </Button>
+                    </HStack>
+                    <Table variant="simple" size="sm">
+                      <Thead>
+                        <Tr>
+                          <Th>Client</Th>
+                          <Th>Type</Th>
+                          <Th>Titre</Th>
+                          <Th>Résultat</Th>
+                          <Th>Date</Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>
+                        {interactions.map((i) => (
+                          <Tr key={i.id}>
+                            <Td>{i.client?.prenom} {i.client?.nom}</Td>
+                            <Td><Badge>{i.type}</Badge></Td>
+                            <Td>{i.titre}</Td>
+                            <Td><Badge colorScheme={i.resultat === 'Positif' ? 'green' : 'orange'}>{i.resultat}</Badge></Td>
+                            <Td>{new Date(i.dateInteraction).toLocaleDateString('fr-FR')}</Td>
+                          </Tr>
+                        ))}
+                      </Tbody>
+                    </Table>
+                  </VStack>
+                </TabPanel>
+
+                {/* Budgets Tab */}
+                <TabPanel>
+                  <VStack spacing={4} align="stretch">
+                    <HStack justify="space-between">
+                      <Heading size="md">Budgets & Devis</Heading>
+                      <Button leftIcon={<AddIcon />} colorScheme="purple" onClick={onBudgetOpen}>
+                        Créer Budget
+                      </Button>
+                    </HStack>
+                    <Table variant="simple" size="sm">
+                      <Thead>
+                        <Tr>
+                          <Th>Référence</Th>
+                          <Th>Titre</Th>
+                          <Th>Montant TTC</Th>
+                          <Th>Statut</Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>
+                        {budgets.map((b) => (
+                          <Tr key={b.id}>
+                            <Td fontWeight="bold">{b.reference}</Td>
+                            <Td>{b.titre}</Td>
+                            <Td>{b.montantTTC?.toFixed(2)} €</Td>
+                            <Td><Badge colorScheme={b.statut === 'Accepté' ? 'green' : 'gray'}>{b.statut}</Badge></Td>
+                          </Tr>
+                        ))}
+                      </Tbody>
+                    </Table>
+                  </VStack>
+                </TabPanel>
+
+                {/* Documents Tab */}
+                <TabPanel>
+                  <VStack spacing={4} align="stretch">
+                    <HStack justify="space-between">
+                      <Heading size="md">Documents</Heading>
+                      <Button leftIcon={<AddIcon />} colorScheme="blue" onClick={onDocumentOpen}>
+                        Ajouter Document
+                      </Button>
+                    </HStack>
+                    <Table variant="simple" size="sm">
+                      <Thead>
+                        <Tr>
+                          <Th>Titre</Th>
+                          <Th>Type</Th>
+                          <Th>Dossier/Client</Th>
+                          <Th>Date</Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>
+                        {documents.map((d) => (
+                          <Tr key={d.id}>
+                            <Td>{d.titre}</Td>
+                            <Td><Badge size="sm">{d.typeDocument}</Badge></Td>
+                            <Td>{d.dossier?.numero || d.client?.email}</Td>
+                            <Td>{new Date(d.createdAt).toLocaleDateString('fr-FR')}</Td>
                           </Tr>
                         ))}
                       </Tbody>
@@ -787,6 +960,126 @@ const FRAISE = () => {
           <ModalFooter>
             <Button variant="ghost" mr={3} onClick={onTransactionClose}>Annuler</Button>
             <Button colorScheme="blue" onClick={handleAddTransaction}>Enregistrer</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Interaction Modal */}
+      <Modal isOpen={isInteractionOpen} onClose={onInteractionClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Enregistrer une Interaction</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack spacing={4}>
+              <FormControl>
+                <FormLabel>Client</FormLabel>
+                <Select value={interactionForm.clientId} onChange={(e) => setInteractionForm({ ...interactionForm, clientId: e.target.value })}>
+                  <option value="">Sélectionner un client</option>
+                  {clients.map((c) => (
+                    <option key={c.id} value={c.id}>{c.prenom} {c.nom}</option>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl>
+                <FormLabel>Type</FormLabel>
+                <Select value={interactionForm.type} onChange={(e) => setInteractionForm({ ...interactionForm, type: e.target.value })}>
+                  <option value="Appel">Appel</option>
+                  <option value="Email">Email</option>
+                  <option value="Visite">Visite</option>
+                  <option value="Réunion">Réunion</option>
+                </Select>
+              </FormControl>
+              <FormControl>
+                <FormLabel>Titre</FormLabel>
+                <Input value={interactionForm.titre} onChange={(e) => setInteractionForm({ ...interactionForm, titre: e.target.value })} />
+              </FormControl>
+              <FormControl>
+                <FormLabel>Résultat</FormLabel>
+                <Select value={interactionForm.resultat} onChange={(e) => setInteractionForm({ ...interactionForm, resultat: e.target.value })}>
+                  <option value="Positif">Positif</option>
+                  <option value="Négatif">Négatif</option>
+                  <option value="Neutre">Neutre</option>
+                </Select>
+              </FormControl>
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={onInteractionClose}>Annuler</Button>
+            <Button colorScheme="green" onClick={handleAddInteraction}>Ajouter</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Budget Modal */}
+      <Modal isOpen={isBudgetOpen} onClose={onBudgetClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Créer un Budget</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack spacing={4}>
+              <FormControl>
+                <FormLabel>Dossier</FormLabel>
+                <Select value={budgetForm.dossierId} onChange={(e) => setBudgetForm({ ...budgetForm, dossierId: e.target.value })}>
+                  <option value="">Sélectionner un dossier</option>
+                  {dossiers.map((d) => (
+                    <option key={d.id} value={d.id}>{d.numero}</option>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl>
+                <FormLabel>Titre</FormLabel>
+                <Input value={budgetForm.titre} onChange={(e) => setBudgetForm({ ...budgetForm, titre: e.target.value })} />
+              </FormControl>
+              <FormControl>
+                <FormLabel>Montant HT</FormLabel>
+                <Input type="number" value={budgetForm.montantHT || ''} onChange={(e) => setBudgetForm({ ...budgetForm, montantHT: parseFloat(e.target.value) || 0 })} />
+              </FormControl>
+              <FormControl>
+                <FormLabel>Montant TTC</FormLabel>
+                <Input type="number" value={budgetForm.montantTTC || ''} onChange={(e) => setBudgetForm({ ...budgetForm, montantTTC: parseFloat(e.target.value) || 0 })} />
+              </FormControl>
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={onBudgetClose}>Annuler</Button>
+            <Button colorScheme="purple" onClick={handleAddBudget}>Créer</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Document Modal */}
+      <Modal isOpen={isDocumentOpen} onClose={onDocumentClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Ajouter un Document</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack spacing={4}>
+              <FormControl>
+                <FormLabel>Titre</FormLabel>
+                <Input value={documentForm.titre} onChange={(e) => setDocumentForm({ ...documentForm, titre: e.target.value })} />
+              </FormControl>
+              <FormControl>
+                <FormLabel>Type</FormLabel>
+                <Select value={documentForm.typeDocument} onChange={(e) => setDocumentForm({ ...documentForm, typeDocument: e.target.value })}>
+                  <option value="Facture">Facture</option>
+                  <option value="Devis">Devis</option>
+                  <option value="Contrat">Contrat</option>
+                  <option value="Photo">Photo</option>
+                  <option value="Autre">Autre</option>
+                </Select>
+              </FormControl>
+              <FormControl>
+                <FormLabel>URL Document</FormLabel>
+                <Input value={documentForm.urlDocument} onChange={(e) => setDocumentForm({ ...documentForm, urlDocument: e.target.value })} placeholder="https://..." />
+              </FormControl>
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={onDocumentClose}>Annuler</Button>
+            <Button colorScheme="blue" onClick={handleAddDocument}>Ajouter</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
