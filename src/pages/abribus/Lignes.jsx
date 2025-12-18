@@ -57,10 +57,12 @@ const Lignes = () => {
         setLignes(data);
       } catch (error) {
         console.error('Erreur:', error);
+        // Fallback sur les données locales
+        setLignes(lignesBase || []);
         toast({
-          title: 'Erreur',
-          description: 'Impossible de charger les lignes',
-          status: 'error',
+          title: 'Info',
+          description: 'Affichage des données locales',
+          status: 'info',
           duration: 3000,
           isClosable: true,
         });
