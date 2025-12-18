@@ -33,6 +33,7 @@ import {
 } from '@chakra-ui/react';
 import { AddIcon, DeleteIcon, EditIcon } from '@chakra-ui/icons';
 import { API_URL } from '../../config';
+import { lignesBase } from '../../data/lignesBase.js';
 
 const typesAutobus = ['TCP - Autocars BC/NOC/EXPRESS', 'TCP - Autobus Standard', 'TCP - Autobus articulé', 'TCP - Autobus Standard BHNS', 'TCP - Autobus articulé BHNS', 'TCP - Midibus', 'TCP - Midibus L (Heuliez)', 'TCP - Minibus'];
 
