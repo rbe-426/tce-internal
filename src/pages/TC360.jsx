@@ -200,8 +200,8 @@ const TC360 = () => {
   // Déterminer le statut et la couleur d'un service
   const getServiceStatus = (service) => {
     // Si le service est déjà marqué comme non-assuré
-    if (service?.statut === 'Non-Assuré') {
-      return { status: 'non-assured', label: '⚠️ Non-Assuré', color: 'orange', canPointage: false };
+    if (service?.statut === 'Non assuré') {
+      return { status: 'non-assured', label: '⚠️ Non assuré', color: 'orange', canPointage: false };
     }
 
     const heureDebut = typeof service === 'string' ? service : service?.heureDebut;
@@ -621,9 +621,9 @@ const TC360 = () => {
                                             colorScheme="orange" 
                                             size="sm"
                                             variant="ghost"
-                                            isDisabled={service.statut === 'Non-Assuré'}
+                                            isDisabled={service.statut === 'Non assuré'}
                                             onClick={() => {
-                                              if (service.statut !== 'Non-Assuré') {
+                                              if (service.statut !== 'Non assuré') {
                                                 setSelectedService(service);
                                                 onNonAssuredOpen();
                                               }
