@@ -66,6 +66,7 @@ const MOTIFS = [
 
 const TC360Stats = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isDetailOpen, onOpen: onDetailOpen, onClose: onDetailClose } = useDisclosure();
   const toast = useToast();
   
   const [stats, setStats] = useState(null);
@@ -80,6 +81,9 @@ const TC360Stats = () => {
   const [selectedServices, setSelectedServices] = useState({});
   const [motifs, setMotifs] = useState({});
   const [savingServices, setSavingServices] = useState({});
+  
+  // État pour la modale de détail des services non assurés
+  const [unassuredDetail, setUnassuredDetail] = useState([]);
 
   useEffect(() => {
     fetchStats();
@@ -136,6 +140,25 @@ const TC360Stats = () => {
       setMotifs({});
     } catch (err) {
       console.error('[TC360Stats] Error fetching unassured:', err);
+      toast({ title: 'Erreur', description: err.message, status: 'error' });
+    }
+  };
+
+  const fetchUnassuredDetail = async () => {
+    try {
+      const url = `${API}/api/pointages/unassured/detail?date=${selectedDate}`;
+      console.log('[TC360Stats] Fetching unassured detail from:', url);
+      
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`Erreur ${response.status}: Récupération du détail`);
+      
+      const data = await response.json();
+      console.log('[TC360Stats] Unassured detail:', data);
+      
+      setUnassuredDetail(data.services || []);
+      onDetailOpen();
+    } catch (err) {
+      console.error('[TC360Stats] Error fetching detail:', err);
       toast({ title: 'Erreur', description: err.message, status: 'error' });
     }
   };
@@ -417,23 +440,39 @@ const TC360Stats = () => {
                     </Box>
                     <Heading size="sm">Services Non Assurés</Heading>
                   </HStack>
-                  <Button 
-                    size="sm" 
-                    colorScheme="red"
-                    onClick={() => {
-                      fetchUnassuredServices();
-                      onOpen();
-                    }}
-                  >
-                    Assigner Motifs
-                  </Button>
+                  <HStack spacing={2}>
+                    <Button 
+                      size="sm" 
+                      colorScheme="purple"
+                      onClick={fetchUnassuredDetail}
+                    >
+                      📋 Détail
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      colorScheme="red"
+                      onClick={() => {
+                        fetchUnassuredServices();
+                        onOpen();
+                      }}
+                    >
+                      Assigner Motifs
+                    </Button>
+                  </HStack>
                 </HStack>
                 
                 <HStack w="full" justify="space-between" bg="white" p={3} borderRadius="md">
                   <Text fontWeight="bold">Total non assuré(s):</Text>
-                  <Badge colorScheme={stats.nonAssuuredStats.total > 0 ? 'red' : 'gray'} fontSize="lg">
-                    {stats.nonAssuuredStats.total}
-                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={fetchUnassuredDetail}
+                    _hover={{ bg: 'red.100' }}
+                  >
+                    <Badge colorScheme={stats.nonAssuuredStats.total > 0 ? 'red' : 'gray'} fontSize="lg" cursor="pointer">
+                      {stats.nonAssuuredStats.total}
+                    </Badge>
+                  </Button>
                 </HStack>
 
                 {stats.nonAssuuredStats.total > 0 && (
@@ -803,6 +842,81 @@ const TC360Stats = () => {
             </ModalBody>
             <ModalFooter>
               <Button variant="ghost" onClick={onClose}>
+                Fermer
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        {/* Modal - Détail des services non assurés */}
+        <Modal isOpen={isDetailOpen} onClose={onDetailClose} size="2xl" scrollBehavior="inside">
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>
+              <HStack>
+                <Box>📋</Box>
+                <span>Détail des services non assurés - {selectedDate}</span>
+              </HStack>
+            </ModalHeader>
+            <ModalCloseButton />
+            <ModalBody pb={6}>
+              {unassuredDetail.length > 0 ? (
+                <VStack spacing={3} align="stretch">
+                  {unassuredDetail.map((service, idx) => (
+                    <Box
+                      key={idx}
+                      p={3}
+                      borderRadius="md"
+                      bg="red.50"
+                      borderLeft="4px solid"
+                      borderLeftColor="red.400"
+                    >
+                      <Grid templateColumns="repeat(2, 1fr)" gap={3} fontSize="sm">
+                        <Box>
+                          <Text fontSize="xs" fontWeight="bold" color="gray.600">Ligne</Text>
+                          <Text fontWeight="bold" color="blue.600">Ligne {service.ligne}</Text>
+                        </Box>
+                        <Box>
+                          <Text fontSize="xs" fontWeight="bold" color="gray.600">Heure</Text>
+                          <Text fontWeight="bold">{service.heure}</Text>
+                        </Box>
+                        <Box>
+                          <Text fontSize="xs" fontWeight="bold" color="gray.600">Direction</Text>
+                          <Text>{service.direction || 'Non spécifiée'}</Text>
+                        </Box>
+                        <Box>
+                          <Text fontSize="xs" fontWeight="bold" color="gray.600">Conducteur</Text>
+                          <Text>{service.conducteur}</Text>
+                        </Box>
+                        <Box colSpan={2}>
+                          <Text fontSize="xs" fontWeight="bold" color="gray.600">Motif</Text>
+                          <Badge 
+                            colorScheme={service.motif === 'Non spécifié' ? 'gray' : 'orange'} 
+                            fontSize="sm"
+                          >
+                            {service.motif}
+                          </Badge>
+                        </Box>
+                        {service.details && (
+                          <Box colSpan={2}>
+                            <Text fontSize="xs" fontWeight="bold" color="gray.600">Détails</Text>
+                            <Text fontSize="xs" bg="white" p={2} borderRadius="md">
+                              {service.details}
+                            </Text>
+                          </Box>
+                        )}
+                      </Grid>
+                    </Box>
+                  ))}
+                </VStack>
+              ) : (
+                <Box textAlign="center" py={6} color="gray.500">
+                  <Text>Aucun service non assuré pour cette date</Text>
+                </Box>
+              )}
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="ghost" onClick={onDetailClose}>
                 Fermer
               </Button>
             </ModalFooter>
