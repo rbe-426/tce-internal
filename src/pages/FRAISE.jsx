@@ -139,7 +139,13 @@ const FRAISE = () => {
         setDossiers([...dossiers, newDossier]);
         setDossierForm({ clientId: '', titre: '', type: 'ACHAT_IMPORT', montantTotal: 0 });
         onDossierClose();
+        // Actualiser les stats aussi
+        const statsRes = await fetch(`${API_URL}/api/fraise/stats`);
+        if (statsRes.ok) setStats(await statsRes.json());
         toast({ title: 'Dossier créé', status: 'success' });
+      } else {
+        const errorData = await res.json();
+        toast({ title: 'Erreur', description: errorData.error || 'Erreur lors de la création', status: 'error' });
       }
     } catch (err) {
       toast({ title: 'Erreur', description: err.message, status: 'error' });
