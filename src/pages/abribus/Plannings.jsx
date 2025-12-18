@@ -312,18 +312,20 @@ const PlanningsCalendar = () => {
       if (serviceDate !== selectedDate) return false;
 
       // 2b. FILTRE PAR JOUR DE FONCTIONNEMENT: Le sens doit être configuré pour ce jour
-      if (s.sens && s.sens.jourFonctionnement && s.sens.jourFonctionnement !== jourSelectionne) {
+      const sens = getSensById(s.ligneId, s.sensId);
+      if (sens && sens.jourFonctionnement && sens.jourFonctionnement !== jourSelectionne) {
         return false;
       }
       
       // 3. DEUXIÈME FILTRE: Vérifier les contraintes (si des filtres sont appliqués)
-      if (!ligneMatchesFilter(s.ligne)) return false;
+      const ligne = getLigneById(s.ligneId);
+      if (!ligneMatchesFilter(ligne)) return false;
       
       // 4. TROISIÈME FILTRE: Vérifier le calendrier d'exploitation de la ligne
       // La ligne ne doit fonctionner QUE si elle est configurée pour ce jour
-      if (s.ligne.calendrierJson) {
+      if (ligne && ligne.calendrierJson) {
         try {
-          const calendrier = JSON.parse(s.ligne.calendrierJson);
+          const calendrier = JSON.parse(ligne.calendrierJson);
           
           // Obtenir le jour de la semaine en heure Paris
           const formatter = new Intl.DateTimeFormat('fr-FR', { 
