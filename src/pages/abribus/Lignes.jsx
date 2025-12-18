@@ -308,7 +308,6 @@ const Lignes = () => {
             Ajouter une ligne
           </Button>
         </HStack>
-        </Box>
 
         {/* Recherche */}
         <Input
