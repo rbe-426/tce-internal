@@ -40,7 +40,8 @@ import {
   StatNumber,
   Text,
 } from '@chakra-ui/react';
-import { AddIcon, DeleteIcon, EditIcon, DownloadIcon, UploadIcon } from '@chakra-ui/icons';
+import { AddIcon, DeleteIcon, EditIcon } from '@chakra-ui/icons';
+import { FiDownload, FiUpload } from 'react-icons/fi';
 import { API_URL } from '../config';
 
 const FRAISE = () => {
@@ -404,10 +405,10 @@ const FRAISE = () => {
                     <HStack justify="space-between">
                       <Heading size="md">Gestion des Véhicules</Heading>
                       <HStack>
-                        <Button leftIcon={<UploadIcon />} colorScheme="green" variant="outline">
+                        <Button leftIcon={<FiUpload />} colorScheme="green" variant="outline">
                           Importer
                         </Button>
-                        <Button leftIcon={<DownloadIcon />} colorScheme="green" variant="outline">
+                        <Button leftIcon={<FiDownload />} colorScheme="green" variant="outline">
                           Exporter
                         </Button>
                         <Button leftIcon={<AddIcon />} colorScheme="blue" onClick={onVehiculeOpen}>
