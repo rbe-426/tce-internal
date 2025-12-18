@@ -77,23 +77,27 @@ const LignesHierarchie = () => {
       if (!response.ok) throw new Error('Erreur lors du chargement');
       const data = await response.json();
       
-      // Déduplication des services (certains retours API peuvent dupliquer les lignes/sens)
+      // Déduplication des services et transformation propre (deep copy)
       let totalServices = 0;
-      data.forEach(ligne => {
+      const processedData = data.map(ligne => {
         if (ligne.sens && Array.isArray(ligne.sens)) {
-          ligne.sens = ligne.sens.map(sens => {
-            if (sens.services && Array.isArray(sens.services)) {
-              const uniqueServices = Array.from(new Map(sens.services.map(s => [s.id, s])).values());
-              totalServices += uniqueServices.length;
-              return { ...sens, services: uniqueServices };
-            }
-            return sens;
-          });
+          return {
+            ...ligne,
+            sens: ligne.sens.map(sens => {
+              if (sens.services && Array.isArray(sens.services)) {
+                const uniqueServices = Array.from(new Map(sens.services.map(s => [s.id, s])).values());
+                totalServices += uniqueServices.length;
+                return { ...sens, services: uniqueServices };
+              }
+              return sens;
+            })
+          };
         }
+        return ligne;
       });
-      console.log(`[FETCH LIGNES] ${data.length} lignes chargées, ${totalServices} services total au BD`);
+      console.log(`[FETCH LIGNES] ${processedData.length} lignes chargées, ${totalServices} services total au BD`);
       
-      setLignes(data);
+      setLignes(processedData);
     } catch (error) {
       console.error('Erreur:', error);
       toast({
