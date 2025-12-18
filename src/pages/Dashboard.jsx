@@ -43,8 +43,7 @@ const Dashboard = () => {
 
   const [stats, setStats] = useState({
     totalServices: 0,
-    servicesPlanned: 0,
-    servicesCompleted: 0,
+    todayPlanned: 0,
     totalConductors: 0,
     totalVehicles: 0,
     todayServices: 0,
@@ -68,8 +67,7 @@ const Dashboard = () => {
 
       setStats({
         totalServices: stats.totalServices,
-        servicesPlanned: stats.servicesPlanned,
-        servicesCompleted: stats.servicesCompleted,
+        todayPlanned: stats.todayPlanned,
         totalConductors: stats.totalConductors,
         totalVehicles: stats.totalVehicles,
         todayServices: stats.todayServices,
@@ -197,7 +195,7 @@ const Dashboard = () => {
             </CardBody>
           </Card>
 
-          {/* Services planifiés */}
+          {/* Services planifiés du jour */}
           <Card bg="white" shadow="sm" borderTop="4px" borderTopColor="blue.500">
             <CardBody>
               <Stat>
@@ -208,10 +206,10 @@ const Dashboard = () => {
                   </HStack>
                 </StatLabel>
                 <StatNumber fontSize="2xl" color="blue.600">
-                  {stats.servicesPlanned}
+                  {stats.todayPlanned}
                 </StatNumber>
                 <StatHelpText>
-                  Total: {stats.totalServices}
+                  Aujourd'hui
                 </StatHelpText>
               </Stat>
             </CardBody>
