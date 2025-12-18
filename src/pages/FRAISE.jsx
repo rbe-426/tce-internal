@@ -76,7 +76,7 @@ const FRAISE = () => {
   const [clientForm, setClientForm] = useState({ nom: '', prenom: '', email: '', telephone: '', typeClient: 'Particulier' });
   const [dossierForm, setDossierForm] = useState({ clientId: '', titre: '', type: 'ACHAT_IMPORT', montantTotal: 0 });
   const [demandeForm, setDemandeForm] = useState({ dossierId: '', titre: '', type: 'Devis', montant: 0 });
-  const [vehiculeForm, setVehiculeForm] = useState({ dossierId: '', immatriculation: '', marque: '', modele: '', annee: 0, kilometre: 0 });
+  const [vehiculeForm, setVehiculeForm] = useState({ dossierId: '', immatriculation: '', marque: '', modele: '', annee: 0, kilometre: 0, carburant: 'Diesel', boite: 'Automatique', couleur: '', etat: 'Bon' });
   const [transactionForm, setTransactionForm] = useState({ dossierId: '', clientId: '', type: 'Paiement', montant: 0, methode: 'Virement' });
 
   useEffect(() => {
@@ -179,7 +179,7 @@ const FRAISE = () => {
       if (res.ok) {
         const newVehicule = await res.json();
         setVehicules([...vehicules, newVehicule]);
-        setVehiculeForm({ dossierId: '', immatriculation: '', marque: '', modele: '', annee: 0, kilometre: 0 });
+        setVehiculeForm({ dossierId: '', immatriculation: '', marque: '', modele: '', annee: 0, kilometre: 0, carburant: 'Diesel', boite: 'Automatique', couleur: '', etat: 'Bon' });
         onVehiculeClose();
         toast({ title: 'Véhicule ajouté', status: 'success' });
       } else {
@@ -672,6 +672,35 @@ const FRAISE = () => {
               <FormControl>
                 <FormLabel>Kilométrage</FormLabel>
                 <Input type="number" value={vehiculeForm.kilometre || ''} onChange={(e) => setVehiculeForm({ ...vehiculeForm, kilometre: e.target.value ? parseInt(e.target.value) : 0 })} />
+              </FormControl>
+              <FormControl>
+                <FormLabel>Carburant</FormLabel>
+                <Select value={vehiculeForm.carburant} onChange={(e) => setVehiculeForm({ ...vehiculeForm, carburant: e.target.value })}>
+                  <option value="Essence">Essence</option>
+                  <option value="Diesel">Diesel</option>
+                  <option value="Hybride">Hybride</option>
+                  <option value="Électrique">Électrique</option>
+                </Select>
+              </FormControl>
+              <FormControl>
+                <FormLabel>Boîte de vitesses</FormLabel>
+                <Select value={vehiculeForm.boite} onChange={(e) => setVehiculeForm({ ...vehiculeForm, boite: e.target.value })}>
+                  <option value="Manuelle">Manuelle</option>
+                  <option value="Automatique">Automatique</option>
+                </Select>
+              </FormControl>
+              <FormControl>
+                <FormLabel>Couleur</FormLabel>
+                <Input value={vehiculeForm.couleur} onChange={(e) => setVehiculeForm({ ...vehiculeForm, couleur: e.target.value })} placeholder="Ex: Blanc, Noir..." />
+              </FormControl>
+              <FormControl>
+                <FormLabel>État</FormLabel>
+                <Select value={vehiculeForm.etat} onChange={(e) => setVehiculeForm({ ...vehiculeForm, etat: e.target.value })}>
+                  <option value="Excellent">Excellent</option>
+                  <option value="Bon">Bon</option>
+                  <option value="Passable">Passable</option>
+                  <option value="Mauvais">Mauvais</option>
+                </Select>
               </FormControl>
             </VStack>
           </ModalBody>
