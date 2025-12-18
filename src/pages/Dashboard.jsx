@@ -63,18 +63,25 @@ const Dashboard = () => {
 
       // Récupérer la date d'aujourd'hui
       const todayRes = await fetch(`${API_URL}/api/today`);
+      if (!todayRes.ok) throw new Error(`Erreur /api/today: ${todayRes.status}`);
       const { today } = await todayRes.json();
 
       // Récupérer les services
       const servicesRes = await fetch(`${API_URL}/api/services`);
+      if (!servicesRes.ok) {
+        console.warn(`Erreur /api/services: ${servicesRes.status}`);
+        throw new Error(`Erreur /api/services: ${servicesRes.status}`);
+      }
       const services = await servicesRes.json();
 
       // Récupérer les conducteurs
       const conductorsRes = await fetch(`${API_URL}/api/conducteurs`);
+      if (!conductorsRes.ok) throw new Error(`Erreur /api/conducteurs: ${conductorsRes.status}`);
       const conductors = await conductorsRes.json();
 
       // Récupérer les véhicules
       const vehiclesRes = await fetch(`${API_URL}/api/vehicles`);
+      if (!vehiclesRes.ok) throw new Error(`Erreur /api/vehicles: ${vehiclesRes.status}`);
       const vehicles = await vehiclesRes.json();
 
       // Filtrer les services d'aujourd'hui

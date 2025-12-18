@@ -57,19 +57,36 @@ export default function NotificationBanner() {
   const fetchNotifications = async () => {
     setServerStatus('loading');
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 secondes timeout
+
       const response = await fetch(`${API_URL}/api/notifications`, {
-        timeout: 5000, // 5 secondes de timeout
+        signal: controller.signal,
       });
       
-      if (!response.ok) throw new Error('Erreur API');
+      clearTimeout(timeoutId);
       
-      const data = await response.json();
-      setNotifications(data);
-      saveToCache(data);
-      setVisibleNotifications(data.map(n => n.id));
-      setServerStatus('ok');
+      if (!response.ok) {
+        if (response.status === 404) {
+          // Endpoint n'existe pas encore en production
+          console.warn('Endpoint /api/notifications non disponible');
+          setServerStatus('offline');
+        } else {
+          throw new Error(`Erreur ${response.status}`);
+        }
+      } else {
+        const data = await response.json();
+        setNotifications(data);
+        saveToCache(data);
+        setVisibleNotifications(data.map(n => n.id));
+        setServerStatus('ok');
+      }
     } catch (error) {
-      console.warn('Erreur chargement notifications:', error);
+      if (error.name === 'AbortError') {
+        console.warn('Timeout notifications');
+      } else {
+        console.warn('Erreur chargement notifications:', error);
+      }
       setServerStatus('offline');
       
       // Essayer de charger depuis le cache
