@@ -230,10 +230,10 @@ const TC360Stats = () => {
         <Box>
           <HStack justify="space-between" mb={4}>
             <VStack align="start" spacing={1}>
-              <Heading as="h1" size="2xl">
+              <Heading as="h1" variant="pageTitle">
                 TC 360+ - Statistiques Pointages
               </Heading>
-              <Text fontSize="md" color="gray.600">
+              <Text fontSize="md" color="gray.600" textAlign="center">
                 Validation des départs de services
               </Text>
             </VStack>

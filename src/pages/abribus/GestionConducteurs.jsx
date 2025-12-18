@@ -139,10 +139,10 @@ const GestionConducteurs = () => {
       <VStack spacing={8} align="stretch">
         {/* Titre */}
         <Box>
-          <Heading as="h1" size="2xl" mb={2}>
+          <Heading as="h1" variant="pageTitle">
             Gestion des Conducteurs
           </Heading>
-          <Text color="gray.600">
+          <Text color="gray.600" textAlign="center">
             Gérez le personnel de conduite synchronisé avec JURHE
           </Text>
         </Box>

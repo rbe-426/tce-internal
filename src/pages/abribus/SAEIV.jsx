@@ -299,23 +299,25 @@ const SAEIV = () => {
       <VStack spacing={8} align="stretch">
         {/* Titre */}
         <Box>
-          <Heading as="h1" size="2xl" mb={2}>
+          <Heading as="h1" variant="pageTitle">
             Gestion SAEIV
           </Heading>
-          <HStack justify="space-between">
-            <Box>
-              Total : <strong>{saeivs.length}</strong> équipements 
-              ({saeivs.filter(s => s.statut === 'Actif').length} actifs)
-            </Box>
-            <Button
-              leftIcon={<AddIcon />}
-              colorScheme="blue"
-              onClick={onOpen}
-            >
-              Ajouter un équipement
-            </Button>
-          </HStack>
         </Box>
+
+        {/* Statistiques et Actions */}
+        <HStack justify="space-between">
+          <Box>
+            Total : <strong>{saeivs.length}</strong> équipements 
+            ({saeivs.filter(s => s.statut === 'Actif').length} actifs)
+          </Box>
+          <Button
+            leftIcon={<AddIcon />}
+            colorScheme="blue"
+            onClick={onOpen}
+          >
+            Ajouter un équipement
+          </Button>
+        </HStack>
 
         {/* Recherche */}
         <Input

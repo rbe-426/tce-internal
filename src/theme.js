@@ -18,6 +18,18 @@ const theme = extendTheme({
     extrabold: 800,
     black: 900,
   },
+  components: {
+    Heading: {
+      variants: {
+        pageTitle: {
+          fontSize: "3xl",
+          fontWeight: 700,
+          textAlign: "center",
+          marginBottom: 6,
+        },
+      },
+    },
+  },
   styles: {
     global: {
       'html, body, #root': {

@@ -397,11 +397,11 @@ const TC360 = () => {
       <VStack spacing={8} align="stretch">
         {/* Titre */}
         <Box>
-          <Heading as="h1" size="2xl" mb={2}>
+          <Heading as="h1" variant="pageTitle">
             <span style={{ color: 'black' }}>TC 360</span>
             <span style={{ color: '#ff8888', fontStyle: 'italic' }}>+</span>
           </Heading>
-          <Text color="gray.600">
+          <Text color="gray.600" textAlign="center">
             Pointage et validation des départs de services
           </Text>
         </Box>

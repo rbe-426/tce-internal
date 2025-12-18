@@ -883,12 +883,16 @@ const LignesHierarchie = () => {
       <VStack spacing={8} align="stretch">
         {/* Titre */}
         <Box>
-          <Heading as="h1" size="2xl" mb={2}>
+          <Heading as="h1" variant="pageTitle">
             📍 Gestion des Lignes (Hiérarchie)
           </Heading>
-          <Text color="gray.600" mb={4}>
+          <Text color="gray.600" mb={4} textAlign="center">
             Lignes → Sens → Services
           </Text>
+        </Box>
+
+        {/* Statistiques et Actions */}
+        <Box>
           <HStack justify="space-between">
             <Box>Total : <strong>{lignes.length}</strong> lignes</Box>
             <HStack>

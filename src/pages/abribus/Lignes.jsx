@@ -292,19 +292,22 @@ const Lignes = () => {
       <VStack spacing={8} align="stretch">
         {/* Titre */}
         <Box>
-          <Heading as="h1" size="2xl" mb={2}>
+          <Heading as="h1" variant="pageTitle">
             Gestion des Lignes
           </Heading>
-          <HStack justify="space-between">
-            <Box>Total : <strong>{lignes.length}</strong> lignes ({lignes.filter(l => l.statut === 'Actif').length} actives)</Box>
-            <Button
-              leftIcon={<AddIcon />}
-              colorScheme="blue"
-              onClick={onOpen}
-            >
-              Ajouter une ligne
-            </Button>
-          </HStack>
+        </Box>
+
+        {/* Statistiques et Actions */}
+        <HStack justify="space-between">
+          <Box>Total : <strong>{lignes.length}</strong> lignes ({lignes.filter(l => l.statut === 'Actif').length} actives)</Box>
+          <Button
+            leftIcon={<AddIcon />}
+            colorScheme="blue"
+            onClick={onOpen}
+          >
+            Ajouter une ligne
+          </Button>
+        </HStack>
         </Box>
 
         {/* Recherche */}
