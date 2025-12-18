@@ -226,15 +226,16 @@ const LignesHierarchie = () => {
       });
 
       if (!response.ok) throw new Error('Erreur lors de la mise à jour');
-      const updated = await response.json();
-
-      setLignes(lignes.map(l => l.id === editingLigne.id ? updated : l));
+      
+      // Refetch all lignes to ensure consistency
+      await fetchLignes();
+      
       setEditingLigne(null);
       onEditLigneClose();
 
       toast({
         title: 'Succès',
-        description: `Ligne ${updated.numero} modifiée`,
+        description: `Ligne modifiée`,
         status: 'success',
         duration: 3000,
         isClosable: true,
@@ -275,15 +276,16 @@ const LignesHierarchie = () => {
       });
 
       if (!response.ok) throw new Error('Erreur lors de la création');
-      const created = await response.json();
 
-      setLignes([...lignes, { ...created, sens: [] }]);
+      // Refetch all lignes to ensure consistency
+      await fetchLignes();
+
       setNewLigne({ numero: '', nom: '', typesVehicules: [] });
       onAddLigneClose();
 
       toast({
         title: 'Succès',
-        description: `Ligne ${created.numero} créée`,
+        description: 'Ligne créée',
         status: 'success',
         duration: 3000,
         isClosable: true,
