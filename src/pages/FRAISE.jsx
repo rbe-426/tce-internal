@@ -44,6 +44,17 @@ import { AddIcon, DeleteIcon, EditIcon } from '@chakra-ui/icons';
 import { FiDownload, FiUpload } from 'react-icons/fi';
 import { API_URL } from '../config';
 
+// Formatage des types de dossier
+const formatDossierType = (type) => {
+  const mapping = {
+    'ACHAT_IMPORT': 'Achat pour Import',
+    'ACHAT_EXPORT': 'Achat pour Export',
+    'LOCATION_LONGUE_DUREE': 'Location Longue Durée',
+    'LOCATION_PONCTUELLE': 'Location Ponctuelle'
+  };
+  return mapping[type] || type;
+};
+
 const FRAISE = () => {
   const [tab, setTab] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -63,7 +74,7 @@ const FRAISE = () => {
   const toast = useToast();
 
   const [clientForm, setClientForm] = useState({ nom: '', prenom: '', email: '', telephone: '', typeClient: 'Particulier' });
-  const [dossierForm, setDossierForm] = useState({ clientId: '', titre: '', type: 'Achat', montantTotal: 0 });
+  const [dossierForm, setDossierForm] = useState({ clientId: '', titre: '', type: 'ACHAT_IMPORT', montantTotal: 0 });
   const [demandeForm, setDemandeForm] = useState({ dossierId: '', titre: '', type: 'Devis', montant: 0 });
   const [vehiculeForm, setVehiculeForm] = useState({ dossierId: '', immatriculation: '', marque: '', modele: '', annee: 0, kilometre: 0 });
   const [transactionForm, setTransactionForm] = useState({ dossierId: '', clientId: '', type: 'Paiement', montant: 0, methode: 'Virement' });
@@ -126,7 +137,7 @@ const FRAISE = () => {
       if (res.ok) {
         const newDossier = await res.json();
         setDossiers([...dossiers, newDossier]);
-        setDossierForm({ clientId: '', titre: '', type: 'Achat', montantTotal: 0 });
+        setDossierForm({ clientId: '', titre: '', type: 'ACHAT_IMPORT', montantTotal: 0 });
         onDossierClose();
         toast({ title: 'Dossier créé', status: 'success' });
       }
@@ -349,7 +360,7 @@ const FRAISE = () => {
                             <Td fontWeight="bold">{dossier.numero}</Td>
                             <Td>{dossier.client?.prenom} {dossier.client?.nom}</Td>
                             <Td>{dossier.titre}</Td>
-                            <Td><Badge colorScheme="purple">{dossier.type}</Badge></Td>
+                            <Td><Badge colorScheme="purple">{formatDossierType(dossier.type)}</Badge></Td>
                             <Td>
                               <Badge colorScheme={dossier.statut === 'Ouvert' ? 'green' : 'gray'}>
                                 {dossier.statut}
@@ -558,10 +569,10 @@ const FRAISE = () => {
               <FormControl>
                 <FormLabel>Type</FormLabel>
                 <Select value={dossierForm.type} onChange={(e) => setDossierForm({ ...dossierForm, type: e.target.value })}>
-                  <option>Achat</option>
-                  <option>Vente</option>
-                  <option>Import</option>
-                  <option>Export</option>
+                  <option value="ACHAT_IMPORT">Achat pour Import</option>
+                  <option value="ACHAT_EXPORT">Achat pour Export</option>
+                  <option value="LOCATION_LONGUE_DUREE">Location Longue Durée / Exploitation</option>
+                  <option value="LOCATION_PONCTUELLE">Location Ponctuelle</option>
                 </Select>
               </FormControl>
               <FormControl>
