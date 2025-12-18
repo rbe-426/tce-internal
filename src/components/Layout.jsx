@@ -3,6 +3,7 @@ import React from 'react';
 import { Box } from '@chakra-ui/react';
 import { useLocation } from 'react-router-dom';
 import Header from '../components/Header';
+import NotificationBanner from '../components/NotificationBanner';
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -19,6 +20,7 @@ const Layout = ({ children }) => {
   return (
     <Box>
       <Header logo={getLogoByPath()} />
+      <NotificationBanner />
       {children}
     </Box>
   );

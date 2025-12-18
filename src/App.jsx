@@ -11,6 +11,7 @@ import MainLayout from './layouts/MainLayout';
 import MonProfil from "./pages/MonProfil";
 import MaMessagerie from "./pages/MaMessagerie";
 import MonCasier from "./pages/MonCasier";
+import DiffusionInformations from "./pages/DiffusionInformations";
 import JURHE from './pages/jurhe';
 import TC360 from './pages/TC360';
 import AbribusHome from './pages/AbribusHome';
@@ -37,6 +38,7 @@ function App() {
       <Route path="/mon-profil" element={<ProtectedRoute><MainLayout><MonProfil /></MainLayout></ProtectedRoute>} />
       <Route path="/ma-messagerie" element={<ProtectedRoute><MainLayout><MaMessagerie /></MainLayout></ProtectedRoute>} />
       <Route path="/mon-casier" element={<ProtectedRoute><MainLayout><MonCasier /></MainLayout></ProtectedRoute>} />
+      <Route path="/parametres-site" element={<ProtectedRoute><MainLayout><DiffusionInformations /></MainLayout></ProtectedRoute>} />
       <Route path="/abribus/vehicules" element={<ProtectedRoute><MainLayout><Vehicules /></MainLayout></ProtectedRoute>} />
       <Route path="/abribus/vehicule/:parc" element={<ProtectedRoute><VehiculeDetail /></ProtectedRoute>} />
       <Route path="/abribus/atelier" element={<ProtectedRoute><MainLayout><Atelier /></MainLayout></ProtectedRoute>} />
