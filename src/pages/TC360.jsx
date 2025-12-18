@@ -658,6 +658,7 @@ const TC360 = () => {
                                               variant="outline"
                                               onClick={() => {
                                                 setSelectedService(service);
+                                                onClose(); // Fermer la modale de pointage d'abord
                                                 onNonAssuredOpen();
                                               }}
                                             >
