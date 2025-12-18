@@ -31,12 +31,13 @@ const ImportVehiclesCSV = ({ isOpen, onClose, onSuccess }) => {
     if (!file) return;
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
+      // Lire le fichier en tant que texte
+      const fileContent = await file.text();
 
       const response = await fetch(`${API_URL}/api/import/vehicles`, {
         method: 'POST',
-        body: formData,
+        body: fileContent,
+        headers: { 'Content-Type': 'text/plain' }
       });
 
       const result = await response.json();
