@@ -37,6 +37,7 @@ import { API_URL } from '../config';
 const TC360 = () => {
   const { user } = useContext(UserContext);
   const [services, setServices] = useState([]);
+  const [lignes, setLignes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedService, setSelectedService] = useState(null);
@@ -139,6 +140,20 @@ const TC360 = () => {
     return "SEMAINE"; // Lundi à vendredi
   };
 
+  // Get ligne object from state by ligneId
+  const getLigneById = (ligneId) => {
+    return lignes.find(l => l.id === ligneId);
+  };
+
+  // Get sens object from ligne by sensId
+  const getSensById = (ligneId, sensId) => {
+    const ligne = getLigneById(ligneId);
+    if (ligne && ligne.sens) {
+      return ligne.sens.find(s => s.id === sensId);
+    }
+    return null;
+  };
+
   const fetchServices = async () => {
     try {
       setLoading(true);
@@ -156,6 +171,7 @@ const TC360 = () => {
       const jourFonctionnement = getJourFonctionnement();
       
       // Aplatir la structure hiérarchique Ligne → Sens → Services
+      // Stocker seulement les services avec IDs pour éviter les erreurs React #31
       // Filtrer les sens selon le jour de fonctionnement actuel
       const allServices = [];
       for (const ligne of lignesData) {
@@ -169,8 +185,8 @@ const TC360 = () => {
               for (const service of sens.services) {
                 allServices.push({
                   ...service,
-                  ligne,
-                  sens,
+                  ligneId: ligne.id,
+                  sensId: sens.id,
                 });
               }
             }
@@ -188,6 +204,7 @@ const TC360 = () => {
       });
 
       setServices(todayServices.sort((a, b) => a.heureDebut.localeCompare(b.heureDebut)));
+      setLignes(lignesData);
       setError(null);
     } catch (err) {
       console.error('Erreur:', err);
@@ -255,7 +272,8 @@ const TC360 = () => {
       }
 
       // Vérifier si la carte chrono est obligatoire et cocher le checkbox
-      if (selectedService.ligne?.demandeChrono && !pointageForm.chronometerChecked) {
+      const ligne = getLigneById(selectedService.ligneId);
+      if (ligne?.demandeChrono && !pointageForm.chronometerChecked) {
         toast({
           title: 'Erreur',
           description: 'La vérification de la carte chrono est obligatoire pour cette ligne',
@@ -327,9 +345,10 @@ const TC360 = () => {
 
       // Toast avec notification de retard si applicable
       const toastTitle = isLate ? '⚠️ Service validé en retard' : 'Pointage enregistré';
+      const ligneNum = getLigneById(selectedService.ligneId)?.numero || '?';
       const toastDesc = isLate 
-        ? `Service ligne ${selectedService.ligne?.numero} validé avec ${lateMinutes}min de retard`
-        : `Service ligne ${selectedService.ligne?.numero} validé avec succès`;
+        ? `Service ligne ${ligneNum} validé avec ${lateMinutes}min de retard`
+        : `Service ligne ${ligneNum} validé avec succès`;
 
       toast({
         title: toastTitle,
@@ -382,7 +401,7 @@ const TC360 = () => {
 
       toast({
         title: 'Service marqué',
-        description: `Service ligne ${selectedService.ligne?.numero} marqué comme non-assuré`,
+        description: `Service ligne ${getLigneById(selectedService.ligneId)?.numero} marqué comme non-assuré`,
         status: 'success',
         duration: 3000,
         isClosable: true,
@@ -534,7 +553,7 @@ const TC360 = () => {
                       const status = getServiceStatus(s);
                       return showExpired || status.status !== 'expired';
                     }).forEach(service => {
-                      const lineNum = service.ligne?.numero || '?';
+                      const lineNum = getLigneById(service.ligneId)?.numero || '?';
                       if (!groupedByLine[lineNum]) {
                         groupedByLine[lineNum] = [];
                       }
@@ -707,7 +726,7 @@ const TC360 = () => {
                   {(() => {
                     const groupedByLine = {};
                     services.filter(s => s.statut === 'Terminée').forEach(service => {
-                      const lineNum = service.ligne?.numero || '?';
+                      const lineNum = getLigneById(service.ligneId)?.numero || '?';
                       if (!groupedByLine[lineNum]) {
                         groupedByLine[lineNum] = [];
                       }
@@ -790,7 +809,9 @@ const TC360 = () => {
             </ModalHeader>
             <ModalCloseButton />
             <ModalBody>
-              {selectedService && (
+              {selectedService && (() => {
+                const ligne = getLigneById(selectedService.ligneId);
+                return (
                 <VStack spacing={4} align="stretch">
                   {/* Infos du service */}
                   <Box bg="blue.50" p={4} borderRadius="md">
@@ -798,7 +819,7 @@ const TC360 = () => {
                     <Grid templateColumns="repeat(2, 1fr)" gap={3}>
                       <GridItem>
                         <Text fontSize="xs" color="gray.600">Ligne</Text>
-                        <Badge colorScheme="blue">{selectedService.ligne?.numero}</Badge>
+                        <Badge colorScheme="blue">{ligne?.numero}</Badge>
                       </GridItem>
                       <GridItem>
                         <Text fontSize="xs" color="gray.600">Heure départ</Text>
@@ -806,7 +827,7 @@ const TC360 = () => {
                       </GridItem>
                       <GridItem colSpan={2}>
                         <Text fontSize="xs" color="gray.600">Ligne</Text>
-                        <Text>{selectedService.ligne?.nom}</Text>
+                        <Text>{ligne?.nom}</Text>
                       </GridItem>
                     </Grid>
                   </Box>
@@ -876,7 +897,7 @@ const TC360 = () => {
                           <Box fontSize="sm" fontWeight="bold">Type de véhicule assigné</Box>
                         </HStack>
                         <HStack spacing={2}>
-                          {selectedService.ligne && JSON.parse(selectedService.ligne.typesVehicules || '[]').map(type => (
+                          {ligne && JSON.parse(ligne.typesVehicules || '[]').map(type => (
                             <Button
                               key={type}
                               size="sm"
@@ -907,9 +928,9 @@ const TC360 = () => {
                       </Box>
 
                       {/* Chrono/Tachograph */}
-                      {selectedService.ligne && (JSON.parse(selectedService.ligne.typesVehicules || '[]').includes('TCP - Autocars BC/NOC/EXPRESS') || selectedService.ligne?.demandeChrono) && (
+                      {ligne && (JSON.parse(ligne.typesVehicules || '[]').includes('TCP - Autocars BC/NOC/EXPRESS') || ligne?.demandeChrono) && (
                         <Box>
-                          {selectedService.ligne?.demandeChrono && (
+                          {ligne?.demandeChrono && (
                             <Alert status="warning" mb={2} borderRadius="md" fontSize="sm">
                               <AlertIcon />
                               <VStack align="start" spacing={0}>
@@ -921,11 +942,11 @@ const TC360 = () => {
                           <Checkbox
                             isChecked={pointageForm.chronometerChecked}
                             onChange={(e) => setPointageForm({ ...pointageForm, chronometerChecked: e.target.checked })}
-                            isRequired={selectedService.ligne?.demandeChrono}
+                            isRequired={ligne?.demandeChrono}
                           >
                             <HStack spacing={2} ml={2}>
                               <FaClock color="purple" />
-                              <span>Chrono/Tachographe vérifié{selectedService.ligne?.demandeChrono ? ' *' : ''}</span>
+                              <span>Chrono/Tachographe vérifié{ligne?.demandeChrono ? ' *' : ''}</span>
                             </HStack>
                           </Checkbox>
                         </Box>
@@ -941,11 +962,12 @@ const TC360 = () => {
                     <VStack align="start" spacing={1} fontSize="xs">
                       <Text>• Validé par : <strong>{user?.role || 'Régulateur'}</strong></Text>
                       <Text>• Conducteur : <strong>{selectedService.conducteur?.prenom} {selectedService.conducteur?.nom}</strong></Text>
-                      <Text>• Service : <strong>Ligne {selectedService.ligne?.numero} à {selectedService.heureDebut}</strong></Text>
+                      <Text>• Service : <strong>Ligne {ligne?.numero} à {selectedService.heureDebut}</strong></Text>
                     </VStack>
                   </Box>
                 </VStack>
-              )}
+              );
+              })()}
             </ModalBody>
             <ModalFooter>
               <HStack spacing={2}>
@@ -971,13 +993,15 @@ const TC360 = () => {
             </ModalHeader>
             <ModalCloseButton />
             <ModalBody>
-              {selectedService && (
+              {selectedService && (() => {
+                const ligneForModal = getLigneById(selectedService.ligneId);
+                return (
                 <VStack spacing={4} align="stretch">
                   {/* Infos du service */}
                   <Box bg="blue.50" p={4} borderRadius="md">
                     <Text fontSize="sm" color="gray.600" mb={1}>Service</Text>
                     <HStack spacing={2}>
-                      <Badge colorScheme="blue">Ligne {selectedService.ligne?.numero}</Badge>
+                      <Badge colorScheme="blue">Ligne {ligneForModal?.numero}</Badge>
                       <Text fontWeight="bold">{selectedService.heureDebut} - {selectedService.heureFin}</Text>
                     </HStack>
                   </Box>
@@ -1021,7 +1045,8 @@ const TC360 = () => {
                     <Text>Ce service sera marqué comme non-assuré et exclu des statistiques de ponctualité.</Text>
                   </Box>
                 </VStack>
-              )}
+              );
+              })()}
             </ModalBody>
             <ModalFooter>
               <HStack spacing={2}>
