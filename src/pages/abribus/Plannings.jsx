@@ -50,6 +50,7 @@ const PlanningsCalendar = () => {
   const [services, setServices] = useState([]);
   const [lignes, setLignes] = useState([]);
   const [conducteurs, setConducteurs] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [selectedConstraints, setSelectedConstraints] = useState([]);
@@ -156,9 +157,10 @@ const PlanningsCalendar = () => {
 
   const fetchData = async () => {
     try {
-      const [lignesRes, conducteursRes] = await Promise.all([
+      const [lignesRes, conducteursRes, vehiclesRes] = await Promise.all([
         fetch(`${API_URL}/api/lignes`),
         fetch(`${API_URL}/api/conducteurs`),
+        fetch(`${API_URL}/api/vehicles`),
       ]);
 
       if (!lignesRes.ok || !conducteursRes.ok) {
@@ -167,8 +169,10 @@ const PlanningsCalendar = () => {
 
       const lignesData = await lignesRes.json();
       const conducteursData = await conducteursRes.json();
+      const vehiclesData = vehiclesRes.ok ? await vehiclesRes.json() : [];
 
       setConducteurs(conducteursData.filter(c => c.statut === 'Actif'));
+      setVehicles(vehiclesData);
 
       // Initialiser les calendriers manquants
       try {
@@ -449,6 +453,38 @@ const PlanningsCalendar = () => {
         toast({
           title: 'Succès',
           description: 'Conducteur assigné avec succès',
+          status: 'success',
+          duration: 2000,
+          isClosable: true,
+        });
+        // Rafraîchir les lignes pour synchroniser avec le serveur
+        await fetchData();
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de mettre à jour le service',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const assignerVehicule = async (serviceId, vehiculeParc) => {
+    try {
+      // Utiliser le nouvel endpoint /api/services-hierarchie
+      const response = await fetch(`${API_URL}/api/services-hierarchie/${serviceId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vehiculeAssigne: vehiculeParc || null }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Succès',
+          description: 'Autobus assigné avec succès',
           status: 'success',
           duration: 2000,
           isClosable: true,
@@ -832,6 +868,33 @@ const PlanningsCalendar = () => {
                               </VStack>
                             );
                           })()}
+                        </Box>
+                      )}
+
+                      <Divider />
+
+                      <Box w="full">
+                        <Text fontSize="sm" color="gray.600" mb={2}>🚌 Assigner un autobus</Text>
+                        <Select
+                          size="sm"
+                          placeholder="-- Sélectionner un autobus --"
+                          value={service.vehiculeAssigne || ''}
+                          onChange={(e) => assignerVehicule(service.id, e.target.value || null)}
+                          isDisabled={isDegradedMode}
+                        >
+                          {vehicles.map(v => (
+                            <option key={v.parc} value={v.parc}>
+                              {v.parc} - {v.modele} ({v.statut})
+                            </option>
+                          ))}
+                        </Select>
+                      </Box>
+
+                      {service.vehiculeAssigne && (
+                        <Box w="full" bg="purple.50" p={2} borderRadius="md">
+                          <Text fontSize="sm" fontWeight="bold" color="purple.700">
+                            ✓ Autobus: {service.vehiculeAssigne}
+                          </Text>
                         </Box>
                       )}
 

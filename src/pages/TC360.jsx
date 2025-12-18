@@ -266,6 +266,46 @@ const TC360 = () => {
         return;
       }
 
+      // Vérifier si le service a un autocar assigné
+      if (selectedService.vehiculeAssigne) {
+        // Chercher le type de véhicule
+        try {
+          const vehicleRes = await fetch(`${API_URL}/api/vehicles/${selectedService.vehiculeAssigne}`);
+          if (vehicleRes.ok) {
+            const vehicle = await vehicleRes.json();
+            // Déterminer si c'est un autocar
+            const isAutocar = vehicle.type && (
+              vehicle.type.toUpperCase().includes('AUTOCAR') ||
+              vehicle.type.toUpperCase().includes('TCP')
+            );
+            
+            if (isAutocar && !pointageForm.chronometerChecked) {
+              toast({
+                title: 'Erreur',
+                description: 'La vérification de la carte chrono est obligatoire pour un autocar',
+                status: 'error',
+                duration: 3000,
+                isClosable: true,
+              });
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn('Impossible de vérifier le type de véhicule:', e);
+        }
+      }
+
+      // Détecter si le service est pointé en retard
+      const now = new Date();
+      const [hours, minutes] = selectedService.heureDebut.split(':').map(Number);
+      const serviceTime = new Date();
+      serviceTime.setHours(hours, minutes, 0, 0);
+      const timeDiff = serviceTime.getTime() - now.getTime();
+      const minutesDiff = timeDiff / (1000 * 60);
+      
+      const isLate = minutesDiff < 0 && minutesDiff > -60;
+      const lateMinutes = isLate ? Math.abs(Math.round(minutesDiff)) : 0;
+
       const pointageData = {
         serviceId: selectedService.id,
         conducteurId: pointageForm.conducteurId, // Utiliser le conducteur sélectionné du form
@@ -273,6 +313,8 @@ const TC360 = () => {
         vehicleType: pointageForm.vehicleType,
         permisChecked: pointageForm.permisChecked,
         chronometerChecked: pointageForm.chronometerChecked,
+        isLate,
+        lateMinutes,
       };
 
       const response = await fetch(`${API_URL}/api/pointages`, {
@@ -283,10 +325,16 @@ const TC360 = () => {
 
       if (!response.ok) throw new Error('Erreur lors du pointage');
 
+      // Toast avec notification de retard si applicable
+      const toastTitle = isLate ? '⚠️ Service validé en retard' : 'Pointage enregistré';
+      const toastDesc = isLate 
+        ? `Service ligne ${selectedService.ligne?.numero} validé avec ${lateMinutes}min de retard`
+        : `Service ligne ${selectedService.ligne?.numero} validé avec succès`;
+
       toast({
-        title: 'Pointage enregistré',
-        description: `Service ligne ${selectedService.ligne?.numero} validé avec succès`,
-        status: 'success',
+        title: toastTitle,
+        description: toastDesc,
+        status: isLate ? 'warning' : 'success',
         duration: 3000,
         isClosable: true,
       });
