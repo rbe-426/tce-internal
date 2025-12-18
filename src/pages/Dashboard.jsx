@@ -61,48 +61,19 @@ const Dashboard = () => {
     try {
       setLoading(true);
 
-      // Récupérer la date d'aujourd'hui
-      const todayRes = await fetch(`${API_URL}/api/today`);
-      if (!todayRes.ok) throw new Error(`Erreur /api/today: ${todayRes.status}`);
-      const { today } = await todayRes.json();
-
-      // Récupérer les services
-      const servicesRes = await fetch(`${API_URL}/api/services`);
-      if (!servicesRes.ok) {
-        console.warn(`Erreur /api/services: ${servicesRes.status}`);
-        throw new Error(`Erreur /api/services: ${servicesRes.status}`);
-      }
-      const services = await servicesRes.json();
-
-      // Récupérer les conducteurs
-      const conductorsRes = await fetch(`${API_URL}/api/conducteurs`);
-      if (!conductorsRes.ok) throw new Error(`Erreur /api/conducteurs: ${conductorsRes.status}`);
-      const conductors = await conductorsRes.json();
-
-      // Récupérer les véhicules
-      const vehiclesRes = await fetch(`${API_URL}/api/vehicles`);
-      if (!vehiclesRes.ok) throw new Error(`Erreur /api/vehicles: ${vehiclesRes.status}`);
-      const vehicles = await vehiclesRes.json();
-
-      // Filtrer les services d'aujourd'hui
-      const todayServicesData = services.filter(s => {
-        // Parse date string directly to avoid UTC conversion issues
-        const serviceDate = s.date instanceof String || typeof s.date === 'string' 
-          ? s.date.split('T')[0]
-          : new Date(s.date).toISOString().split('T')[0];
-        return serviceDate === today;
-      });
-
-      const todayCompletedCount = todayServicesData.filter(s => s.statut === 'Terminée').length;
+      // Récupérer les stats directement du backend (plus efficace)
+      const statsRes = await fetch(`${API_URL}/api/stats`);
+      if (!statsRes.ok) throw new Error(`Erreur /api/stats: ${statsRes.status}`);
+      const stats = await statsRes.json();
 
       setStats({
-        totalServices: services.length,
-        servicesPlanned: services.filter(s => s.statut === 'Planifiée').length,
-        servicesCompleted: services.filter(s => s.statut === 'Terminée').length,
-        totalConductors: conductors.length,
-        totalVehicles: vehicles.length,
-        todayServices: todayServicesData.length,
-        todayCompleted: todayCompletedCount,
+        totalServices: stats.totalServices,
+        servicesPlanned: stats.servicesPlanned,
+        servicesCompleted: stats.servicesCompleted,
+        totalConductors: stats.totalConductors,
+        totalVehicles: stats.totalVehicles,
+        todayServices: stats.todayServices,
+        todayCompleted: stats.todayCompleted,
       });
     } catch (error) {
       console.error('Erreur récupération stats:', error);
