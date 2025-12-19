@@ -510,10 +510,16 @@ const PlanningsCalendar = () => {
     }
   };
 
-  // Récupérer les véhicules éligibles pour une ligne donnée
-  // Get ligne object from state by ligneId
-  const getLigneById = (ligneId) => {
-    return lignes.find(l => l.id === ligneId);
+  const [selectOpenState, setSelectOpenState] = React.useState({});
+
+  // Handle Select opening - load vehicles before opening dropdown
+  const handleSelectOpen = async (ligneId) => {
+    await loadEligibleVehiclesForLine(ligneId);
+    setSelectOpenState(prev => ({ ...prev, [ligneId]: true }));
+  };
+
+  const handleSelectClose = (ligneId) => {
+    setSelectOpenState(prev => ({ ...prev, [ligneId]: false }));
   };
 
   // Get sens object from ligne by sensId
@@ -935,11 +941,12 @@ const PlanningsCalendar = () => {
                         <Text fontSize="sm" color="gray.600" mb={2}>🚌 Assigner un autobus</Text>
                         <Select
                           size="sm"
-                          placeholder="-- Sélectionner un autobus --"
+                          placeholder={selectOpenState[service.ligneId] ? "Chargement..." : "-- Sélectionner un autobus --"}
                           value={service.vehiculeAssigne || ''}
                           onChange={(e) => assignerVehicule(service.id, e.target.value || null)}
                           isDisabled={isDegradedMode}
-                          onFocus={() => loadEligibleVehiclesForLine(service.ligneId)}
+                          onFocus={() => handleSelectOpen(service.ligneId)}
+                          onBlur={() => handleSelectClose(service.ligneId)}
                         >
                           {getEligibleVehicles(service.ligneId).map(v => (
                             <option key={v.parc} value={v.parc}>
