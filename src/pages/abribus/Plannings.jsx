@@ -522,6 +522,11 @@ const PlanningsCalendar = () => {
     setSelectOpenState(prev => ({ ...prev, [ligneId]: false }));
   };
 
+  // Get ligne by ID from lignes array
+  const getLigneById = (ligneId) => {
+    return lignes.find(l => l.id === ligneId);
+  };
+
   // Get sens object from ligne by sensId
   const getSensById = (ligneId, sensId) => {
     const ligne = getLigneById(ligneId);
