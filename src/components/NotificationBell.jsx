@@ -138,7 +138,16 @@ const NotificationBell = () => {
         </Box>
       </PopoverTrigger>
 
-      <PopoverContent width="80vw" maxWidth="1200px" boxShadow="lg" position="fixed" zIndex="9999">
+      <PopoverContent 
+        width="80vw" 
+        maxWidth="1200px" 
+        boxShadow="lg" 
+        position="fixed"
+        top="50%"
+        left="50%"
+        transform="translate(-50%, -50%)"
+        zIndex="9999"
+      >
         <PopoverHeader fontWeight="bold" fontSize="16px">
           Notifications ({notifications.length})
         </PopoverHeader>
