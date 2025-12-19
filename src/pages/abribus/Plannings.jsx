@@ -526,14 +526,14 @@ const PlanningsCalendar = () => {
   };
 
   const getEligibleVehicles = (ligneId) => {
-    console.log('[getEligibleVehicles] ligneId:', ligneId, 'cached:', !!eligibleVehiclesByLine[ligneId], 'total vehicles:', vehicles.length);
+    // Retourner le cache s'il existe
     if (eligibleVehiclesByLine[ligneId]) {
       return eligibleVehiclesByLine[ligneId];
     }
-    // Par défaut: filtrer les véhicules qui ne sont pas en atelier/CT/indisponibles
-    const available = vehicles.filter(v => v.statut === 'Disponible');
-    console.log('[getEligibleVehicles] Filtered available:', available.length);
-    return available;
+    
+    // Sinon return vide pour que le user recharge/clique à nouveau
+    console.log('[getEligibleVehicles] Cache miss for ligne:', ligneId, 'call loadEligibleVehiclesForLine()');
+    return [];
   };
 
   // Charger les véhicules éligibles pour une ligne (avec cache)
