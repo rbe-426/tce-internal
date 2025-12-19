@@ -33,6 +33,7 @@ const Vehicules = () => {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+  const [vehicleTypes, setVehicleTypes] = useState([]);
   const { isOpen: isImportOpen, onOpen: onImportOpen, onClose: onImportClose } = useDisclosure();
 
   // Formulaire d'ajout (on garde tes champs, même si tous ne partent pas au backend)
@@ -92,15 +93,6 @@ const Vehicules = () => {
   );
 
   // 3) Listes pour tes selects
-  const vehicleTypes = [
-    "TCP - Bus",
-    "TCP - Cars",
-    "ST - Sous Traitance",
-    "DIV - Collection",
-    "BC - Billet Collectif",
-    "SCO - Scolaire",
-  ];
-
   const vehicleStatus = [
     "Disponible",
     "Indisponible",
@@ -110,6 +102,22 @@ const Vehicules = () => {
     "Réformé",
     "A VENIR",
   ];
+
+  // Charger les types de véhicules depuis l'API
+  useEffect(() => {
+    const loadVehicleTypes = async () => {
+      try {
+        const res = await fetch(`${API}/api/vehicle-types`);
+        if (res.ok) {
+          const data = await res.json();
+          setVehicleTypes(data.types || []);
+        }
+      } catch (e) {
+        console.error('Erreur chargement types véhicules:', e.message);
+      }
+    };
+    loadVehicleTypes();
+  }, []);
 
   // 4) Form handlers
   const handleInputChange = (e) => {
