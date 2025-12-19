@@ -172,6 +172,7 @@ const PlanningsCalendar = () => {
       const conducteursData = await conducteursRes.json();
       const vehiclesData = vehiclesRes.ok ? await vehiclesRes.json() : [];
 
+      console.log('[Plannings] Vehicles loaded:', vehiclesData.length, vehiclesData.slice(0, 2));
       setConducteurs(conducteursData.filter(c => c.statut === 'Actif'));
       setVehicles(vehiclesData);
 
@@ -525,11 +526,14 @@ const PlanningsCalendar = () => {
   };
 
   const getEligibleVehicles = (ligneId) => {
+    console.log('[getEligibleVehicles] ligneId:', ligneId, 'cached:', !!eligibleVehiclesByLine[ligneId], 'total vehicles:', vehicles.length);
     if (eligibleVehiclesByLine[ligneId]) {
       return eligibleVehiclesByLine[ligneId];
     }
     // Par défaut: filtrer les véhicules qui ne sont pas en atelier/CT/indisponibles
-    return vehicles.filter(v => v.statut === 'Disponible');
+    const available = vehicles.filter(v => v.statut === 'Disponible');
+    console.log('[getEligibleVehicles] Filtered available:', available.length);
+    return available;
   };
 
   // Charger les véhicules éligibles pour une ligne (avec cache)
