@@ -54,7 +54,10 @@ const Lignes = () => {
         const typesRes = await fetch(`${API_URL}/api/vehicle-types`);
         if (typesRes.ok) {
           const typesData = await typesRes.json();
+          console.log('[Lignes] Types loaded:', typesData.types?.length);
           setTypesAutobus(typesData.types || []);
+        } else {
+          console.warn('[Lignes] Failed to load types:', typesRes.status);
         }
       } catch (error) {
         console.error('Erreur chargement types:', error);
@@ -502,29 +505,35 @@ const Lignes = () => {
                 </FormControl>
                 <FormControl>
                   <FormLabel>Types d'autobus autorisés</FormLabel>
-                  <Stack spacing={2}>
-                    {typesAutobus.map((type) => (
-                      <Checkbox
-                        key={type}
-                        isChecked={editingLigne.typesVehicules.includes(type)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setEditingLigne({
-                              ...editingLigne,
-                              typesVehicules: [...editingLigne.typesVehicules, type],
-                            });
-                          } else {
-                            setEditingLigne({
-                              ...editingLigne,
-                              typesVehicules: editingLigne.typesVehicules.filter(t => t !== type),
-                            });
-                          }
-                        }}
-                      >
-                        {type}
-                      </Checkbox>
-                    ))}
-                  </Stack>
+                  {typesAutobus.length === 0 ? (
+                    <Box color="orange.500" fontSize="sm">
+                      Chargement des types de véhicules... ({typesAutobus.length})
+                    </Box>
+                  ) : (
+                    <Stack spacing={2}>
+                      {typesAutobus.map((type) => (
+                        <Checkbox
+                          key={type}
+                          isChecked={editingLigne.typesVehicules.includes(type)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setEditingLigne({
+                                ...editingLigne,
+                                typesVehicules: [...editingLigne.typesVehicules, type],
+                              });
+                            } else {
+                              setEditingLigne({
+                                ...editingLigne,
+                                typesVehicules: editingLigne.typesVehicules.filter(t => t !== type),
+                              });
+                            }
+                          }}
+                        >
+                          {type}
+                        </Checkbox>
+                      ))}
+                    </Stack>
+                  )}
                 </FormControl>
                 <FormControl>
                   <Checkbox
