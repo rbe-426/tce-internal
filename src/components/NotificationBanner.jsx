@@ -102,7 +102,19 @@ export default function NotificationBanner() {
     fetchNotifications();
     // Rafraîchir toutes les 30 secondes
     const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
+    
+    // Écouter l'événement de création de notification
+    const handleNotificationCreated = () => {
+      console.log('[NotificationBanner] Notification créée détectée, rafraîchissement...');
+      fetchNotifications();
+    };
+    
+    window.addEventListener('notification-created', handleNotificationCreated);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('notification-created', handleNotificationCreated);
+    };
   }, []);
 
   const dismissNotification = (id) => {

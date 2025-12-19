@@ -35,7 +35,7 @@
 
         const hostname = window.location.hostname;
         if (hostname === 'localhost' || hostname === '127.0.0.1') {
-          window.RUNTIME_API_URL = 'http://localhost:3000';
+          window.RUNTIME_API_URL = 'http://localhost:8080';
         } else {
           // Production: valeur par défaut (à remplacer par le backend actif)
           window.RUNTIME_API_URL = 'https://tce-serv-rbe-serveurs.up.railway.app';

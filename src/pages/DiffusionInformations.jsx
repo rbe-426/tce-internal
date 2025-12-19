@@ -137,6 +137,9 @@ export default function DiffusionInformations() {
         isClosable: true,
       });
 
+      // Notifier la bannière de se rafraîchir immédiatement
+      window.dispatchEvent(new Event('notification-created'));
+
       onClose();
       resetForm();
       fetchNotifications();
