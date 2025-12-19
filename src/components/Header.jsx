@@ -14,6 +14,7 @@ import {
 import { UserContext } from '../context/UserContext';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FaHome } from 'react-icons/fa';
+import NotificationBell from './NotificationBell';
 
 import abriBusLogo from '../assets/ABRIBUS.png';
 import logoIntranet from '../assets/wbm_intranet.png';
@@ -80,14 +81,19 @@ const Header = () => {
 
         {/* Menu utilisateur à droite */}
         <Box position="absolute" right="20px" top="50%" transform="translateY(-50%)">
-          <Menu>
-            <MenuButton
-              _hover={{ cursor: 'pointer', color: 'black', bg: 'gray.300' }}
-              color="white"
-              fontWeight="semibold"
-            >
-              Bonjour, {user ? `${user.prenom} ${user.nom.toUpperCase()}` : 'Invité'}
-            </MenuButton>
+          <Flex align="center" gap={2}>
+            {/* Cloche de notifications */}
+            <NotificationBell />
+            
+            {/* Menu utilisateur */}
+            <Menu>
+              <MenuButton
+                _hover={{ cursor: 'pointer', color: 'black', bg: 'gray.300' }}
+                color="white"
+                fontWeight="semibold"
+              >
+                Bonjour, {user ? `${user.prenom} ${user.nom.toUpperCase()}` : 'Invité'}
+              </MenuButton>
             <MenuList
               bg="white"
               color="black"
@@ -117,7 +123,8 @@ const Header = () => {
                 Déconnexion
               </MenuItem>
             </MenuList>
-          </Menu>
+            </Menu>
+          </Flex>
         </Box>
       </Flex>
 

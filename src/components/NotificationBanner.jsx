@@ -76,9 +76,12 @@ export default function NotificationBanner() {
         }
       } else {
         const data = await response.json();
+        console.log('[NotificationBanner] Fetched notifications:', data);
         setNotifications(data);
         saveToCache(data);
-        setVisibleNotifications(data.map(n => n.id));
+        const ids = data.map(n => n.id);
+        console.log('[NotificationBanner] Setting visibleNotifications:', ids);
+        setVisibleNotifications(ids);
         setServerStatus('ok');
       }
     } catch (error) {
@@ -153,6 +156,8 @@ export default function NotificationBanner() {
   // Afficher les notifications
   const hasVisibleNotifications = notifications.length > 0 && 
     notifications.some(n => visibleNotifications.includes(n.id));
+
+  console.log('[NotificationBanner] Render - notifications:', notifications.length, 'visibleNotifications:', visibleNotifications.length, 'hasVisibleNotifications:', hasVisibleNotifications, 'serverStatus:', serverStatus);
 
   if (!hasVisibleNotifications && serverStatus === 'ok') return null;
 
