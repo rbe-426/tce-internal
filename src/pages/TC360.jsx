@@ -28,6 +28,8 @@ import {
   GridItem,
   SimpleGrid,
   Input,
+  FormControl,
+  FormLabel,
 } from '@chakra-ui/react';
 import { FaClock, FaCheckCircle, FaUser, FaBus, FaShieldAlt, FaMapPin } from 'react-icons/fa';
 import { UserContext } from '../context/UserContext';
@@ -834,32 +836,50 @@ const TC360 = () => {
 
                   <Divider />
 
-                  {/* Sélection du conducteur */}
+                  {/* Sélection du conducteur ou Échange de service */}
                   <Box>
                     <Heading size="sm" mb={3}>
                       <HStack spacing={2}>
                         <FaUser />
-                        <span>Sélectionner le conducteur</span>
+                        <span>{selectedService.conducteur ? 'Échange de service' : 'Sélectionner le conducteur'}</span>
                       </HStack>
                     </Heading>
-                    <select
-                      value={pointageForm.conducteurId}
-                      onChange={(e) => setPointageForm({ ...pointageForm, conducteurId: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '8px',
-                        borderRadius: '4px',
-                        border: '1px solid #ccc',
-                        fontSize: '14px',
-                      }}
-                    >
-                      <option value="">-- Choisir un conducteur --</option>
-                      {conducteurs.map(c => (
-                        <option key={c.id} value={c.id}>
-                          {c.prenom} {c.nom} ({c.matricule})
-                        </option>
-                      ))}
-                    </select>
+                    <VStack spacing={3}>
+                      <select
+                        value={pointageForm.conducteurId}
+                        onChange={(e) => setPointageForm({ ...pointageForm, conducteurId: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '8px',
+                          borderRadius: '4px',
+                          border: '1px solid #ccc',
+                          fontSize: '14px',
+                        }}
+                      >
+                        <option value="">-- Choisir un conducteur --</option>
+                        {conducteurs.map(c => (
+                          <option key={c.id} value={c.id}>
+                            {c.prenom} {c.nom} ({c.matricule})
+                          </option>
+                        ))}
+                      </select>
+                      
+                      {/* Motif d'échange si conducteur changé */}
+                      {selectedService.conducteur && pointageForm.conducteurId && pointageForm.conducteurId !== selectedService.conducteur.id && (
+                        <Box w="full" bg="orange.50" p={3} borderRadius="md">
+                          <FormControl>
+                            <FormLabel fontSize="sm" fontWeight="bold">Motif de l'échange</FormLabel>
+                            <Input
+                              type="text"
+                              placeholder="Ex: Échange de dernière minute, absence du conducteur, ..."
+                              value={pointageForm.motifEchange || ''}
+                              onChange={(e) => setPointageForm({ ...pointageForm, motifEchange: e.target.value })}
+                              size="sm"
+                            />
+                          </FormControl>
+                        </Box>
+                      )}
+                    </VStack>
                   </Box>
 
                   <Divider />
