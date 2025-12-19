@@ -35,10 +35,9 @@ import { AddIcon, DeleteIcon, EditIcon } from '@chakra-ui/icons';
 import { API_URL } from '../../config';
 import { lignesBase } from '../../data/lignesBase.js';
 
-const typesAutobus = ['TCP - Autocars BC/NOC/EXPRESS', 'TCP - Autobus Standard', 'TCP - Autobus articulé', 'TCP - Autobus Standard BHNS', 'TCP - Autobus articulé BHNS', 'TCP - Midibus', 'TCP - Midibus L (Heuliez)', 'TCP - Minibus'];
-
 const Lignes = () => {
   const [lignes, setLignes] = useState([]);
+  const [typesAutobus, setTypesAutobus] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [newLigne, setNewLigne] = useState({ numero: '', nom: '', typesVehicules: [], demandeChrono: false });
@@ -46,6 +45,23 @@ const Lignes = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: isEditOpen, onOpen: onEditOpen, onClose: onEditClose } = useDisclosure();
   const toast = useToast();
+
+  // Charger les types de véhicules et les lignes
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Charger les types
+        const typesRes = await fetch(`${API_URL}/api/vehicle-types`);
+        if (typesRes.ok) {
+          const typesData = await typesRes.json();
+          setTypesAutobus(typesData.types || []);
+        }
+      } catch (error) {
+        console.error('Erreur chargement types:', error);
+      }
+    };
+    fetchData();
+  }, []);
 
   // Charger les lignes depuis le serveur
   useEffect(() => {
