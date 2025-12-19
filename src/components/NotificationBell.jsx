@@ -167,7 +167,7 @@ const NotificationBell = () => {
                     <HStack spacing={2} align="start" mb={2}>
                       <Box fontSize="18px">{icon}</Box>
                       <VStack align="start" spacing={0} flex={1}>
-                        <Text fontWeight="bold" fontSize="14px">
+                        <Text fontWeight="bold" fontSize="14px" color="black">
                           {notif.titre}
                         </Text>
                         <Text fontSize="12px" color="gray.600">
