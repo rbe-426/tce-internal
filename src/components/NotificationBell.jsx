@@ -138,48 +138,54 @@ const NotificationBell = () => {
         </Box>
       </PopoverTrigger>
 
-      <PopoverContent width="400px" maxWidth="90vw" boxShadow="lg">
+      <PopoverContent width="80vw" maxWidth="1200px" boxShadow="lg" position="fixed" zIndex="9999">
         <PopoverHeader fontWeight="bold" fontSize="16px">
           Notifications ({notifications.length})
         </PopoverHeader>
         <PopoverCloseButton />
         <Divider />
-        <PopoverBody>
+        <PopoverBody py={6}>
           {notifications.length === 0 ? (
             <Text textAlign="center" py={8} color="gray.500">
               Aucune notification
             </Text>
           ) : (
-            <VStack spacing={3} align="stretch">
-              {notifications.map(notif => {
-                const { icon, color } = getTypeStyles(notif.type);
-                const isSeen = seenIds.includes(notif.id);
-                
-                return (
-                  <Box
-                    key={notif.id}
-                    bg={isSeen ? 'gray.50' : 'blue.50'}
-                    p={3}
-                    borderRadius="md"
-                    borderLeft="4px"
-                    borderColor={color}
-                  >
-                    <HStack spacing={2} align="start" mb={2}>
-                      <Box fontSize="18px">{icon}</Box>
-                      <VStack align="start" spacing={0} flex={1}>
-                        <Text fontWeight="bold" fontSize="14px" color="black">
-                          {notif.titre}
-                        </Text>
-                        <Text fontSize="12px" color="gray.600">
-                          {notif.message}
-                        </Text>
-                      </VStack>
-                    </HStack>
-                  </Box>
-                );
-              })}
+            <Box>
+              {/* Notifications en ligne */}
+              <Box display="flex" flexWrap="wrap" gap={4} mb={6}>
+                {notifications.map(notif => {
+                  const { icon, color } = getTypeStyles(notif.type);
+                  const isSeen = seenIds.includes(notif.id);
+                  
+                  return (
+                    <Box
+                      key={notif.id}
+                      flex="1"
+                      minWidth="280px"
+                      bg={isSeen ? 'gray.50' : 'blue.50'}
+                      p={4}
+                      borderRadius="md"
+                      borderLeft="4px"
+                      borderColor={color}
+                      boxShadow="sm"
+                    >
+                      <HStack spacing={3} align="start" mb={3}>
+                        <Box fontSize="20px">{icon}</Box>
+                        <VStack align="start" spacing={1} flex={1}>
+                          <Text fontWeight="bold" fontSize="15px" color="black">
+                            {notif.titre}
+                          </Text>
+                          <Text fontSize="13px" color="gray.600">
+                            {notif.message}
+                          </Text>
+                        </VStack>
+                      </HStack>
+                    </Box>
+                  );
+                })}
+              </Box>
               
-              <Divider my={2} />
+              <Divider my={4} />
               
               <Button
                 size="sm"
@@ -189,7 +195,7 @@ const NotificationBell = () => {
               >
                 Gérer les notifications
               </Button>
-            </VStack>
+            </Box>
           )}
         </PopoverBody>
       </PopoverContent>
