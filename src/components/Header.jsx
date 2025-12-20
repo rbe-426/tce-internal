@@ -112,7 +112,7 @@ const Header = () => {
                 Mon Casier
               </MenuItem>
               <MenuItem as={Link} to="/parametres-site" _hover={{ bg: 'gray.800', color: 'white' }}>
-                ⚙️ Paramètres du site
+                Paramètres du site
               </MenuItem>
               <MenuItem
                 onClick={handleLogout}

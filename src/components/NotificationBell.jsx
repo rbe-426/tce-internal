@@ -119,8 +119,6 @@ const NotificationBell = () => {
             }
           } : {}}
         />
-        
-        {/* Badge de notification */}
         {notifications.length > 0 && (
           <Badge
             position="absolute"
@@ -136,70 +134,56 @@ const NotificationBell = () => {
         )}
       </Box>
 
-      {/* Modal centré */}
-      <Modal isOpen={isOpen} onClose={onClose} size="2xl" isCentered>
+      {/* Modal centré, notifications en liste verticale */}
+      <Modal isOpen={isOpen} onClose={onClose} size="4xl" isCentered>
         <ModalOverlay backdropFilter="blur(5px)" />
-        <ModalContent maxWidth="80vw" width="100%" maxH="70vh" overflowY="auto">
-          <ModalHeader fontWeight="bold" fontSize="18px">
+        <ModalContent maxWidth="900px" width="90vw" maxH="75vh" overflowY="auto">
+          <ModalHeader fontWeight="bold" fontSize="24px">
             Notifications ({notifications.length})
           </ModalHeader>
           <ModalCloseButton />
           <Divider />
-          <ModalBody py={6}>
+          <ModalBody py={10} px={10}>
             {notifications.length === 0 ? (
-              <Text textAlign="center" py={8} color="gray.500">
+              <Text textAlign="center" py={8} color="gray.500" fontSize="lg">
                 Aucune notification
               </Text>
             ) : (
-              <Box>
-                {/* Notifications en ligne */}
-                <Box display="flex" flexWrap="wrap" gap={4} mb={6}>
-                  {notifications.map(notif => {
-                    const { icon, color } = getTypeStyles(notif.type);
-                    const isSeen = seenIds.includes(notif.id);
-                    
-                    return (
-                      <Box
-                        key={notif.id}
-                        flex="1"
-                        minWidth="280px"
-                        bg={isSeen ? 'gray.50' : 'blue.50'}
-                        p={4}
-                        borderRadius="md"
-                        borderLeft="4px"
-                        borderColor={color}
-                        boxShadow="sm"
-                      >
-                        <HStack spacing={3} align="start" mb={3}>
-                          <Box fontSize="20px">{icon}</Box>
-                          <VStack align="start" spacing={1} flex={1}>
-                            <Text fontWeight="bold" fontSize="15px" color="black">
-                              {notif.titre}
-                            </Text>
-                            <Text fontSize="13px" color="gray.600">
-                              {notif.message}
-                            </Text>
-                          </VStack>
-                        </HStack>
+              <VStack spacing={6} align="stretch">
+                {notifications.map((notif) => {
+                  const { icon, color } = getTypeStyles(notif.type);
+                  const isSeen = seenIds.includes(notif.id);
+                  return (
+                    <Box
+                      key={notif.id}
+                      width="100%"
+                      maxWidth="700px"
+                      mx="auto"
+                      bg={isSeen ? 'gray.50' : 'blue.50'}
+                      p={6}
+                      borderRadius="lg"
+                      borderLeft="6px"
+                      borderColor={color}
+                      boxShadow="md"
+                      display="flex"
+                      flexDirection="row"
+                      alignItems="center"
+                      gap={5}
+                    >
+                      <Box fontSize="28px">{icon}</Box>
+                      <Box flex="1">
+                        <Text fontWeight="bold" fontSize="xl" color="black" mb={2}>
+                          {notif.titre}
+                        </Text>
+                        <Text fontSize="md" color="gray.700">
+                          {notif.message}
+                        </Text>
                       </Box>
-                    );
-                  })}
-                </Box>
-                
-                <Divider my={4} />
-                
-                <Button
-                  size="sm"
-                  colorScheme="blue"
-                  width="100%"
-                  onClick={() => {
-                    onClose();
-                    window.location.href = '/diffusion-informations';
-                  }}
-                >
-                  Gérer les notifications
-                </Button>
-              </Box>
+                    </Box>
+                  );
+                })}
+                {/* Bouton 'Gérer les notifications' retiré */}
+              </VStack>
             )}
           </ModalBody>
         </ModalContent>
