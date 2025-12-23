@@ -1,50 +1,115 @@
 import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Text,
+  Flex,
+  Collapse,
+  IconButton,
+  Divider,
+  Spinner,
+  VStack,
+  Button,
+  Input,
+  Textarea,
+  HStack,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
+} from '@chakra-ui/react';
+import { ChevronDownIcon, ChevronUpIcon, AddIcon } from '@chakra-ui/icons';
 import { API_URL } from '../../config';
-import { useNavigate } from 'react-router-dom';
-import './atelierStyles.css';
 
 const API = API_URL;
 
 const getStatusColor = (statut) => {
   switch (statut) {
-    case 'Disponible': return '#096943';
-    case 'Indisponible': return '#ff6b6b';
-    case 'Aux Ateliers': return '#ff1900';
-    case 'Affecté': return '#0080f8';
-    case 'Au CT': return '#ff9100';
-    case 'Réformé': return '#000000';
-    default: return '#7f8c8d';
+    case 'Disponible':
+      return '#e67e22';
+    case 'Indisponible':
+    case 'Aux Ateliers':
+      return '#e74c3c';
+    case 'Affecté':
+      return '#7f8c8d';
+    case 'Au CT':
+      return '#9265ca';
+    case 'Réformé':
+      return '#292c3b';
+    case 'Entretien':
+      return '#f39c12';
+    default:
+      return '#7f8c8d';
   }
 };
 
 const AtelierManager = () => {
-  const navigate = useNavigate();
-  const [vehicles, setVehicles] = useState([]);
+  const [ateliers, setAteliers] = useState(null);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedVehicle, setSelectedVehicle] = useState(null);
-  const [filterStatut, setFilterStatut] = useState('Aux Ateliers');
+  const [expandedParc, setExpandedParc] = useState(null);
+  const [selectedVehicleParc, setSelectedVehicleParc] = useState(null);
   const [showInterventionForm, setShowInterventionForm] = useState(false);
   const [interventionData, setInterventionData] = useState({
     libelle: '',
     datePrevue: '',
     commentaire: '',
   });
+  const { isOpen: isModalOpen, onOpen: onModalOpen, onClose: onModalClose } = useDisclosure();
+  const [statusTransition, setStatusTransition] = useState(null);
+  const [transitionComment, setTransitionComment] = useState('');
 
-  // Charger les véhicules
   useEffect(() => {
-    fetchVehicles();
-  }, [filterStatut]);
+    fetchAteliers();
+    fetchStats();
+  }, []);
 
-  const fetchVehicles = async () => {
+  const fetchAteliers = async () => {
     try {
-      const r = await fetch(`${API}/api/vehicles`);
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const data = await r.json();
-      setVehicles(data.filter(v => v.statut === filterStatut));
+      const response = await fetch(`${API}/api/ateliers`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      setAteliers(data);
+    } catch (error) {
+      console.error('Erreur chargement ateliers:', error);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const response = await fetch(`${API}/api/ateliers/stats`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      setStats(data);
+    } finally {
       setLoading(false);
+    }
+  };
+
+  const handleChangeStatus = async (parc, newStatus, comment) => {
+    try {
+      const r = await fetch(`${API}/api/vehicles/${parc}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ statut: newStatus }),
+      });
+      if (!r.ok) throw new Error(await r.text());
+      
+      // Ajouter à l'historique avec commentaire
+      await fetch(`${API}/api/vehicles/${parc}/state-history`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ toStatus: newStatus, note: comment }),
+      });
+      
+      // Recharger
+      await fetchAteliers();
+      await fetchStats();
     } catch (err) {
-      console.error('Erreur chargement véhicules:', err);
-      setLoading(false);
+      alert('Erreur: ' + err.message);
     }
   };
 
@@ -61,39 +126,10 @@ const AtelierManager = () => {
       });
       if (!r.ok) throw new Error(await r.text());
       
-      // Recharger le véhicule
-      const vehicleR = await fetch(`${API}/api/vehicles/${parc}`);
-      const updatedVehicle = await vehicleR.json();
-      setSelectedVehicle(updatedVehicle);
       setInterventionData({ libelle: '', datePrevue: '', commentaire: '' });
       setShowInterventionForm(false);
-    } catch (err) {
-      alert('Erreur: ' + err.message);
-    }
-  };
-
-  const handleChangeStatus = async (parc, newStatus, comment) => {
-    try {
-      const r = await fetch(`${API}/api/vehicles/${parc}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ statut: newStatus }),
-      });
-      if (!r.ok) throw new Error(await r.text());
-      
-      // Ajouter à l'historique avec commentaire
-      const historyR = await fetch(`${API}/api/vehicles/${parc}/state-history`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ toStatus: newStatus, note: comment }),
-      });
-      
-      // Recharger
-      await fetchVehicles();
-      
-      const vehicleR = await fetch(`${API}/api/vehicles/${parc}`);
-      const updatedVehicle = await vehicleR.json();
-      setSelectedVehicle(updatedVehicle);
+      await fetchAteliers();
+      await fetchStats();
     } catch (err) {
       alert('Erreur: ' + err.message);
     }
@@ -104,506 +140,401 @@ const AtelierManager = () => {
       const r = await fetch(`${API}/api/vehicles/${parc}/interventions/${interventionId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ statut: 'terminée' }),
+        body: JSON.stringify({ statut: 'Complétée', dateEffective: new Date().toISOString() }),
       });
       if (!r.ok) throw new Error(await r.text());
       
-      // Recharger
-      const vehicleR = await fetch(`${API}/api/vehicles/${parc}`);
-      const updatedVehicle = await vehicleR.json();
-      setSelectedVehicle(updatedVehicle);
+      await fetchAteliers();
+      await fetchStats();
     } catch (err) {
       alert('Erreur: ' + err.message);
     }
   };
 
-  if (loading) return <div style={styles.loading}>Chargement…</div>;
+  const openStatusModal = (parc, targetStatus) => {
+    setSelectedVehicleParc(parc);
+    setStatusTransition(targetStatus);
+    setTransitionComment('');
+    onModalOpen();
+  };
+
+  if (loading) {
+    return (
+      <Box p={8} display="flex" justifyContent="center" alignItems="center" minH="400px">
+        <Spinner size="lg" color="blue.500" />
+      </Box>
+    );
+  }
+
+  const statuts = ['Aux Ateliers', 'Au CT', 'Indisponible', 'Entretien'];
+  const vehiculesParStatut = ateliers?.parStatut || {};
 
   return (
-    <div style={styles.container}>
-      <h1 style={styles.title}>Gestion des Ateliers & Suivi des Réparations</h1>
+    <Box>
+      <Box p={8} fontFamily="Montserrat">
+        {/* Titre principal */}
+        <Text fontSize="3xl" fontWeight="bold" textAlign="center" mb={6}>
+          Gestion des Ateliers
+        </Text>
 
-      {/* Filtrage par statut */}
-      <div style={styles.filterBar}>
-        <div>
-          <label>Filtrer par statut:</label>
-          <select value={filterStatut} onChange={(e) => setFilterStatut(e.target.value)} style={styles.select}>
-            <option>Aux Ateliers</option>
-            <option>Indisponible</option>
-            <option>Affecté</option>
-            <option>Au CT</option>
-          </select>
-        </div>
-        <div style={styles.stats}>
-          Véhicules: <strong>{vehicles.length}</strong>
-        </div>
-      </div>
+        {/* Stats par statut */}
+        {stats && stats.parStatut && (
+          <Flex
+            direction="row"
+            justify="space-around"
+            align="center"
+            bg="gray.100"
+            p={4}
+            borderRadius="md"
+            mb={8}
+            flexWrap="wrap"
+            gap={4}
+          >
+            {stats.parStatut.map((stat) => (
+              <Box key={stat.statut} textAlign="center">
+                <Text fontWeight="bold" fontSize="lg" color={getStatusColor(stat.statut)}>
+                  {stat._count.parc}
+                </Text>
+                <Text fontSize="sm">{stat.statut}</Text>
+              </Box>
+            ))}
+          </Flex>
+        )}
 
-      <div style={styles.gridContainer}>
-        {/* Liste des véhicules */}
-        <div style={styles.vehicleList}>
-          <h2>Véhicules en {filterStatut}</h2>
-          {vehicles.length === 0 ? (
-            <p style={styles.emptyMessage}>Aucun véhicule en {filterStatut}</p>
-          ) : (
-            vehicles.map(veh => (
-              <div
-                key={veh.parc}
-                style={{
-                  ...styles.vehicleCard,
-                  borderLeftColor: getStatusColor(veh.statut),
-                  background: selectedVehicle?.parc === veh.parc ? '#f0f8ff' : '#fff',
-                  cursor: 'pointer',
-                }}
-                onClick={() => setSelectedVehicle(veh)}
-              >
-                <div style={styles.vehicleHeader}>
-                  <strong>{veh.parc}</strong>
-                  <span style={{ ...styles.badge, background: getStatusColor(veh.statut) }}>
-                    {veh.statut}
-                  </span>
-                </div>
-                <div style={styles.vehicleDetails}>
-                  <small>{veh.type} • {veh.modele}</small>
-                  <small>{veh.immat}</small>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+        {/* Véhicules par statut */}
+        <VStack spacing={6} align="stretch">
+          {statuts.map((statut) => {
+            const vehicules = vehiculesParStatut[statut] || [];
+            return (
+              <Box key={statut}>
+                <Text fontSize="2xl" fontWeight="bold" mb={4}>
+                  {statut} ({vehicules.length})
+                </Text>
 
-        {/* Détail du véhicule sélectionné */}
-        <div style={styles.vehicleDetail}>
-          {selectedVehicle ? (
-            <>
-              <h2>Parc {selectedVehicle.parc} - {selectedVehicle.modele}</h2>
-
-              {/* Infos générales */}
-              <section style={styles.section}>
-                <h3>Informations</h3>
-                <div style={styles.infoGrid}>
-                  <div><strong>Type:</strong> {selectedVehicle.type}</div>
-                  <div><strong>Immat:</strong> {selectedVehicle.immat}</div>
-                  <div><strong>Statut:</strong> <span style={{ ...styles.badge, background: getStatusColor(selectedVehicle.statut) }}>{selectedVehicle.statut}</span></div>
-                  <div><strong>Km:</strong> {selectedVehicle.km.toLocaleString()}</div>
-                  <div><strong>Santé:</strong> {selectedVehicle.tauxSante}%</div>
-                </div>
-              </section>
-
-              {/* Actions de changement d'état */}
-              <section style={styles.section}>
-                <h3>Actions - Suivi des Réparations</h3>
-                <div style={styles.statusFlow}>
-                  {selectedVehicle.statut === 'Aux Ateliers' && (
-                    <button
-                      onClick={() => {
-                        const comment = prompt('Commentaire sur le passage en Indisponible (ex: réparations en cours):', '');
-                        if (comment !== null) handleChangeStatus(selectedVehicle.parc, 'Indisponible', comment);
-                      }}
-                      style={{ ...styles.btn, background: '#ff6b6b' }}
+                {vehicules.length === 0 ? (
+                  <Box bg="gray.100" p={4} borderRadius="md" textAlign="center">
+                    <Text color="gray.600">Aucun véhicule {statut}</Text>
+                  </Box>
+                ) : (
+                  vehicules.map((vehicule) => (
+                    <Box
+                      key={vehicule.parc}
+                      bg="gray.200"
+                      borderRadius="md"
+                      p={4}
+                      mb={4}
+                      borderLeft={`4px solid ${getStatusColor(vehicule.statut)}`}
                     >
-                      → Passer en Indisponible (réparations terminées)
-                    </button>
-                  )}
-                  {selectedVehicle.statut === 'Indisponible' && (
-                    <>
-                      <button
-                        onClick={() => {
-                          const comment = prompt('Commentaire:', '');
-                          if (comment !== null) handleChangeStatus(selectedVehicle.parc, 'Affecté', comment);
-                        }}
-                        style={{ ...styles.btn, background: '#0080f8' }}
-                      >
-                        → Passer en Affecté (remis en service)
-                      </button>
-                      <button
-                        onClick={() => {
-                          const comment = prompt('Commentaire (retour en ateliers):', '');
-                          if (comment !== null) handleChangeStatus(selectedVehicle.parc, 'Aux Ateliers', comment);
-                        }}
-                        style={{ ...styles.btn, background: '#ff9100' }}
-                      >
-                        ← Retour aux Ateliers
-                      </button>
-                    </>
-                  )}
-                  {selectedVehicle.statut === 'Affecté' && (
-                    <button
-                      onClick={() => {
-                        const comment = prompt('Commentaire:', '');
-                        if (comment !== null) handleChangeStatus(selectedVehicle.parc, 'Indisponible', comment);
-                      }}
-                      style={{ ...styles.btn, background: '#ff6b6b' }}
+                      <Flex justify="space-between" align="center" flexWrap="wrap" gap={2}>
+                        <Box>
+                          <Text><strong>Parc:</strong> {vehicule.parc}</Text>
+                          <Text><strong>Type:</strong> {vehicule.type}</Text>
+                          <Text><strong>Immat:</strong> {vehicule.immat}</Text>
+                        </Box>
+                        <Box>
+                          <Text><strong>Taux santé:</strong> {vehicule.tauxSante}%</Text>
+                          <Text><strong>Statut:</strong> {vehicule.statut}</Text>
+                        </Box>
+                        <IconButton
+                          icon={expandedParc === vehicule.parc ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                          onClick={() => setExpandedParc(expandedParc === vehicule.parc ? null : vehicule.parc)}
+                          variant="ghost"
+                          aria-label="Afficher les détails"
+                        />
+                      </Flex>
+
+                      {/* Détails et actions */}
+                      <Collapse in={expandedParc === vehicule.parc} animateOpacity>
+                        <Box mt={4} bg="white" p={4} borderRadius="md" boxShadow="sm">
+                          {/* Transitions de statut */}
+                          <Box mb={4}>
+                            <Text fontWeight="bold" mb={2}>Mouvements disponibles:</Text>
+                            <HStack spacing={2} flexWrap="wrap">
+                              {statut === 'Aux Ateliers' && (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    colorScheme="blue"
+                                    onClick={() => openStatusModal(vehicule.parc, 'Indisponible')}
+                                  >
+                                    → Indisponible
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    colorScheme="purple"
+                                    onClick={() => openStatusModal(vehicule.parc, 'Affecté')}
+                                  >
+                                    → Affecté
+                                  </Button>
+                                </>
+                              )}
+                              {statut === 'Indisponible' && (
+                                <Button
+                                  size="sm"
+                                  colorScheme="green"
+                                  onClick={() => openStatusModal(vehicule.parc, 'Disponible')}
+                                >
+                                  → Disponible
+                                </Button>
+                              )}
+                              {statut === 'Affecté' && (
+                                <Button
+                                  size="sm"
+                                  colorScheme="green"
+                                  onClick={() => openStatusModal(vehicule.parc, 'Disponible')}
+                                >
+                                  → Disponible
+                                </Button>
+                              )}
+                            </HStack>
+                          </Box>
+
+                          <Divider mb={4} />
+
+                          {/* Historique des mouvements */}
+                          <Box mb={4}>
+                            <Text fontWeight="bold" mb={3}>Mouvements récents:</Text>
+                            {vehicule.statesHistory && vehicule.statesHistory.length > 0 ? (
+                              <VStack spacing={2} align="stretch">
+                                {vehicule.statesHistory.map((mouvement, idx) => (
+                                  <Flex key={idx} align="flex-start" gap={3}>
+                                    <Box
+                                      bg={getStatusColor(mouvement.toStatus)}
+                                      color="white"
+                                      fontSize="xs"
+                                      fontWeight="bold"
+                                      px={2}
+                                      py={1}
+                                      borderRadius="md"
+                                      minW="100px"
+                                      textAlign="center"
+                                      flexShrink={0}
+                                    >
+                                      {mouvement.toStatus}
+                                    </Box>
+                                    <Box>
+                                      <Text fontSize="sm">
+                                        <strong>{new Date(mouvement.changedAt).toLocaleDateString('fr-FR')}</strong>
+                                        {' '}à {new Date(mouvement.changedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                      </Text>
+                                      {mouvement.note && (
+                                        <Text fontSize="sm" color="gray.600">
+                                          {mouvement.note}
+                                        </Text>
+                                      )}
+                                    </Box>
+                                  </Flex>
+                                ))}
+                              </VStack>
+                            ) : (
+                              <Text fontSize="sm" color="gray.600">Pas d'historique</Text>
+                            )}
+                          </Box>
+
+                          <Divider mb={4} />
+
+                          {/* Interventions */}
+                          <Box mb={4}>
+                            <Flex justify="space-between" align="center" mb={2}>
+                              <Text fontWeight="bold">Interventions:</Text>
+                              <Button
+                                size="xs"
+                                leftIcon={<AddIcon />}
+                                colorScheme="green"
+                                onClick={() => {
+                                  setSelectedVehicleParc(vehicule.parc);
+                                  setShowInterventionForm(!showInterventionForm);
+                                }}
+                              >
+                                Ajouter
+                              </Button>
+                            </Flex>
+
+                            {/* Formulaire ajout intervention */}
+                            {showInterventionForm && selectedVehicleParc === vehicule.parc && (
+                              <Box bg="green.50" p={3} borderRadius="md" mb={3}>
+                                <Input
+                                  placeholder="Libellé de l'intervention"
+                                  size="sm"
+                                  mb={2}
+                                  value={interventionData.libelle}
+                                  onChange={(e) =>
+                                    setInterventionData({ ...interventionData, libelle: e.target.value })
+                                  }
+                                />
+                                <Input
+                                  type="date"
+                                  size="sm"
+                                  mb={2}
+                                  value={interventionData.datePrevue}
+                                  onChange={(e) =>
+                                    setInterventionData({ ...interventionData, datePrevue: e.target.value })
+                                  }
+                                />
+                                <Textarea
+                                  placeholder="Commentaires (optionnel)"
+                                  size="sm"
+                                  mb={2}
+                                  value={interventionData.commentaire}
+                                  onChange={(e) =>
+                                    setInterventionData({ ...interventionData, commentaire: e.target.value })
+                                  }
+                                />
+                                <HStack spacing={2}>
+                                  <Button
+                                    size="xs"
+                                    colorScheme="green"
+                                    onClick={() => handleAddIntervention(vehicule.parc)}
+                                  >
+                                    Ajouter
+                                  </Button>
+                                  <Button
+                                    size="xs"
+                                    variant="outline"
+                                    onClick={() => setShowInterventionForm(false)}
+                                  >
+                                    Annuler
+                                  </Button>
+                                </HStack>
+                              </Box>
+                            )}
+
+                            {/* Liste interventions */}
+                            {vehicule.interventions && vehicule.interventions.length > 0 ? (
+                              <VStack spacing={2} align="stretch">
+                                {vehicule.interventions.map((intervention) => (
+                                  <Box
+                                    key={intervention.id}
+                                    bg={intervention.statut === 'Complétée' ? 'green.50' : 'yellow.50'}
+                                    p={2}
+                                    borderRadius="md"
+                                  >
+                                    <Flex justify="space-between" align="center">
+                                      <Box flex="1">
+                                        <Text fontSize="sm">
+                                          <strong>{intervention.libelle}</strong>
+                                        </Text>
+                                        {intervention.datePrevue && (
+                                          <Text fontSize="xs" color="gray.600">
+                                            Prévu: {new Date(intervention.datePrevue).toLocaleDateString('fr-FR')}
+                                          </Text>
+                                        )}
+                                        {intervention.commentaire && (
+                                          <Text fontSize="xs" color="gray.600">
+                                            {intervention.commentaire}
+                                          </Text>
+                                        )}
+                                        <Text fontSize="xs" fontWeight="bold" color={intervention.statut === 'Complétée' ? 'green.600' : 'orange.600'}>
+                                          {intervention.statut}
+                                        </Text>
+                                      </Box>
+                                      {intervention.statut !== 'Complétée' && (
+                                        <Button
+                                          size="xs"
+                                          colorScheme="green"
+                                          onClick={() =>
+                                            handleCompleteIntervention(vehicule.parc, intervention.id)
+                                          }
+                                        >
+                                          ✓
+                                        </Button>
+                                      )}
+                                    </Flex>
+                                  </Box>
+                                ))}
+                              </VStack>
+                            ) : (
+                              <Text fontSize="sm" color="gray.600">Aucune intervention</Text>
+                            )}
+                          </Box>
+                        </Box>
+                      </Collapse>
+                    </Box>
+                  ))
+                )}
+              </Box>
+            );
+          })}
+        </VStack>
+
+        {/* Derniers mouvements */}
+        {stats && stats.derniersMouvements && stats.derniersMouvements.length > 0 && (
+          <Box mt={10}>
+            <Text fontSize="2xl" fontWeight="bold" mb={4}>
+              Derniers mouvements sur le site
+            </Text>
+            <Box bg="gray.50" p={4} borderRadius="md">
+              <VStack spacing={2} align="stretch">
+                {stats.derniersMouvements.map((mouvement) => (
+                  <Flex key={mouvement.id} align="center" gap={3} pb={2} borderBottom="1px solid #e2e8f0">
+                    <Box
+                      bg={getStatusColor(mouvement.toStatus)}
+                      color="white"
+                      fontSize="xs"
+                      fontWeight="bold"
+                      px={2}
+                      py={1}
+                      borderRadius="md"
+                      minW="100px"
+                      textAlign="center"
                     >
-                      ← Retour en Indisponible
-                    </button>
-                  )}
-                </div>
-              </section>
+                      {mouvement.toStatus}
+                    </Box>
+                    <Box flex="1">
+                      <Text fontSize="sm">
+                        <strong>{mouvement.vehicle.parc}</strong> - {mouvement.vehicle.type}
+                      </Text>
+                      <Text fontSize="xs" color="gray.600">
+                        {new Date(mouvement.changedAt).toLocaleDateString('fr-FR')} à{' '}
+                        {new Date(mouvement.changedAt).toLocaleTimeString('fr-FR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </Text>
+                    </Box>
+                  </Flex>
+                ))}
+              </VStack>
+            </Box>
+          </Box>
+        )}
+      </Box>
 
-              {/* Interventions */}
-              <section style={styles.section}>
-                <h3>Interventions en Atelier</h3>
-                {selectedVehicle.interventions && selectedVehicle.interventions.length > 0 ? (
-                  <div style={styles.interventionsList}>
-                    {selectedVehicle.interventions.map(inter => (
-                      <div key={inter.id} style={{ ...styles.interventionCard, opacity: inter.statut === 'terminée' ? 0.7 : 1 }}>
-                        <div style={styles.interventionHeader}>
-                          <strong>{inter.libelle}</strong>
-                          <span style={{ ...styles.badge, background: inter.statut === 'terminée' ? '#27ae60' : '#f39c12', fontSize: '11px' }}>
-                            {inter.statut || 'planifiée'}
-                          </span>
-                        </div>
-                        {inter.datePrevue && (
-                          <div style={styles.interventionDate}>
-                            Prévu: {new Date(inter.datePrevue).toLocaleDateString('fr-FR')}
-                          </div>
-                        )}
-                        {inter.commentaire && (
-                          <div style={styles.interventionComment}>
-                            {inter.commentaire}
-                          </div>
-                        )}
-                        {inter.dateEffective && (
-                          <div style={styles.interventionDate}>
-                            Effectué: {new Date(inter.dateEffective).toLocaleDateString('fr-FR')}
-                          </div>
-                        )}
-                        {inter.statut !== 'terminée' && (
-                          <button
-                            onClick={() => handleCompleteIntervention(selectedVehicle.parc, inter.id)}
-                            style={styles.btnSmall}
-                          >
-                            ✓ Marquer comme terminée
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p style={styles.emptyMessage}>Aucune intervention</p>
-                )}
-
-                {/* Ajouter une intervention */}
-                {!showInterventionForm ? (
-                  <button
-                    onClick={() => setShowInterventionForm(true)}
-                    style={{ ...styles.btn, background: '#27ae60', marginTop: '16px' }}
-                  >
-                    + Ajouter une intervention
-                  </button>
-                ) : (
-                  <div style={styles.formSection}>
-                    <label>
-                      Libellé
-                      <input
-                        type="text"
-                        value={interventionData.libelle}
-                        onChange={(e) => setInterventionData({ ...interventionData, libelle: e.target.value })}
-                        placeholder="Ex: Révision moteur, Changement pneus..."
-                        style={styles.input}
-                      />
-                    </label>
-                    <label>
-                      Date prévue
-                      <input
-                        type="date"
-                        value={interventionData.datePrevue}
-                        onChange={(e) => setInterventionData({ ...interventionData, datePrevue: e.target.value })}
-                        style={styles.input}
-                      />
-                    </label>
-                    <label>
-                      Commentaire
-                      <textarea
-                        value={interventionData.commentaire}
-                        onChange={(e) => setInterventionData({ ...interventionData, commentaire: e.target.value })}
-                        placeholder="Détails de l'intervention..."
-                        style={styles.textarea}
-                      />
-                    </label>
-                    <div style={styles.formActions}>
-                      <button
-                        onClick={() => handleAddIntervention(selectedVehicle.parc)}
-                        style={{ ...styles.btn, background: '#27ae60' }}
-                      >
-                        Créer
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowInterventionForm(false);
-                          setInterventionData({ libelle: '', datePrevue: '', commentaire: '' });
-                        }}
-                        style={{ ...styles.btn, background: '#95a5a6' }}
-                      >
-                        Annuler
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </section>
-
-              {/* Historique */}
-              <section style={styles.section}>
-                <h3>Historique des Mouvements</h3>
-                {selectedVehicle.statesHistory && selectedVehicle.statesHistory.length > 0 ? (
-                  <div style={styles.historyTimeline}>
-                    {selectedVehicle.statesHistory.map((move, idx) => (
-                      <div key={idx} style={styles.historyItem}>
-                        <div style={{ ...styles.historyBadge, background: getStatusColor(move.toStatus) }}>
-                          {move.toStatus}
-                        </div>
-                        <div style={styles.historyContent}>
-                          <div style={styles.historyDate}>
-                            {new Date(move.changedAt).toLocaleDateString('fr-FR')} à {new Date(move.changedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                          </div>
-                          {move.note && <div style={styles.historyNote}>{move.note}</div>}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p style={styles.emptyMessage}>Pas d'historique</p>
-                )}
-              </section>
-            </>
-          ) : (
-            <div style={styles.emptyMessage}>Sélectionnez un véhicule pour voir les détails</div>
-          )}
-        </div>
-      </div>
-    </div>
+      {/* Modal pour transition de statut avec commentaire */}
+      <Modal isOpen={isModalOpen} onClose={onModalClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Transition de statut</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Text mb={4}>
+              Passer le véhicule <strong>{selectedVehicleParc}</strong> à{' '}
+              <strong>{statusTransition}</strong>
+            </Text>
+            <Textarea
+              placeholder="Ajouter un commentaire (optionnel)"
+              value={transitionComment}
+              onChange={(e) => setTransitionComment(e.target.value)}
+            />
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={onModalClose}>
+              Annuler
+            </Button>
+            <Button
+              colorScheme="blue"
+              onClick={() => {
+                handleChangeStatus(selectedVehicleParc, statusTransition, transitionComment);
+                onModalClose();
+              }}
+            >
+              Confirmer
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </Box>
   );
-};
-
-const styles = {
-  container: {
-    padding: '24px',
-    background: '#f5f7fa',
-    minHeight: '100vh',
-    fontFamily: 'Montserrat, system-ui, -apple-system, Segoe UI, Roboto',
-  },
-  title: {
-    fontSize: '28px',
-    fontWeight: 800,
-    color: '#2c3e50',
-    marginBottom: '24px',
-    textAlign: 'center',
-  },
-  filterBar: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    background: '#fff',
-    padding: '16px',
-    borderRadius: '8px',
-    marginBottom: '24px',
-    boxShadow: '0 2px 8px rgba(0,0,0,.08)',
-  },
-  select: {
-    padding: '8px 12px',
-    border: '1px solid #ddd',
-    borderRadius: '6px',
-    fontSize: '14px',
-    marginLeft: '12px',
-    fontFamily: 'inherit',
-  },
-  stats: {
-    fontSize: '14px',
-    color: '#666',
-  },
-  gridContainer: {
-    display: 'grid',
-    gridTemplateColumns: '350px 1fr',
-    gap: '24px',
-  },
-  vehicleList: {
-    background: '#fff',
-    borderRadius: '8px',
-    padding: '16px',
-    boxShadow: '0 2px 8px rgba(0,0,0,.08)',
-    maxHeight: '80vh',
-    overflowY: 'auto',
-  },
-  vehicleCard: {
-    padding: '12px',
-    marginBottom: '12px',
-    borderRadius: '6px',
-    borderLeft: '4px solid',
-    background: '#f9f9f9',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-  },
-  vehicleHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '8px',
-  },
-  vehicleDetails: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px',
-    color: '#666',
-  },
-  badge: {
-    color: '#fff',
-    padding: '4px 8px',
-    borderRadius: '12px',
-    fontSize: '11px',
-    fontWeight: 700,
-  },
-  vehicleDetail: {
-    background: '#fff',
-    borderRadius: '8px',
-    padding: '20px',
-    boxShadow: '0 2px 8px rgba(0,0,0,.08)',
-    overflowY: 'auto',
-    maxHeight: '80vh',
-  },
-  section: {
-    marginBottom: '24px',
-    paddingBottom: '16px',
-    borderBottom: '1px solid #eee',
-  },
-  infoGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(2, 1fr)',
-    gap: '12px',
-    marginTop: '12px',
-  },
-  statusFlow: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px',
-  },
-  btn: {
-    padding: '10px 16px',
-    border: 'none',
-    borderRadius: '6px',
-    color: '#fff',
-    fontWeight: 600,
-    cursor: 'pointer',
-    fontSize: '14px',
-  },
-  btnSmall: {
-    padding: '6px 12px',
-    background: '#27ae60',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '4px',
-    fontWeight: 600,
-    cursor: 'pointer',
-    fontSize: '12px',
-    marginTop: '8px',
-  },
-  interventionsList: {
-    marginTop: '12px',
-  },
-  interventionCard: {
-    background: '#f9f9f9',
-    padding: '12px',
-    borderRadius: '6px',
-    marginBottom: '12px',
-    borderLeft: '4px solid #f39c12',
-  },
-  interventionHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '8px',
-  },
-  interventionDate: {
-    fontSize: '12px',
-    color: '#666',
-    marginTop: '4px',
-  },
-  interventionComment: {
-    fontSize: '13px',
-    color: '#333',
-    marginTop: '8px',
-    paddingTop: '8px',
-    borderTop: '1px solid #eee',
-  },
-  formSection: {
-    background: '#f9f9f9',
-    padding: '16px',
-    borderRadius: '6px',
-    marginTop: '12px',
-  },
-  input: {
-    display: 'block',
-    width: '100%',
-    padding: '8px 12px',
-    border: '1px solid #ddd',
-    borderRadius: '4px',
-    marginTop: '6px',
-    marginBottom: '12px',
-    fontSize: '14px',
-    fontFamily: 'inherit',
-    boxSizing: 'border-box',
-  },
-  textarea: {
-    display: 'block',
-    width: '100%',
-    padding: '8px 12px',
-    border: '1px solid #ddd',
-    borderRadius: '4px',
-    marginTop: '6px',
-    marginBottom: '12px',
-    fontSize: '14px',
-    fontFamily: 'inherit',
-    minHeight: '80px',
-    boxSizing: 'border-box',
-  },
-  formActions: {
-    display: 'flex',
-    gap: '12px',
-    justifyContent: 'flex-end',
-  },
-  historyTimeline: {
-    marginTop: '12px',
-  },
-  historyItem: {
-    display: 'flex',
-    gap: '12px',
-    marginBottom: '16px',
-    paddingBottom: '16px',
-    borderBottom: '1px solid #eee',
-  },
-  historyBadge: {
-    color: '#fff',
-    padding: '4px 8px',
-    borderRadius: '4px',
-    fontSize: '11px',
-    fontWeight: 700,
-    whiteSpace: 'nowrap',
-    minWidth: '100px',
-    textAlign: 'center',
-  },
-  historyContent: {
-    flex: 1,
-  },
-  historyDate: {
-    fontSize: '12px',
-    fontWeight: 600,
-    color: '#2c3e50',
-  },
-  historyNote: {
-    fontSize: '13px',
-    color: '#666',
-    marginTop: '4px',
-  },
-  loading: {
-    padding: '24px',
-    textAlign: 'center',
-    fontSize: '16px',
-  },
-  emptyMessage: {
-    textAlign: 'center',
-    color: '#999',
-    padding: '20px',
-  },
 };
 
 export default AtelierManager;

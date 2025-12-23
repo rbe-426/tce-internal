@@ -275,6 +275,42 @@ const PlanningsCalendar = () => {
     return days;
   };
 
+  // Générer les services pour N jours
+  const handleGenerateServices = async (daysToGenerate = 14) => {
+    try {
+      const response = await fetch(`${API_URL}/api/services/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ days: daysToGenerate })
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la génération');
+      }
+
+      const result = await response.json();
+      toast({
+        title: '✅ Services générés',
+        description: result.message || `${result.created} services créés, ${result.skipped} existants`,
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+
+      // Recharger les données
+      await fetchData();
+    } catch (error) {
+      console.error('Erreur génération services:', error);
+      toast({
+        title: '❌ Erreur',
+        description: 'Impossible de générer les services',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   // Get all days in month for calendar view (based on selectedDate)
   const getDaysInMonth = () => {
     const selectedDateObj = new Date(selectedDate);
@@ -752,6 +788,36 @@ const PlanningsCalendar = () => {
                     </CheckboxGroup>
                   </FormControl>
                 )}
+
+                {/* Section génération services */}
+                <Divider my={4} />
+                <Box w="full">
+                  <FormLabel fontWeight="bold" fontSize="sm">⚙️ Gestion des services</FormLabel>
+                  <HStack spacing={2} mt={2}>
+                    <Button
+                      leftIcon={<AddIcon />}
+                      colorScheme="green"
+                      size="sm"
+                      onClick={() => handleGenerateServices(14)}
+                      isDisabled={isDegradedMode}
+                      title="Génère les services pour 14 jours à partir d'aujourd'hui"
+                    >
+                      Générer services (14j)
+                    </Button>
+                    <Button
+                      size="sm"
+                      colorScheme="blue"
+                      variant="outline"
+                      onClick={() => handleGenerateServices(7)}
+                      isDisabled={isDegradedMode}
+                    >
+                      Générer services (7j)
+                    </Button>
+                  </HStack>
+                  <Text fontSize="xs" color="gray.600" mt={2}>
+                    💡 Générez les services si la page affiche "Aucun service" pour les dates sélectionnées
+                  </Text>
+                </Box>
               </Box>
             </VStack>
           </CardBody>
