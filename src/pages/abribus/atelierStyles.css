@@ -1,0 +1,9 @@
+/* AtelierManager Styles */
+/* Tous les styles sont définis en inline pour éviter les dépendances CSS */
+
+/* Responsive tweaks can be added here if needed */
+@media (max-width: 1024px) {
+  .atelier-container {
+    grid-template-columns: 1fr !important;
+  }
+}

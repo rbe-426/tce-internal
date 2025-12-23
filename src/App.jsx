@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Vehicules from './pages/abribus/Vehicules';
 import VehiculeDetail from './pages/abribus/Vehicule';
 import Atelier from './pages/abribus/Atelier';
+import AtelierManager from './pages/abribus/AtelierManager';
 import NotFound from './pages/NotFound';
 import MainLayout from './layouts/MainLayout';
 import MonProfil from "./pages/MonProfil";
@@ -43,7 +44,7 @@ function App() {
       <Route path="/parametres-site" element={<ProtectedRoute><MainLayout><DiffusionInformations /></MainLayout></ProtectedRoute>} />
       <Route path="/abribus/vehicules" element={<ProtectedRoute><MainLayout><Vehicules /></MainLayout></ProtectedRoute>} />
       <Route path="/abribus/vehicule/:parc" element={<ProtectedRoute><VehiculeDetail /></ProtectedRoute>} />
-      <Route path="/abribus/atelier" element={<ProtectedRoute><MainLayout><Atelier /></MainLayout></ProtectedRoute>} />
+      <Route path="/abribus/atelier" element={<ProtectedRoute><MainLayout><AtelierManager /></MainLayout></ProtectedRoute>} />
       <Route path="/abribus/statistiques" element={<ProtectedRoute><MainLayout><Statistiques /></MainLayout></ProtectedRoute>} />
       <Route path="/abribus/vehicule/:parc/edit" element={<ProtectedRoute><VehiculeEdit /></ProtectedRoute>} />
       <Route path="/abribus/lignes" element={<ProtectedRoute><MainLayout><Lignes /></MainLayout></ProtectedRoute>} />

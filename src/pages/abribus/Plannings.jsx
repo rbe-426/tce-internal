@@ -220,6 +220,27 @@ const PlanningsCalendar = () => {
           }
         }
       }
+      console.log('[Plannings] Services loaded from lignes:', flatServices.length);
+      if (flatServices.length === 0) {
+        console.warn('[Plannings] ⚠️ NO SERVICES FOUND - trying fallback /api/services endpoint');
+        // Fallback: charger les services directement
+        try {
+          const servicesRes = await fetch(`${API_URL}/api/services`);
+          if (servicesRes.ok) {
+            const fallbackServices = await servicesRes.json();
+            console.log('[Plannings] Fallback services loaded:', fallbackServices.length);
+            fallbackServices.forEach(service => {
+              flatServices.push({
+                ...service,
+                ligneId: service.ligneId,
+                sensId: service.sensId,
+              });
+            });
+          }
+        } catch (e) {
+          console.error('[Plannings] Fallback fetch error:', e);
+        }
+      }
       setServices(flatServices);
       setLignes(lignesData);
     } catch (error) {

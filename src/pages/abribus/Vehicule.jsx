@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import Header from "../../components/Header.jsx";
 import { API_URL } from "../../config";
 
@@ -13,7 +13,8 @@ const getStatusColor = (statut = "") => {
     case "Affecté": return "#0080f8ff";
     case "Au CT": return "#ff9100ff";
     case "Réformé":
-    case "A venir": return "#000000ff";
+    case "A venir":
+    case "A VENIR": return "#000000ff";
     default: return "#7f8c8d";
   }
 };
@@ -138,7 +139,7 @@ const Vehicule = () => {
     try {
       const r = await fetch(`${API}/api/vehicles/${parc}`, { method: "DELETE" });
       if (!r.ok) throw new Error(await r.text());
-      navigate("/abribus/vehicules"); // retour liste
+      navigate("/abribus/vehicules");
     } catch (e) {
       alert("Erreur: " + e.message);
     }
@@ -177,13 +178,17 @@ const Vehicule = () => {
           <section>
             <h2 style={h2Style}>Informations de base</h2>
             <InfoRow label="Numéro de Parc" value={vehicule.parc} />
-            <InfoRow label="Modèle" value={vehicule.modele} />
             <InfoRow label="Type" value={vehicule.type} />
-            <InfoRow label="Moteur" value={vehicule.moteur || "-"} />
+            <InfoRow label="Modèle" value={vehicule.modele} />
+            {vehicule.marque && <InfoRow label="Marque" value={vehicule.marque} />}
             <InfoRow label="Immatriculation" value={vehicule.immat} badge />
+            <InfoRow label="Moteur" value={vehicule.moteur || "-"} />
+            {vehicule.boite && <InfoRow label="Boîte" value={vehicule.boite} />}
+            {vehicule.annee && <InfoRow label="Année" value={vehicule.annee} />}
             <InfoRow label="Mise en Service" value={vehicule.miseEnService ? new Date(vehicule.miseEnService).toLocaleDateString() : "-"} />
             <InfoRow label="Km" value={`${Number(vehicule.km || 0).toLocaleString()} km`} highlight />
             <InfoRow label="Prochain CT" value={vehicule.ct ? new Date(vehicule.ct).toLocaleDateString() : "-"} chip />
+            {vehicule.pmr && <InfoRow label="PMR" value="✓ Équipé" chip />}
           </section>
 
           {/* Carrousel + statut (droite) */}
@@ -195,9 +200,9 @@ const Vehicule = () => {
             {vehicule.etablissementId && (
               <div style={{ marginTop: 16, padding: 12, background: '#f0f8ff', borderRadius: 8, borderLeft: '4px solid #0080f8' }}>
                 <p style={{ margin: 0, fontSize: 12, color: '#666', fontWeight: 600 }}>ÉTABLISSEMENT</p>
-                <p style={{ margin: '6px 0 0 0', fontSize: 14, fontWeight: 600, color: '#0080f8' }}>
-                  {vehicule.etablissement?.nom || 'Établissement'}
-                </p>
+                <Link to={`/abribus/etablissement/${vehicule.etablissementId}`} style={{ margin: '6px 0 0 0', fontSize: 14, fontWeight: 600, color: '#0080f8', textDecoration: 'none', display: 'inline-block' }}>
+                  → {vehicule.etablissement?.nom || 'Établissement'}
+                </Link>
               </div>
             )}
           </aside>
@@ -205,7 +210,7 @@ const Vehicule = () => {
 
         {/* ——— BLOC ACTIONS : Éditer / Changer état / Supprimer ——— */}
         <div style={{ width: "100%", maxWidth: 1100, display: "flex", gap: 12, flexWrap: "wrap", marginTop: 24, justifyContent: "space-between" }}>
-          <button className="btn primary" onClick={() => navigate(`/abribus/vehicule/${parc}/edit`)}>
+          <button className="btn primary" onClick={() => navigate(`/abribus/vehicule/${parc}/edit`)} style={{ background: '#2980b9', color: '#fff', fontWeight: 600, borderRadius: 6, padding: '8px 22px', fontSize: '1rem', border: 'none', cursor: 'pointer' }}>
             Éditer le véhicule
           </button>
           <button
@@ -218,12 +223,8 @@ const Vehicule = () => {
           </button>
           <button
             className="btn danger"
-            onClick={async () => {
-              if (!confirm(`Supprimer définitivement le véhicule ${parc} ?`)) return;
-              const r = await fetch(`${API}/api/vehicles/${parc}`, { method: 'DELETE' });
-              if (r.ok) navigate('/abribus/vehicules');
-              else alert(await r.text());
-            }}
+            style={{ background: '#e74c3c', color: '#fff', fontWeight: 600, borderRadius: 6, padding: '8px 22px', fontSize: '1rem', border: 'none', cursor: 'pointer' }}
+            onClick={handleDelete}
           >
             Supprimer
           </button>
@@ -242,30 +243,13 @@ const Vehicule = () => {
           <Card title="Options d'atelier"><SmallList jsonText={vehicule.optionsAtelierJson} /></Card>
           <Card title="Options SAEIV"><SmallList jsonText={vehicule.optionsSaeivJson} /></Card>
         </div>
-
-        {/* ——— Pied de page : Edit / Supprimer ——— */}
-        <div style={{ width: "100%", maxWidth: 1100, display: "flex", justifyContent: "space-between", marginTop: 24 }}>
-  <button className="btn primary" onClick={() => navigate(`/abribus/vehicule/${parc}/edit`)}>
-    Éditer le véhicule
-  </button>
-  <button
-    className="btn danger"
-    onClick={async () => {
-      if (!confirm(`Supprimer définitivement le véhicule ${parc} ?`)) return;
-      const r = await fetch(`${API}/api/vehicles/${parc}`, { method: 'DELETE' });
-      if (r.ok) navigate('/abribus/vehicules');
-      else alert(await r.text());
-    }}
-  >
-    Supprimer
-  </button>
-</div>
         {/* ——— Modal Changer l'état ——— */}
         {showEtat && (
           <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.4)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowEtat(false)}>
-            <div style={{ background: "#fff", borderRadius: 16, padding: 36, minWidth: 340, boxShadow: "0 8px 32px rgba(0,0,0,.18)" }} onClick={e => e.stopPropagation()}>
-              <h2 style={{ marginTop: 0, marginBottom: 18, color: '#2c3e50' }}>Changer l'état du véhicule</h2>
-              <select value={nouvelEtat} onChange={e => setNouvelEtat(e.target.value)} style={{ width: "100%", padding: 12, borderRadius: 10, marginBottom: 22, fontSize: '1rem', fontWeight: 600 }}>
+            <div style={{ background: "#fff", borderRadius: 12, padding: 32, minWidth: 360, maxWidth: 480, boxShadow: "0 10px 40px rgba(0,0,0,.2)" }} onClick={e => e.stopPropagation()}>
+              <h2 style={{ marginTop: 0, marginBottom: 20, color: '#2c3e50', fontSize: '1.3rem', fontWeight: 700 }}>Changer l'état du véhicule</h2>
+              <p style={{ color: '#666', fontSize: '0.95rem', marginBottom: 16 }}>État actuel: <strong>{vehicule.statut}</strong></p>
+              <select value={nouvelEtat} onChange={e => setNouvelEtat(e.target.value)} style={{ width: "100%", padding: 12, borderRadius: 8, marginBottom: 24, fontSize: '0.95rem', fontWeight: 600, border: '1px solid #ddd' }}>
                 <option value="">-- Sélectionner un état --</option>
                 <option value="Disponible">Disponible</option>
                 <option value="Indisponible">Indisponible</option>
@@ -275,9 +259,9 @@ const Vehicule = () => {
                 <option value="Réformé">Réformé</option>
                 <option value="A VENIR">A VENIR</option>
               </select>
-              <div style={{ display: "flex", gap: 14, justifyContent: "flex-end" }}>
-                <button className="btn" style={{ background: '#eee', color: '#222', borderRadius: 8, padding: '8px 22px', fontWeight: 600, fontSize: '1rem', border: 'none', cursor: 'pointer' }} onClick={() => setShowEtat(false)}>Annuler</button>
-                <button className="btn primary" style={{ background: '#2980b9', color: '#fff', borderRadius: 8, padding: '8px 22px', fontWeight: 700, fontSize: '1rem', border: 'none', cursor: 'pointer' }} onClick={handleChangeEtat} disabled={!nouvelEtat}>Valider</button>
+              <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+                <button style={{ background: '#eee', color: '#222', borderRadius: 6, padding: '10px 20px', fontWeight: 600, fontSize: '0.95rem', border: 'none', cursor: 'pointer' }} onClick={() => setShowEtat(false)}>Annuler</button>
+                <button style={{ background: '#2980b9', color: '#fff', borderRadius: 6, padding: '10px 20px', fontWeight: 700, fontSize: '0.95rem', border: 'none', cursor: 'pointer' }} onClick={handleChangeEtat} disabled={!nouvelEtat}>Valider</button>
               </div>
             </div>
           </div>
