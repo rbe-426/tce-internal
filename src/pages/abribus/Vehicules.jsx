@@ -372,6 +372,53 @@ const handleAddVehicle = async () => {
                   veh.statut
                 )}
               </div>
+              {/* Actions: Éditer, Changer état, Supprimer */}
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <Link to={`/abribus/vehicule/${veh.parc}/edit`} style={{
+                  background: '#2980b9', color: '#fff', padding: '6px 14px', borderRadius: '6px', fontWeight: 600, textDecoration: 'none', fontSize: '0.95rem', border: 'none', cursor: 'pointer'
+                }}>Éditer</Link>
+                <button
+                  onClick={async () => {
+                    const nextStatus = window.prompt('Nouveau statut pour ce véhicule ?', veh.statut);
+                    if (!nextStatus || nextStatus === veh.statut) return;
+                    try {
+                      const res = await fetch(`${API}/api/vehicles/${veh.parc}/status`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ statut: nextStatus })
+                      });
+                      if (!res.ok) throw new Error('Erreur API');
+                      await fetchVehicles();
+                    } catch (e) {
+                      alert('Erreur lors du changement de statut');
+                    }
+                  }}
+                  style={{
+                    background: '#f1c40f', color: '#222', padding: '6px 14px', borderRadius: '6px', fontWeight: 600, fontSize: '0.95rem', border: 'none', cursor: 'pointer'
+                  }}
+                  title="Changer l'état du véhicule"
+                >
+                  Changer état
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!window.confirm('Supprimer ce véhicule ?')) return;
+                    try {
+                      const res = await fetch(`${API}/api/vehicles/${veh.parc}`, { method: 'DELETE' });
+                      if (!res.ok) throw new Error('Erreur API');
+                      await fetchVehicles();
+                    } catch (e) {
+                      alert('Erreur lors de la suppression');
+                    }
+                  }}
+                  style={{
+                    background: '#e74c3c', color: '#fff', padding: '6px 14px', borderRadius: '6px', fontWeight: 600, fontSize: '0.95rem', border: 'none', cursor: 'pointer'
+                  }}
+                  title="Supprimer le véhicule"
+                >
+                  Supprimer
+                </button>
+              </div>
             </div>
           ))}
         </div>
