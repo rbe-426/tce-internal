@@ -20,7 +20,6 @@ const Layout = ({ children }) => {
   return (
     <Box>
       <Header logo={getLogoByPath()} />
-      <NotificationBanner />
       {children}
     </Box>
   );

@@ -503,24 +503,7 @@ const TC360 = () => {
           {showExpired ? "Masquer" : "Afficher"} les services expirés non assurés
         </Button>
 
-        {/* Rôle utilisateur */}
-        {user && (
-          <Card bg="blue.50" borderColor="blue.200" borderWidth="1px">
-            <CardBody>
-              <HStack spacing={4}>
-                <Box fontSize="xl" color="blue.500">
-                  <FaUser />
-                </Box>
-                <VStack align="start" spacing={0}>
-                  <Text fontWeight="bold">
-                    {user.prenom} {user.nom}
-                  </Text>
-                  <Badge colorScheme="blue">{user.role || 'Régulateur'}</Badge>
-                </VStack>
-              </HStack>
-            </CardBody>
-          </Card>
-        )}
+        {/* Bloc utilisateur supprimé */}
 
         {/* Liste des services */}
         {error && (
