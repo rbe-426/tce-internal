@@ -34,6 +34,7 @@ const Vehicules = () => {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
   const [vehicleTypes, setVehicleTypes] = useState([]);
+  const [etablissements, setEtablissements] = useState([]);
   const { isOpen: isImportOpen, onOpen: onImportOpen, onClose: onImportClose } = useDisclosure();
 
   // Formulaire d'ajout (on garde tes champs, même si tous ne partent pas au backend)
@@ -53,6 +54,7 @@ const Vehicules = () => {
     clim: "",
     pmr: false,
     ct: "",
+    etablissementId: "",
     photos: [],
   });
 
@@ -119,6 +121,22 @@ const Vehicules = () => {
     loadVehicleTypes();
   }, []);
 
+  // Charger les établissements
+  useEffect(() => {
+    const loadEtablissements = async () => {
+      try {
+        const res = await fetch(`${API}/api/etablissements`);
+        if (res.ok) {
+          const data = await res.json();
+          setEtablissements(data || []);
+        }
+      } catch (e) {
+        console.error('Erreur chargement établissements:', e.message);
+      }
+    };
+    loadEtablissements();
+  }, []);
+
   // 4) Form handlers
   const handleInputChange = (e) => {
     const { name, value, type, checked, files } = e.target;
@@ -153,6 +171,7 @@ const handleAddVehicle = async () => {
     km: Number.isFinite(Number(v.km)) ? Number(v.km) : 0,
     tauxSante: Number.isFinite(Number(v.tauxSante)) ? Number(v.tauxSante) : 100,
     statut: v.statut || "Disponible",
+    etablissementId: v.etablissementId || null,
 
     // champs additionnels synchronisés
     annee: v.annee !== "" ? Number(v.annee) : null,
@@ -341,6 +360,11 @@ const handleAddVehicle = async () => {
                 {veh.parc}
                 {veh.pmr && <FaWheelchair style={{ color: "#007bff" }} />}
               </Link>
+              {veh.etablissement && (
+                <div style={{ flex: "1 0 150px", fontSize: "0.85rem", color: "#0080f8", fontWeight: 500 }}>
+                  📍 {veh.etablissement.nom}
+                </div>
+              )}
               <div style={{ flex: "1.5 0 150px", fontSize: "0.95rem" }}>{veh.type}</div>
               <div style={{ flex: "2 0 150px" }}>{veh.modele}</div>
               <div style={{ flex: "1 0 120px" }}>{veh.immat}</div>
@@ -502,6 +526,25 @@ const handleAddVehicle = async () => {
                   )}
                 </div>
               ))}
+
+              <div>
+                <label style={{ display: "block", fontWeight: "600", marginBottom: "4px" }}>
+                  Établissement / Dépôt
+                </label>
+                <select
+                  name="etablissementId"
+                  value={newVeh.etablissementId}
+                  onChange={handleInputChange}
+                  style={{ marginBottom: "16px", width: "100%", padding: "10px", borderRadius: "6px" }}
+                >
+                  <option value="">-- Aucun --</option>
+                  {etablissements.map((e) => (
+                    <option key={e.id} value={e.id}>
+                      {e.nom} ({e.type})
+                    </option>
+                  ))}
+                </select>
+              </div>
 
               <div>
                 <label style={{ display: "block", fontWeight: "600", marginBottom: "4px" }}>

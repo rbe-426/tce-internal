@@ -22,6 +22,8 @@ import LignesHierarchie from './pages/abribus/LignesHierarchie';
 import Plannings from './pages/abribus/Plannings';
 import GestionConducteurs from './pages/abribus/GestionConducteurs';
 import SAEIV from './pages/abribus/SAEIV';
+import Etablissements from './pages/abribus/Etablissements';
+import EtablissementDetail from './pages/abribus/EtablissementDetail';
 import ProtectedRoute from './components/ProtectedRoute';
 
 
@@ -49,6 +51,8 @@ function App() {
       <Route path="/abribus/plannings" element={<ProtectedRoute><MainLayout><Plannings /></MainLayout></ProtectedRoute>} />
       <Route path="/abribus/conducteurs" element={<ProtectedRoute><MainLayout><GestionConducteurs /></MainLayout></ProtectedRoute>} />
       <Route path="/abribus/saeiv" element={<ProtectedRoute><MainLayout><SAEIV /></MainLayout></ProtectedRoute>} />
+      <Route path="/abribus/etablissements" element={<ProtectedRoute><MainLayout><Etablissements /></MainLayout></ProtectedRoute>} />
+      <Route path="/abribus/etablissement/:id" element={<ProtectedRoute><MainLayout><EtablissementDetail /></MainLayout></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

@@ -192,21 +192,42 @@ const Vehicule = () => {
             <div style={{ marginTop: 10 }}>
               <Badge color={getStatusColor(vehicule.statut)}>{vehicule.statut}</Badge>
             </div>
+            {vehicule.etablissementId && (
+              <div style={{ marginTop: 16, padding: 12, background: '#f0f8ff', borderRadius: 8, borderLeft: '4px solid #0080f8' }}>
+                <p style={{ margin: 0, fontSize: 12, color: '#666', fontWeight: 600 }}>ÉTABLISSEMENT</p>
+                <p style={{ margin: '6px 0 0 0', fontSize: 14, fontWeight: 600, color: '#0080f8' }}>
+                  {vehicule.etablissement?.nom || 'Établissement'}
+                </p>
+              </div>
+            )}
           </aside>
         </div>
 
-        {/* ——— BLOC ACTIONS : 1 bouton "Changer l'état" ——— */}
-        <div style={{
-          width: "100%", maxWidth: 1100, display: "flex",
-          gap: 12, flexWrap: "wrap", marginTop: 18, marginBottom: 6
-        }}>
-          <button className="btn" onClick={() => setShowEtat(true)}>
-            CHANGER L’ÉTAT
+        {/* ——— BLOC ACTIONS : Éditer / Changer état / Supprimer ——— */}
+        <div style={{ width: "100%", maxWidth: 1100, display: "flex", gap: 12, flexWrap: "wrap", marginTop: 24, justifyContent: "space-between" }}>
+          <button className="btn primary" onClick={() => navigate(`/abribus/vehicule/${parc}/edit`)}>
+            Éditer le véhicule
+          </button>
+          <button
+            className="btn"
+            style={{ background: '#f1c40f', color: '#222', fontWeight: 600, borderRadius: 6, padding: '8px 22px', fontSize: '1rem', border: 'none', cursor: 'pointer' }}
+            onClick={() => setShowEtat(true)}
+            title="Changer l'état du véhicule"
+          >
+            Changer état
+          </button>
+          <button
+            className="btn danger"
+            onClick={async () => {
+              if (!confirm(`Supprimer définitivement le véhicule ${parc} ?`)) return;
+              const r = await fetch(`${API}/api/vehicles/${parc}`, { method: 'DELETE' });
+              if (r.ok) navigate('/abribus/vehicules');
+              else alert(await r.text());
+            }}
+          >
+            Supprimer
           </button>
         </div>
-<div style={{ width: "100%", maxWidth: 1100, display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18, marginBottom: 6 }}>
-  <button className="btn" onClick={() => setShowEtat(true)}>Changer l’état</button>
-</div>
         {/* ——— Jauges (remplies) ——— */}
         <hr style={{ margin: "18px 0" }} />
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18, width: "100%", maxWidth: 1100 }}>
@@ -241,22 +262,22 @@ const Vehicule = () => {
 </div>
         {/* ——— Modal Changer l'état ——— */}
         {showEtat && (
-          <div className="modalOverlay" onClick={() => setShowEtat(false)}>
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
-              <h2>Changer l’état du véhicule</h2>
-              <select className="input" value={nouvelEtat} onChange={(e) => setNouvelEtat(e.target.value)}>
-                <option value="">Sélectionner un état</option>
+          <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.4)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowEtat(false)}>
+            <div style={{ background: "#fff", borderRadius: 16, padding: 36, minWidth: 340, boxShadow: "0 8px 32px rgba(0,0,0,.18)" }} onClick={e => e.stopPropagation()}>
+              <h2 style={{ marginTop: 0, marginBottom: 18, color: '#2c3e50' }}>Changer l'état du véhicule</h2>
+              <select value={nouvelEtat} onChange={e => setNouvelEtat(e.target.value)} style={{ width: "100%", padding: 12, borderRadius: 10, marginBottom: 22, fontSize: '1rem', fontWeight: 600 }}>
+                <option value="">-- Sélectionner un état --</option>
                 <option value="Disponible">Disponible</option>
                 <option value="Indisponible">Indisponible</option>
-                <option value="Atelier">Atelier</option>
-                <option value="A VENIR">A VENIR</option>
+                <option value="Aux Ateliers">Aux Ateliers</option>
                 <option value="Affecté">Affecté</option>
                 <option value="Au CT">Au CT</option>
                 <option value="Réformé">Réformé</option>
+                <option value="A VENIR">A VENIR</option>
               </select>
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 12 }}>
-                <button className="btn" onClick={() => setShowEtat(false)}>Annuler</button>
-                <button className="btn primary" disabled={!nouvelEtat} onClick={handleChangeEtat}>Valider</button>
+              <div style={{ display: "flex", gap: 14, justifyContent: "flex-end" }}>
+                <button className="btn" style={{ background: '#eee', color: '#222', borderRadius: 8, padding: '8px 22px', fontWeight: 600, fontSize: '1rem', border: 'none', cursor: 'pointer' }} onClick={() => setShowEtat(false)}>Annuler</button>
+                <button className="btn primary" style={{ background: '#2980b9', color: '#fff', borderRadius: 8, padding: '8px 22px', fontWeight: 700, fontSize: '1rem', border: 'none', cursor: 'pointer' }} onClick={handleChangeEtat} disabled={!nouvelEtat}>Valider</button>
               </div>
             </div>
           </div>
