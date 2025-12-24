@@ -55,6 +55,7 @@ const TC360 = () => {
   // États pour la modale de switch véhicule
   const [assignableVehicles, setAssignableVehicles] = useState([]);
   const [switchingVehicleLoading, setSwitchingVehicleLoading] = useState(false);
+  const [autoAssignLoading, setAutoAssignLoading] = useState(false);
   const [switchForm, setSwitchForm] = useState({
     motif: '',
     selectedVehicle: null,
@@ -331,6 +332,76 @@ const TC360 = () => {
         duration: 3000,
         isClosable: true,
       });
+    }
+  };
+
+  const autoAssignVehicle = async () => {
+    if (!selectedService) return;
+    
+    setAutoAssignLoading(true);
+    try {
+      // Récupérer les véhicules disponibles pour ce service
+      const response = await fetch(`${API_URL}/api/services/${selectedService.id}/assignable-vehicles`);
+      if (!response.ok) throw new Error('Impossible de charger les véhicules');
+      
+      const data = await response.json();
+      const vehicles = data.vehicles || [];
+      
+      if (vehicles.length === 0) {
+        toast({
+          title: 'Aucun véhicule disponible',
+          description: 'Aucun véhicule compatible n\'est actuellement disponible',
+          status: 'warning',
+          duration: 3000,
+        });
+        return;
+      }
+      
+      // Assigner le premier véhicule disponible
+      const vehicleToAssign = vehicles[0];
+      const assignResponse = await fetch(`${API_URL}/api/services/${selectedService.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vehiculeAssigne: vehicleToAssign.parc
+        })
+      });
+      
+      if (!assignResponse.ok) throw new Error('Erreur lors de l\'assignation');
+      
+      const updated = await assignResponse.json();
+      setSelectedService(prev => ({
+        ...prev,
+        vehiculeAssigne: vehicleToAssign.parc
+      }));
+      
+      // Charger les détails du véhicule
+      const vehicleRes = await fetch(`${API_URL}/api/vehicles/${vehicleToAssign.parc}`);
+      if (vehicleRes.ok) {
+        const vehicle = await vehicleRes.json();
+        setSelectedService(prev => ({
+          ...prev,
+          vehiculeDetails: vehicle
+        }));
+      }
+      
+      toast({
+        title: 'Succès',
+        description: `Véhicule ${vehicleToAssign.parc} assigné automatiquement`,
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible d\'assigner un véhicule',
+        status: 'error',
+        duration: 3000,
+      });
+    } finally {
+      setAutoAssignLoading(false);
     }
   };
 
@@ -1114,8 +1185,8 @@ const TC360 = () => {
                             </Badge>
                           </VStack>
                           <HStack spacing={2}>
-                            <Button size="sm" colorScheme="blue" variant="solid" isLoading={switchingVehicleLoading} onClick={openSwitchVehicleModal}>
-                              Switcher
+                            <Button size="md" colorScheme="blue" variant="solid" isLoading={switchingVehicleLoading} onClick={openSwitchVehicleModal} fontWeight="bold" width="full">
+                              🔄 Switcher
                             </Button>
                             <Button size="sm" colorScheme="orange" variant="outline" onClick={() => {
                               // Marquer véhicule comme indisponible
@@ -1127,12 +1198,33 @@ const TC360 = () => {
                         </HStack>
                       </VStack>
                     ) : (
-                      <Alert status="warning" borderRadius="md">
-                        <AlertIcon />
-                        <VStack align="start" spacing={0}>
-                          <Text fontWeight="bold">Pas de véhicule assigné</Text>
-                          <Text fontSize="sm">Assignez un véhicule pour ce service</Text>
-                        </VStack>
+                      <Alert status="warning" borderRadius="md" p={4}>
+                        <HStack spacing={3} justify="space-between" w="full" align="start">
+                          <VStack align="start" spacing={1} flex="1">
+                            <Text fontWeight="bold" fontSize="md">⚠️ Pas de véhicule assigné</Text>
+                            <Text fontSize="sm" color="gray.700">Assignez un véhicule compatible pour ce service</Text>
+                          </VStack>
+                          <HStack spacing={2}>
+                            <Button
+                              colorScheme="blue"
+                              size="sm"
+                              onClick={autoAssignVehicle}
+                              isLoading={autoAssignLoading}
+                              fontWeight="bold"
+                            >
+                              🚌 Auto-assigner
+                            </Button>
+                            <Button
+                              colorScheme="green"
+                              size="sm"
+                              variant="outline"
+                              onClick={openSwitchVehicleModal}
+                              isLoading={switchingVehicleLoading}
+                            >
+                              Choisir...
+                            </Button>
+                          </HStack>
+                        </HStack>
                       </Alert>
                     )}
                   </Box>
@@ -1236,7 +1328,7 @@ const TC360 = () => {
         </Modal>
 
         {/* Modal pour switcher de véhicule */}
-        <Modal isOpen={isSwitchVehicleOpen} onClose={onSwitchVehicleClose} size="lg">
+        <Modal isOpen={isSwitchVehicleOpen} onClose={onSwitchVehicleClose} size="xl" scrollBehavior="inside">
           <ModalOverlay />
           <ModalContent>
             <ModalHeader>
@@ -1250,36 +1342,35 @@ const TC360 = () => {
                 const ligneForModal = getLigneById(selectedService.ligneId);
                 const motifData = MOTIFS_CHANGEMENT_VEHICULE.find(m => m.id === switchForm.motif);
                 return (
-                  <VStack spacing={4} align="stretch">
-                    {/* Service actuel */}
-                    <Box bg="blue.50" p={4} borderRadius="md">
-                      <Text fontSize="sm" color="gray.600" mb={1}>Service</Text>
-                      <HStack spacing={2}>
-                        <Badge colorScheme="blue">Ligne {ligneForModal?.numero}</Badge>
-                        <Text fontWeight="bold">{selectedService.heureDebut} - {selectedService.heureFin}</Text>
+                  <VStack spacing={3} align="stretch">
+                    {/* Service actuel - COMPACT */}
+                    <Box bg="blue.50" p={3} borderRadius="md">
+                      <HStack spacing={3} justify="space-between">
+                        <VStack align="start" spacing={0}>
+                          <Badge colorScheme="blue" fontSize="xs">Ligne {ligneForModal?.numero}</Badge>
+                          <Text fontWeight="bold" fontSize="sm">{selectedService.heureDebut} - {selectedService.heureFin}</Text>
+                        </VStack>
+                        <VStack align="end" spacing={0}>
+                          <Text fontSize="xs" color="gray.600">Véhicule</Text>
+                          <Text fontWeight="bold" fontSize="sm">{selectedService.vehiculeAssigne}</Text>
+                        </VStack>
                       </HStack>
-                      {selectedService.vehiculeAssigne && (
-                        <Box mt={2}>
-                          <Text fontSize="sm" color="gray.600">Véhicule actuel: <strong>{selectedService.vehiculeAssigne}</strong></Text>
-                        </Box>
-                      )}
                     </Box>
 
-                    <Divider />
-
-                    {/* Sélection du motif */}
+                    {/* Sélection du motif - PRIORITAIRE */}
                     <FormControl>
-                      <FormLabel fontWeight="bold">Motif du changement *</FormLabel>
+                      <FormLabel fontWeight="bold" fontSize="sm">Motif du changement *</FormLabel>
                       <select
                         value={switchForm.motif}
                         onChange={(e) => setSwitchForm({ ...switchForm, motif: e.target.value })}
                         style={{
                           width: '100%',
-                          padding: '8px 12px',
+                          padding: '10px 12px',
                           borderRadius: '6px',
                           border: '1px solid #cbd5e0',
                           fontSize: '14px',
                           fontFamily: 'inherit',
+                          fontWeight: '500',
                         }}
                       >
                         <option value="">-- Sélectionner un motif --</option>
@@ -1292,76 +1383,64 @@ const TC360 = () => {
                     </FormControl>
 
                     {motifData && motifData.makeUnavailable && (
-                      <Alert status="warning" borderRadius="md">
+                      <Alert status="warning" borderRadius="md" fontSize="sm">
                         <AlertIcon />
                         <Box>
-                          <Text fontWeight="bold" fontSize="sm">
-                            ⚠️ Le véhicule actuel sera marqué comme indisponible
-                          </Text>
-                          <Text fontSize="xs" color="gray.700">
-                            Raison : {motifData.label}
-                          </Text>
+                          <Text fontWeight="bold">⚠️ L'ancien véhicule sera indisponible</Text>
+                          <Text fontSize="xs">Raison : {motifData.label}</Text>
                         </Box>
                       </Alert>
                     )}
 
-                    <Divider />
-
-                    {/* Liste des véhicules disponibles */}
+                    {/* Liste des véhicules en GRID */}
                     <Box>
-                      <Text fontWeight="bold" mb={2}>Véhicules disponibles ({assignableVehicles.length})</Text>
+                      <Text fontWeight="bold" fontSize="sm" mb={2}>Choisir un véhicule ({assignableVehicles.length})</Text>
                       {assignableVehicles.length > 0 ? (
-                        <VStack spacing={2} maxH="350px" overflowY="auto">
+                        <SimpleGrid columns={2} spacing={2} maxH="320px" overflowY="auto">
                           {assignableVehicles.map(vehicle => (
                             <Box
                               key={vehicle.parc}
-                              p={3}
+                              p={2}
                               borderWidth="2px"
                               borderRadius="md"
-                              w="full"
                               cursor="pointer"
                               bg={switchForm.selectedVehicle === vehicle.parc ? 'blue.100' : 'white'}
-                              borderColor={switchForm.selectedVehicle === vehicle.parc ? 'blue.400' : 'gray.200'}
-                              hover={{ bg: 'blue.50' }}
+                              borderColor={switchForm.selectedVehicle === vehicle.parc ? 'blue.500' : 'gray.200'}
+                              hover={{ bg: 'blue.50', borderColor: 'blue.300' }}
                               onClick={() => switchVehicle(vehicle.parc)}
                               transition="all 0.2s"
                             >
-                              <HStack justify="space-between">
-                                <VStack align="start" spacing={0}>
-                                  <Text fontWeight="bold">{vehicle.parc}</Text>
-                                  <Text fontSize="sm" color="gray.600">{vehicle.modele}</Text>
-                                  <Badge colorScheme="green" fontSize="xs" mt={1}>{vehicle.statut}</Badge>
-                                </VStack>
-                                <VStack align="end" spacing={0}>
-                                  <Badge colorScheme="gray">{vehicle.type}</Badge>
-                                  <Text fontSize="xs" color="gray.600">Taux: {vehicle.tauxSante}%</Text>
-                                </VStack>
-                              </HStack>
+                              <VStack spacing={1} align="start">
+                                <Text fontWeight="bold" fontSize="sm">{vehicle.parc}</Text>
+                                <Text fontSize="xs" color="gray.600">{vehicle.modele}</Text>
+                                <HStack spacing={1}>
+                                  <Badge colorScheme="green" fontSize="xs">{vehicle.statut}</Badge>
+                                  <Badge colorScheme="gray" fontSize="xs">{vehicle.type}</Badge>
+                                </HStack>
+                              </VStack>
                             </Box>
                           ))}
-                        </VStack>
+                        </SimpleGrid>
                       ) : (
-                        <Alert status="warning" borderRadius="md">
+                        <Alert status="warning" borderRadius="md" fontSize="sm">
                           <AlertIcon />
                           <Box>
                             <Text fontWeight="bold">Aucun véhicule disponible</Text>
-                            <Text fontSize="sm">Tous les véhicules assignés pour cette ligne sont occupés</Text>
+                            <Text fontSize="xs">Tous les véhicules sont occupés</Text>
                           </Box>
                         </Alert>
                       )}
                     </Box>
 
-                    {switchForm.selectedVehicle && motifData && (
-                      <Alert status="success" borderRadius="md">
+                    {switchForm.selectedVehicle && switchForm.motif && (
+                      <Alert status="success" borderRadius="md" fontSize="sm">
                         <AlertIcon />
                         <Box>
-                          <Text fontWeight="bold" fontSize="sm">
-                            Prêt à switcher vers {switchForm.selectedVehicle}
-                          </Text>
-                          <Text fontSize="xs" color="gray.700">
-                            {motifData.makeUnavailable 
-                              ? `L'ancien véhicule sera marqué comme indisponible (${motifData.label})`
-                              : 'L\'ancien véhicule reste disponible'}
+                          <Text fontWeight="bold">✓ Prêt : {switchForm.selectedVehicle}</Text>
+                          <Text fontSize="xs">
+                            {motifData?.makeUnavailable 
+                              ? `Ancien indisponible (${motifData.label})`
+                              : 'Ancien reste disponible'}
                           </Text>
                         </Box>
                       </Alert>
@@ -1371,7 +1450,7 @@ const TC360 = () => {
               })()}
             </ModalBody>
             <ModalFooter>
-              <HStack spacing={2}>
+              <HStack spacing={2} w="full" pt={2} borderTopWidth="1px">
                 <Button variant="outline" onClick={onSwitchVehicleClose}>
                   Annuler
                 </Button>
@@ -1380,8 +1459,11 @@ const TC360 = () => {
                   onClick={confirmSwitchVehicle}
                   isDisabled={!switchForm.selectedVehicle || !switchForm.motif}
                   isLoading={switchingVehicleLoading}
+                  size="md"
+                  fontWeight="bold"
+                  flex="1"
                 >
-                  Confirmer le changement
+                  ✓ Confirmer
                 </Button>
               </HStack>
             </ModalFooter>
