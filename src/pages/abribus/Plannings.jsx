@@ -570,13 +570,13 @@ const PlanningsCalendar = () => {
   const [selectOpenState, setSelectOpenState] = React.useState({});
 
   // Handle Select opening - load vehicles before opening dropdown
-  const handleSelectOpen = async (ligneId) => {
-    await loadEligibleVehiclesForLine(ligneId);
-    setSelectOpenState(prev => ({ ...prev, [ligneId]: true }));
+  const handleSelectOpen = async (serviceId) => {
+    await loadEligibleVehiclesForService(serviceId);
+    setSelectOpenState(prev => ({ ...prev, [serviceId]: true }));
   };
 
-  const handleSelectClose = (ligneId) => {
-    setSelectOpenState(prev => ({ ...prev, [ligneId]: false }));
+  const handleSelectClose = (serviceId) => {
+    setSelectOpenState(prev => ({ ...prev, [serviceId]: false }));
   };
 
   // Get ligne by ID from lignes array
@@ -593,38 +593,37 @@ const PlanningsCalendar = () => {
     return null;
   };
 
-  const getEligibleVehicles = (ligneId) => {
+  const getEligibleVehicles = (serviceId) => {
     // Retourner le cache s'il existe
-    if (eligibleVehiclesByLine[ligneId]) {
-      return eligibleVehiclesByLine[ligneId];
+    if (eligibleVehiclesByLine[serviceId]) {
+      return eligibleVehiclesByLine[serviceId];
     }
     
     // Sinon return vide pour que le user recharge/clique à nouveau
-    console.log('[getEligibleVehicles] Cache miss for ligne:', ligneId, 'call loadEligibleVehiclesForLine()');
+    console.log('[getEligibleVehicles] Cache miss for service:', serviceId);
     return [];
   };
 
-  // Charger les véhicules éligibles pour une ligne (avec cache)
-  const loadEligibleVehiclesForLine = async (ligneId) => {
-    if (eligibleVehiclesByLine[ligneId]) {
-      return eligibleVehiclesByLine[ligneId];
+  // Charger les véhicules assignables pour un service (disponibles + autorisés)
+  const loadEligibleVehiclesForService = async (serviceId) => {
+    if (eligibleVehiclesByLine[serviceId]) {
+      return eligibleVehiclesByLine[serviceId];
     }
 
     try {
-      const response = await fetch(`${API_URL}/api/vehicles/eligible/${ligneId}`);
+      const response = await fetch(`${API_URL}/api/services/${serviceId}/assignable-vehicles`);
       if (response.ok) {
         const data = await response.json();
         setEligibleVehiclesByLine(prev => ({
           ...prev,
-          [ligneId]: data.vehicles || [],
+          [serviceId]: data.vehicles || [],
         }));
         return data.vehicles || [];
       }
     } catch (error) {
-      console.error('Erreur lors du chargement des véhicules éligibles:', error);
+      console.error('Erreur lors du chargement des véhicules:', error);
     }
-    // Fallback: retourner seulement les véhicules disponibles
-    return vehicles.filter(v => v.statut === 'Disponible');
+    return [];
   };
 
   const supprimerService = async (serviceId) => {
@@ -1033,21 +1032,21 @@ const PlanningsCalendar = () => {
                         <Text fontSize="sm" color="gray.600" mb={2}>🚌 Assigner un autobus</Text>
                         <Select
                           size="sm"
-                          placeholder={selectOpenState[service.ligneId] ? "Chargement..." : "-- Sélectionner un autobus --"}
+                          placeholder={selectOpenState[service.id] ? "Chargement..." : "-- Sélectionner un autobus --"}
                           value={service.vehiculeAssigne || ''}
                           onChange={(e) => assignerVehicule(service.id, e.target.value || null)}
                           isDisabled={isDegradedMode}
-                          onFocus={() => handleSelectOpen(service.ligneId)}
-                          onBlur={() => handleSelectClose(service.ligneId)}
+                          onFocus={() => handleSelectOpen(service.id)}
+                          onBlur={() => handleSelectClose(service.id)}
                         >
-                          {getEligibleVehicles(service.ligneId).map(v => (
+                          {getEligibleVehicles(service.id).map(v => (
                             <option key={v.parc} value={v.parc}>
                               {v.parc} - {v.modele} ({v.statut}) [{v.type}]
                             </option>
                           ))}
                         </Select>
                         <Text fontSize="xs" color="gray.500" mt={1}>
-                          Ligne {service.ligneId}: {getEligibleVehicles(service.ligneId).length} véhicule(s) éligible(s)
+                          {getEligibleVehicles(service.id).length} autobus disponible(s) pour cette ligne
                         </Text>
                       </Box>
 
