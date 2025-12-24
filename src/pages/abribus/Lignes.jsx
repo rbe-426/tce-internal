@@ -28,6 +28,7 @@ import {
   FormLabel,
   Checkbox,
   Stack,
+  Divider,
   useToast,
   Spinner,
 } from '@chakra-ui/react';
@@ -40,7 +41,7 @@ const Lignes = () => {
   const [typesAutobus, setTypesAutobus] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [newLigne, setNewLigne] = useState({ numero: '', nom: '', typesVehicules: [], demandeChrono: false });
+  const [newLigne, setNewLigne] = useState({ numero: '', nom: '', typesVehicules: [], demandeChrono: false, estScolaire: false, estSpecial: false, departLimite: false, serviceLimite: false });
   const [editingLigne, setEditingLigne] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: isEditOpen, onOpen: onEditOpen, onClose: onEditClose } = useDisclosure();
@@ -138,6 +139,10 @@ const Lignes = () => {
           typesVehicules: newLigne.typesVehicules,
           demandeChrono: newLigne.demandeChrono,
           statut: 'Actif',
+          estScolaire: newLigne.estScolaire || false,
+          estSpecial: newLigne.estSpecial || false,
+          departLimite: newLigne.departLimite || false,
+          serviceLimite: newLigne.serviceLimite || false,
         }),
       });
 
@@ -145,7 +150,7 @@ const Lignes = () => {
       const created = await response.json();
 
       setLignes([...lignes, created]);
-      setNewLigne({ numero: '', nom: '', typesVehicules: [], demandeChrono: false });
+      setNewLigne({ numero: '', nom: '', typesVehicules: [], demandeChrono: false, estScolaire: false, estSpecial: false, departLimite: false, serviceLimite: false });
       onClose();
 
       toast({
@@ -203,6 +208,10 @@ const Lignes = () => {
       typesVehicules: parseJSON(ligne.typesVehicules),
       demandeChrono: ligne.demandeChrono || false,
       statut: ligne.statut,
+      estScolaire: ligne.estScolaire || false,
+      estSpecial: ligne.estSpecial || false,
+      departLimite: ligne.departLimite || false,
+      serviceLimite: ligne.serviceLimite || false,
     });
     onEditOpen();
   };
@@ -229,6 +238,10 @@ const Lignes = () => {
           typesVehicules: editingLigne.typesVehicules,
           demandeChrono: editingLigne.demandeChrono,
           statut: editingLigne.statut,
+          estScolaire: editingLigne.estScolaire || false,
+          estSpecial: editingLigne.estSpecial || false,
+          departLimite: editingLigne.departLimite || false,
+          serviceLimite: editingLigne.serviceLimite || false,
         }),
       });
 
@@ -465,6 +478,38 @@ const Lignes = () => {
                   Demander la carte chrono
                 </Checkbox>
               </FormControl>
+
+              {/* Paramètres du cycle - Create modal */}
+              <Divider my={2} />
+              <FormControl>
+                <FormLabel fontWeight="bold" fontSize="md">Paramètres du cycle</FormLabel>
+                <Stack spacing={2} mt={3}>
+                  <Checkbox
+                    isChecked={newLigne.estScolaire}
+                    onChange={(e) => setNewLigne({ ...newLigne, estScolaire: e.target.checked })}
+                  >
+                    Service scolaire
+                  </Checkbox>
+                  <Checkbox
+                    isChecked={newLigne.estSpecial}
+                    onChange={(e) => setNewLigne({ ...newLigne, estSpecial: e.target.checked })}
+                  >
+                    Service spécial
+                  </Checkbox>
+                  <Checkbox
+                    isChecked={newLigne.departLimite}
+                    onChange={(e) => setNewLigne({ ...newLigne, departLimite: e.target.checked })}
+                  >
+                    Départ limité
+                  </Checkbox>
+                  <Checkbox
+                    isChecked={newLigne.serviceLimite}
+                    onChange={(e) => setNewLigne({ ...newLigne, serviceLimite: e.target.checked })}
+                  >
+                    Service limité
+                  </Checkbox>
+                </Stack>
+              </FormControl>
             </VStack>
           </ModalBody>
           <ModalFooter>
@@ -543,6 +588,39 @@ const Lignes = () => {
                     Demander la carte chrono
                   </Checkbox>
                 </FormControl>
+
+                {/* Paramètres du cycle */}
+                <Divider my={2} />
+                <FormControl>
+                  <FormLabel fontWeight="bold" fontSize="md">Paramètres du cycle</FormLabel>
+                  <Stack spacing={2} mt={3}>
+                    <Checkbox
+                      isChecked={editingLigne.estScolaire || false}
+                      onChange={(e) => setEditingLigne({ ...editingLigne, estScolaire: e.target.checked })}
+                    >
+                      Service scolaire
+                    </Checkbox>
+                    <Checkbox
+                      isChecked={editingLigne.estSpecial || false}
+                      onChange={(e) => setEditingLigne({ ...editingLigne, estSpecial: e.target.checked })}
+                    >
+                      Service spécial
+                    </Checkbox>
+                    <Checkbox
+                      isChecked={editingLigne.departLimite || false}
+                      onChange={(e) => setEditingLigne({ ...editingLigne, departLimite: e.target.checked })}
+                    >
+                      Départ limité
+                    </Checkbox>
+                    <Checkbox
+                      isChecked={editingLigne.serviceLimite || false}
+                      onChange={(e) => setEditingLigne({ ...editingLigne, serviceLimite: e.target.checked })}
+                    >
+                      Service limité
+                    </Checkbox>
+                  </Stack>
+                </FormControl>
+
                 <FormControl>
                   <FormLabel>Statut</FormLabel>
                   <HStack spacing={4}>

@@ -951,6 +951,37 @@ const PlanningsCalendar = () => {
                             {sens.direction}
                           </Text>
                         )}
+                        
+                        {/* Afficher les paramètres du cycle */}
+                        {ligne && (
+                          <HStack spacing={2} mt={2} flexWrap="wrap">
+                            {ligne.estScolaire && (
+                              <Badge colorScheme="blue" fontSize="xs">
+                                🎓 Scolaire
+                              </Badge>
+                            )}
+                            {ligne.estSpecial && (
+                              <Badge colorScheme="purple" fontSize="xs">
+                                ⭐ Spécial
+                              </Badge>
+                            )}
+                            {ligne.departLimite && (
+                              <Badge colorScheme="orange" fontSize="xs">
+                                📍 Départ limité
+                              </Badge>
+                            )}
+                            {ligne.serviceLimite && (
+                              <Badge colorScheme="red" fontSize="xs">
+                                ⚠️ Service limité
+                              </Badge>
+                            )}
+                            {sens?.jourFonctionnement && (
+                              <Badge colorScheme="teal" fontSize="xs">
+                                📅 {sens.jourFonctionnement === 'SEMAINE' ? 'Semaine' : sens.jourFonctionnement === 'SAMEDI' ? 'Samedi' : 'Dimanche/Féries'}
+                              </Badge>
+                            )}
+                          </HStack>
+                        )}
                       </Box>
 
                       <Divider />
