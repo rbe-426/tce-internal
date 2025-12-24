@@ -397,11 +397,16 @@ const TC360 = () => {
         isClosable: true,
       });
     }
+  };
+
+  const handlePointage = async () => {
     try {
       if (!selectedService) return;
 
-      // Valider que le conducteurId est sélectionné
-      if (!pointageForm.conducteurId) {
+      // Si le conducteur est déjà assigné au service, pas besoin de vérifier qu'il soit rempli
+      const conductorToUse = pointageForm.conducteurId || selectedService.conducteur?.id;
+      
+      if (!conductorToUse) {
         toast({
           title: 'Erreur',
           description: 'Veuillez sélectionner un conducteur',
@@ -467,7 +472,7 @@ const TC360 = () => {
 
       const pointageData = {
         serviceId: selectedService.id,
-        conducteurId: pointageForm.conducteurId, // Utiliser le conducteur sélectionné du form
+        conducteurId: conductorToUse, // Utiliser le conducteur du form OU celui déjà assigné au service
         validatedBy: user?.role || 'Régulateur',
         vehicleType: pointageForm.vehicleType,
         permisChecked: pointageForm.permisChecked,
@@ -963,10 +968,24 @@ const TC360 = () => {
                     <Heading size="sm" mb={3}>
                       <HStack spacing={2}>
                         <FaUser />
-                        <span>{selectedService.conducteur ? 'Échange de service' : 'Sélectionner le conducteur'}</span>
+                        <span>
+                          {selectedService.conducteur 
+                            ? `Conducteur: ${selectedService.conducteur.prenom} ${selectedService.conducteur.nom}${pointageForm.conducteurId && pointageForm.conducteurId !== selectedService.conducteur.id ? ' (à changer)' : ' (confirmé)'}`
+                            : 'Sélectionner le conducteur *'
+                          }
+                        </span>
                       </HStack>
                     </Heading>
                     <VStack spacing={3}>
+                      {selectedService.conducteur && (
+                        <Alert status="info" borderRadius="md" fontSize="sm">
+                          <AlertIcon />
+                          <Box>
+                            <Text fontWeight="bold">{selectedService.conducteur.prenom} {selectedService.conducteur.nom}</Text>
+                            <Text fontSize="xs">Déjà assigné à ce service. Vous pouvez le changer si nécessaire.</Text>
+                          </Box>
+                        </Alert>
+                      )}
                       <select
                         value={pointageForm.conducteurId}
                         onChange={(e) => setPointageForm({ ...pointageForm, conducteurId: e.target.value })}
@@ -978,7 +997,7 @@ const TC360 = () => {
                           fontSize: '14px',
                         }}
                       >
-                        <option value="">-- Choisir un conducteur --</option>
+                        <option value="">{selectedService.conducteur ? '-- Garder le conducteur assigné --' : '-- Choisir un conducteur --'}</option>
                         {conducteurs.map(c => (
                           <option key={c.id} value={c.id}>
                             {c.prenom} {c.nom} ({c.matricule})
