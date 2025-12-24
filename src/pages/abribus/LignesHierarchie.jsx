@@ -908,7 +908,7 @@ const LignesHierarchie = () => {
                 variant="outline"
                 onClick={onImportOpen}
               >
-                Importer CSV
+                Ajout de lignes
               </Button>
               <Button
                 leftIcon={<AddIcon />}
@@ -1525,11 +1525,12 @@ const LignesHierarchie = () => {
         </ModalContent>
       </Modal>
 
-      {/* Modal Import CSV */}
+      {/* Modal Ajout de lignes */}
       <ImportLignesCSV
         isOpen={isImportOpen}
         onClose={onImportClose}
         onSuccess={handleImportSuccess}
+        instructions={`Utilisez ce module pour ajouter des lignes en masse via un fichier CSV.\n\nLe script backend utilisé est : /backend/import-lignes.ps1 (PowerShell) ou /backend/scripts/import-lignes-direct.js (Node.js).\n\nPour importer, préparez votre fichier CSV au format attendu, puis sélectionnez-le ici.\n\nVoir aussi le guide détaillé dans GUIDE_IMPORT_CSV.md.`}
       />
     </Container>
   );

@@ -22,7 +22,7 @@ import {
 import { DownloadIcon } from '@chakra-ui/icons';
 import { API_URL } from '../config';
 
-const ImportLignesCSV = ({ isOpen, onClose, onSuccess }) => {
+const ImportLignesCSV = ({ isOpen, onClose, onSuccess, instructions }) => {
   const fileInputRef = useRef(null);
   const toast = useToast();
 
@@ -116,6 +116,11 @@ Centre-Aero,3,Aéroport,8`;
         <ModalCloseButton />
         <ModalBody>
           <VStack spacing={4} align="stretch">
+            {instructions && (
+              <Box bg="gray.50" p={3} borderRadius="md" mb={2}>
+                <Text fontSize="sm" color="gray.700" whiteSpace="pre-line">{instructions}</Text>
+              </Box>
+            )}
             <Box>
               <Text fontSize="sm" fontWeight="bold" mb={2}>
                 Format attendu du CSV (deux sections) :
