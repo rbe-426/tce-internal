@@ -55,6 +55,10 @@ const TC360 = () => {
   // États pour la modale de switch véhicule
   const [assignableVehicles, setAssignableVehicles] = useState([]);
   const [switchingVehicleLoading, setSwitchingVehicleLoading] = useState(false);
+  const [switchForm, setSwitchForm] = useState({
+    motif: '',
+    selectedVehicle: null,
+  });
 
   // États pour la modal non-assuré
   const [nonAssuredForm, setNonAssuredForm] = useState({
@@ -72,6 +76,16 @@ const TC360 = () => {
     'DROIT DE RETRAIT CONDUCTEUR',
     'GREVE NON AUTORISEE',
     'GREVE AUTORISEE'
+  ];
+
+  // Motifs pour changement de véhicule
+  const MOTIFS_CHANGEMENT_VEHICULE = [
+    { id: 'deja_sur_route', label: 'Véhicule déjà sur route', makeUnavailable: false },
+    { id: 'panne', label: 'Panne', makeUnavailable: true },
+    { id: 'accident', label: 'Accident', makeUnavailable: true },
+    { id: 'atelier', label: 'Sur atelier', makeUnavailable: true },
+    { id: 'formation', label: 'Formation en cours', makeUnavailable: true },
+    { id: 'maintenance', label: 'Maintenance', makeUnavailable: true },
   ];
 
   // Pointage form state
@@ -324,6 +338,7 @@ const TC360 = () => {
     if (!selectedService) return;
     
     setSwitchingVehicleLoading(true);
+    setSwitchForm({ motif: '', selectedVehicle: null });
     try {
       // Charger les véhicules assignables pour ce service
       const response = await fetch(`${API_URL}/api/services/${selectedService.id}/assignable-vehicles`);
@@ -347,10 +362,23 @@ const TC360 = () => {
     }
   };
 
-  const switchVehicle = async (newParc) => {
-    if (!selectedService) return;
-    
+  const confirmSwitchVehicle = async () => {
+    if (!selectedService || !switchForm.selectedVehicle || !switchForm.motif) {
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez sélectionner un véhicule et un motif',
+        status: 'error',
+        duration: 3000,
+      });
+      return;
+    }
+
+    const newParc = switchForm.selectedVehicle;
+    const motifData = MOTIFS_CHANGEMENT_VEHICULE.find(m => m.id === switchForm.motif);
+    const shouldMarkUnavailable = motifData?.makeUnavailable || false;
+
     try {
+      // Changer le véhicule assigné au service
       const response = await fetch(`${API_URL}/api/services/${selectedService.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -359,34 +387,51 @@ const TC360 = () => {
         })
       });
 
-      if (response.ok) {
-        const updated = await response.json();
+      if (!response.ok) throw new Error('Erreur lors du changement de véhicule');
+
+      const updated = await response.json();
+      setSelectedService(prev => ({
+        ...prev,
+        vehiculeAssigne: newParc
+      }));
+      
+      // Reload vehicle details
+      const vehicleRes = await fetch(`${API_URL}/api/vehicles/${newParc}`);
+      if (vehicleRes.ok) {
+        const vehicle = await vehicleRes.json();
         setSelectedService(prev => ({
           ...prev,
-          vehiculeAssigne: newParc
+          vehiculeDetails: vehicle
         }));
-        
-        // Reload vehicle details
-        const vehicleRes = await fetch(`${API_URL}/api/vehicles/${newParc}`);
-        if (vehicleRes.ok) {
-          const vehicle = await vehicleRes.json();
-          setSelectedService(prev => ({
-            ...prev,
-            vehiculeDetails: vehicle
-          }));
-        }
-        
-        onSwitchVehicleClose();
-        toast({
-          title: 'Succès',
-          description: `Véhicule changé en ${newParc}`,
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-      } else {
-        throw new Error('Erreur lors de la mise à jour');
       }
+
+      // Si le motif requiert de marquer le véhicule comme indisponible
+      if (shouldMarkUnavailable && selectedService.vehiculeAssigne) {
+        await fetch(`${API_URL}/api/vehicles/${selectedService.vehiculeAssigne}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            statut: 'Indisponible',
+            motifChangement: motifData.label
+          })
+        });
+
+        // Recharger les véhicules disponibles
+        const assignableRes = await fetch(`${API_URL}/api/services/${selectedService.id}/assignable-vehicles`);
+        if (assignableRes.ok) {
+          const data = await assignableRes.json();
+          setAssignableVehicles(data.vehicles || []);
+        }
+      }
+      
+      onSwitchVehicleClose();
+      toast({
+        title: 'Succès',
+        description: `Véhicule changé en ${newParc}${shouldMarkUnavailable ? ' et marqué comme indisponible' : ''}`,
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
     } catch (error) {
       console.error('Erreur:', error);
       toast({
@@ -397,6 +442,14 @@ const TC360 = () => {
         isClosable: true,
       });
     }
+  };
+
+  const switchVehicle = async (newParc) => {
+    // Sélectionner le véhicule et demander la confirmation
+    setSwitchForm(prev => ({
+      ...prev,
+      selectedVehicle: newParc
+    }));
   };
 
   const handlePointage = async () => {
@@ -1195,6 +1248,7 @@ const TC360 = () => {
             <ModalBody>
               {selectedService && (() => {
                 const ligneForModal = getLigneById(selectedService.ligneId);
+                const motifData = MOTIFS_CHANGEMENT_VEHICULE.find(m => m.id === switchForm.motif);
                 return (
                   <VStack spacing={4} align="stretch">
                     {/* Service actuel */}
@@ -1213,19 +1267,61 @@ const TC360 = () => {
 
                     <Divider />
 
+                    {/* Sélection du motif */}
+                    <FormControl>
+                      <FormLabel fontWeight="bold">Motif du changement *</FormLabel>
+                      <select
+                        value={switchForm.motif}
+                        onChange={(e) => setSwitchForm({ ...switchForm, motif: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          borderRadius: '6px',
+                          border: '1px solid #cbd5e0',
+                          fontSize: '14px',
+                          fontFamily: 'inherit',
+                        }}
+                      >
+                        <option value="">-- Sélectionner un motif --</option>
+                        {MOTIFS_CHANGEMENT_VEHICULE.map(m => (
+                          <option key={m.id} value={m.id}>
+                            {m.label}
+                          </option>
+                        ))}
+                      </select>
+                    </FormControl>
+
+                    {motifData && motifData.makeUnavailable && (
+                      <Alert status="warning" borderRadius="md">
+                        <AlertIcon />
+                        <Box>
+                          <Text fontWeight="bold" fontSize="sm">
+                            ⚠️ Le véhicule actuel sera marqué comme indisponible
+                          </Text>
+                          <Text fontSize="xs" color="gray.700">
+                            Raison : {motifData.label}
+                          </Text>
+                        </Box>
+                      </Alert>
+                    )}
+
+                    <Divider />
+
                     {/* Liste des véhicules disponibles */}
                     <Box>
                       <Text fontWeight="bold" mb={2}>Véhicules disponibles ({assignableVehicles.length})</Text>
                       {assignableVehicles.length > 0 ? (
-                        <VStack spacing={2} maxH="400px" overflowY="auto">
+                        <VStack spacing={2} maxH="350px" overflowY="auto">
                           {assignableVehicles.map(vehicle => (
                             <Box
                               key={vehicle.parc}
                               p={3}
-                              borderWidth="1px"
+                              borderWidth="2px"
                               borderRadius="md"
                               w="full"
                               cursor="pointer"
+                              bg={switchForm.selectedVehicle === vehicle.parc ? 'blue.100' : 'white'}
+                              borderColor={switchForm.selectedVehicle === vehicle.parc ? 'blue.400' : 'gray.200'}
                               hover={{ bg: 'blue.50' }}
                               onClick={() => switchVehicle(vehicle.parc)}
                               transition="all 0.2s"
@@ -1254,14 +1350,40 @@ const TC360 = () => {
                         </Alert>
                       )}
                     </Box>
+
+                    {switchForm.selectedVehicle && motifData && (
+                      <Alert status="success" borderRadius="md">
+                        <AlertIcon />
+                        <Box>
+                          <Text fontWeight="bold" fontSize="sm">
+                            Prêt à switcher vers {switchForm.selectedVehicle}
+                          </Text>
+                          <Text fontSize="xs" color="gray.700">
+                            {motifData.makeUnavailable 
+                              ? `L'ancien véhicule sera marqué comme indisponible (${motifData.label})`
+                              : 'L\'ancien véhicule reste disponible'}
+                          </Text>
+                        </Box>
+                      </Alert>
+                    )}
                   </VStack>
                 );
               })()}
             </ModalBody>
             <ModalFooter>
-              <Button variant="outline" onClick={onSwitchVehicleClose}>
-                Fermer
-              </Button>
+              <HStack spacing={2}>
+                <Button variant="outline" onClick={onSwitchVehicleClose}>
+                  Annuler
+                </Button>
+                <Button
+                  colorScheme="blue"
+                  onClick={confirmSwitchVehicle}
+                  isDisabled={!switchForm.selectedVehicle || !switchForm.motif}
+                  isLoading={switchingVehicleLoading}
+                >
+                  Confirmer le changement
+                </Button>
+              </HStack>
             </ModalFooter>
           </ModalContent>
         </Modal>
