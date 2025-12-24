@@ -49,7 +49,12 @@ const TC360 = () => {
   const [conducteurs, setConducteurs] = useState([]);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: isNonAssuredOpen, onOpen: onNonAssuredOpen, onClose: onNonAssuredClose } = useDisclosure();
+  const { isOpen: isSwitchVehicleOpen, onOpen: onSwitchVehicleOpen, onClose: onSwitchVehicleClose } = useDisclosure();
   const toast = useToast();
+
+  // États pour la modale de switch véhicule
+  const [assignableVehicles, setAssignableVehicles] = useState([]);
+  const [switchingVehicleLoading, setSwitchingVehicleLoading] = useState(false);
 
   // États pour la modal non-assuré
   const [nonAssuredForm, setNonAssuredForm] = useState({
@@ -248,6 +253,22 @@ const TC360 = () => {
 
   const handleServiceSelect = (service) => {
     setSelectedService(service);
+    
+    // Charger les détails du véhicule si assigné
+    if (service.vehiculeAssigne) {
+      fetch(`${API_URL}/api/vehicles/${service.vehiculeAssigne}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(vehicle => {
+          if (vehicle) {
+            setSelectedService(prev => ({
+              ...prev,
+              vehiculeDetails: vehicle
+            }));
+          }
+        })
+        .catch(err => console.error('Erreur chargement véhicule:', err));
+    }
+    
     setPointageForm({
       vehicleType: '',
       permisChecked: false,
@@ -257,7 +278,125 @@ const TC360 = () => {
     onOpen();
   };
 
-  const handlePointage = async () => {
+  const markVehicleUnavailable = async (parc) => {
+    if (!parc) return;
+    
+    try {
+      const response = await fetch(`${API_URL}/api/vehicles/${parc}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          statut: 'Indisponible',
+          motifChangement: 'Marqué indisponible par TC360'
+        })
+      });
+
+      if (response.ok) {
+        const updated = await response.json();
+        setSelectedService(prev => ({
+          ...prev,
+          vehiculeDetails: updated
+        }));
+        
+        toast({
+          title: 'Succès',
+          description: `Véhicule ${parc} marqué comme indisponible`,
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        throw new Error('Erreur lors de la mise à jour');
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de marquer le véhicule comme indisponible',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const openSwitchVehicleModal = async () => {
+    if (!selectedService) return;
+    
+    setSwitchingVehicleLoading(true);
+    try {
+      // Charger les véhicules assignables pour ce service
+      const response = await fetch(`${API_URL}/api/services/${selectedService.id}/assignable-vehicles`);
+      if (response.ok) {
+        const data = await response.json();
+        setAssignableVehicles(data.vehicles || []);
+        onSwitchVehicleOpen();
+      } else {
+        throw new Error('Impossible de charger les véhicules');
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger les véhicules disponibles',
+        status: 'error',
+        duration: 3000,
+      });
+    } finally {
+      setSwitchingVehicleLoading(false);
+    }
+  };
+
+  const switchVehicle = async (newParc) => {
+    if (!selectedService) return;
+    
+    try {
+      const response = await fetch(`${API_URL}/api/services/${selectedService.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vehiculeAssigne: newParc
+        })
+      });
+
+      if (response.ok) {
+        const updated = await response.json();
+        setSelectedService(prev => ({
+          ...prev,
+          vehiculeAssigne: newParc
+        }));
+        
+        // Reload vehicle details
+        const vehicleRes = await fetch(`${API_URL}/api/vehicles/${newParc}`);
+        if (vehicleRes.ok) {
+          const vehicle = await vehicleRes.json();
+          setSelectedService(prev => ({
+            ...prev,
+            vehiculeDetails: vehicle
+          }));
+        }
+        
+        onSwitchVehicleClose();
+        toast({
+          title: 'Succès',
+          description: `Véhicule changé en ${newParc}`,
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        throw new Error('Erreur lors de la mise à jour');
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de changer le véhicule',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
     try {
       if (!selectedService) return;
 
@@ -889,6 +1028,45 @@ const TC360 = () => {
 
                   <Divider />
 
+                  {/* Véhicule assigné */}
+                  <Box>
+                    <Heading size="sm" mb={3}>🚌 Véhicule assigné</Heading>
+                    {selectedService.vehiculeAssigne ? (
+                      <VStack align="start" spacing={3} bg="blue.50" p={3} borderRadius="md" borderLeft="4px" borderColor="blue.400">
+                        <HStack justify="space-between" w="full">
+                          <VStack align="start" spacing={0}>
+                            <Text fontWeight="bold" fontSize="md">{selectedService.vehiculeAssigne}</Text>
+                            <Text fontSize="sm" color="gray.600">{selectedService.vehiculeDetails?.modele || 'Détails chargement...'}</Text>
+                            <Badge mt={2} colorScheme={selectedService.vehiculeDetails?.statut === 'Disponible' ? 'green' : 'red'}>
+                              {selectedService.vehiculeDetails?.statut || 'Chargement...'}
+                            </Badge>
+                          </VStack>
+                          <HStack spacing={2}>
+                            <Button size="sm" colorScheme="blue" variant="solid" isLoading={switchingVehicleLoading} onClick={openSwitchVehicleModal}>
+                              Switcher
+                            </Button>
+                            <Button size="sm" colorScheme="orange" variant="outline" onClick={() => {
+                              // Marquer véhicule comme indisponible
+                              markVehicleUnavailable(selectedService.vehiculeAssigne);
+                            }}>
+                              Marquer indisponible
+                            </Button>
+                          </HStack>
+                        </HStack>
+                      </VStack>
+                    ) : (
+                      <Alert status="warning" borderRadius="md">
+                        <AlertIcon />
+                        <VStack align="start" spacing={0}>
+                          <Text fontWeight="bold">Pas de véhicule assigné</Text>
+                          <Text fontSize="sm">Assignez un véhicule pour ce service</Text>
+                        </VStack>
+                      </Alert>
+                    )}
+                  </Box>
+
+                  <Divider />
+
                   {/* Vérifications */}
                   <Box>
                     <Heading size="sm" mb={3}>Vérifications</Heading>
@@ -981,6 +1159,90 @@ const TC360 = () => {
                   Valider le pointage
                 </Button>
               </HStack>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        {/* Modal pour switcher de véhicule */}
+        <Modal isOpen={isSwitchVehicleOpen} onClose={onSwitchVehicleClose} size="lg">
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>
+              <HStack spacing={2}>
+                <span>🔄 Switcher de véhicule</span>
+              </HStack>
+            </ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              {selectedService && (() => {
+                const ligneForModal = getLigneById(selectedService.ligneId);
+                return (
+                  <VStack spacing={4} align="stretch">
+                    {/* Service actuel */}
+                    <Box bg="blue.50" p={4} borderRadius="md">
+                      <Text fontSize="sm" color="gray.600" mb={1}>Service</Text>
+                      <HStack spacing={2}>
+                        <Badge colorScheme="blue">Ligne {ligneForModal?.numero}</Badge>
+                        <Text fontWeight="bold">{selectedService.heureDebut} - {selectedService.heureFin}</Text>
+                      </HStack>
+                      {selectedService.vehiculeAssigne && (
+                        <Box mt={2}>
+                          <Text fontSize="sm" color="gray.600">Véhicule actuel: <strong>{selectedService.vehiculeAssigne}</strong></Text>
+                        </Box>
+                      )}
+                    </Box>
+
+                    <Divider />
+
+                    {/* Liste des véhicules disponibles */}
+                    <Box>
+                      <Text fontWeight="bold" mb={2}>Véhicules disponibles ({assignableVehicles.length})</Text>
+                      {assignableVehicles.length > 0 ? (
+                        <VStack spacing={2} maxH="400px" overflowY="auto">
+                          {assignableVehicles.map(vehicle => (
+                            <Box
+                              key={vehicle.parc}
+                              p={3}
+                              borderWidth="1px"
+                              borderRadius="md"
+                              w="full"
+                              cursor="pointer"
+                              hover={{ bg: 'blue.50' }}
+                              onClick={() => switchVehicle(vehicle.parc)}
+                              transition="all 0.2s"
+                            >
+                              <HStack justify="space-between">
+                                <VStack align="start" spacing={0}>
+                                  <Text fontWeight="bold">{vehicle.parc}</Text>
+                                  <Text fontSize="sm" color="gray.600">{vehicle.modele}</Text>
+                                  <Badge colorScheme="green" fontSize="xs" mt={1}>{vehicle.statut}</Badge>
+                                </VStack>
+                                <VStack align="end" spacing={0}>
+                                  <Badge colorScheme="gray">{vehicle.type}</Badge>
+                                  <Text fontSize="xs" color="gray.600">Taux: {vehicle.tauxSante}%</Text>
+                                </VStack>
+                              </HStack>
+                            </Box>
+                          ))}
+                        </VStack>
+                      ) : (
+                        <Alert status="warning" borderRadius="md">
+                          <AlertIcon />
+                          <Box>
+                            <Text fontWeight="bold">Aucun véhicule disponible</Text>
+                            <Text fontSize="sm">Tous les véhicules assignés pour cette ligne sont occupés</Text>
+                          </Box>
+                        </Alert>
+                      )}
+                    </Box>
+                  </VStack>
+                );
+              })()}
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="outline" onClick={onSwitchVehicleClose}>
+                Fermer
+              </Button>
             </ModalFooter>
           </ModalContent>
         </Modal>
