@@ -1184,17 +1184,9 @@ const TC360 = () => {
                               {selectedService.vehiculeDetails?.statut || 'Chargement...'}
                             </Badge>
                           </VStack>
-                          <HStack spacing={2}>
-                            <Button size="md" colorScheme="blue" variant="solid" isLoading={switchingVehicleLoading} onClick={openSwitchVehicleModal} fontWeight="bold" width="full">
-                              🔄 Switcher
-                            </Button>
-                            <Button size="sm" colorScheme="orange" variant="outline" onClick={() => {
-                              // Marquer véhicule comme indisponible
-                              markVehicleUnavailable(selectedService.vehiculeAssigne);
-                            }}>
-                              Marquer indisponible
-                            </Button>
-                          </HStack>
+                          <Button size="sm" colorScheme="blue" variant="solid" isLoading={switchingVehicleLoading} onClick={openSwitchVehicleModal} fontWeight="bold">
+                            🔄 Switcher
+                          </Button>
                         </HStack>
                       </VStack>
                     ) : (
