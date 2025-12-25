@@ -557,31 +557,8 @@ const TC360 = () => {
 
       // Vérifier si le service a un autocar assigné
       if (selectedService.vehiculeAssigne) {
-        // Chercher le type de véhicule
-        try {
-          const vehicleRes = await fetch(`${API_URL}/api/vehicles/${selectedService.vehiculeAssigne}`);
-          if (vehicleRes.ok) {
-            const vehicle = await vehicleRes.json();
-            // Déterminer si c'est un autocar
-            const isAutocar = vehicle.type && (
-              vehicle.type.toUpperCase().includes('AUTOCAR') ||
-              vehicle.type.toUpperCase().includes('TCP')
-            );
-            
-            if (isAutocar && !pointageForm.chronometerChecked) {
-              toast({
-                title: 'Erreur',
-                description: 'La vérification de la carte chrono est obligatoire pour un autocar',
-                status: 'error',
-                duration: 3000,
-                isClosable: true,
-              });
-              return;
-            }
-          }
-        } catch (e) {
-          console.warn('Impossible de vérifier le type de véhicule:', e);
-        }
+        // Note: Validation chrono est UNIQUEMENT pour TCP - Autocars BC/NOC/EXPRESS
+        // (voir ligne 544-551 pour la validation du type de ligne)
       }
 
       // Détecter si le service est pointé en retard
