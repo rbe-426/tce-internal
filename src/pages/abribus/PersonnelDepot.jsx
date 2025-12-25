@@ -26,8 +26,15 @@ import {
   Spinner,
   Alert,
   AlertIcon,
-  useToast
+  useToast,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
 } from '@chakra-ui/react';
+import ImmobilisationByOthers from './components/ImmobilisationByOthers';
+import ImmobilisationRequests from './components/ImmobilisationRequests';
 import { API_URL } from '../../config';
 
 const ROLE_TYPES = [
@@ -148,36 +155,47 @@ export default function PersonnelDepot({ depotId, depotName }) {
   return (
     <VStack align="stretch" spacing={6} p={6}>
       <Box>
-        <Heading size="lg" mb={4}>
+        <Heading size="lg" mb={6}>
           Gestion du Personnel - {depotName}
         </Heading>
 
-        {/* Stats */}
-        {stats && (
-          <Box mb={6} p={4} bg="gray.50" rounded="md">
-            <Heading size="sm" mb={3}>
-              État des Rôles
-            </Heading>
-            <HStack spacing={4} wrap="wrap">
-              {Object.entries(stats).map(([role, status]) => (
-                <Box key={role}>
-                  <Badge colorScheme={STATUS_COLORS[status]}>
-                    {role}: {status}
-                  </Badge>
-                </Box>
-              ))}
-            </HStack>
-          </Box>
-        )}
+        <Tabs variant="enclosed">
+          <TabList>
+            <Tab>Assignation des rôles</Tab>
+            <Tab>Demandes d'immobilisation</Tab>
+            <Tab>Approuver les demandes</Tab>
+          </TabList>
 
-        {/* Bouton */}
-        <Button colorScheme="blue" onClick={onOpen} mb={4}>
-          + Assigner un Rôle
-        </Button>
+          <TabPanels>
+            {/* Onglet 1: Assignation des rôles */}
+            <TabPanel>
+              <VStack align="stretch" spacing={4}>
+                {/* Stats */}
+                {stats && (
+                  <Box p={4} bg="gray.50" rounded="md">
+                    <Heading size="sm" mb={3}>
+                      État des Rôles
+                    </Heading>
+                    <HStack spacing={4} wrap="wrap">
+                      {Object.entries(stats).map(([role, status]) => (
+                        <Box key={role}>
+                          <Badge colorScheme={STATUS_COLORS[status]}>
+                            {role}: {status}
+                          </Badge>
+                        </Box>
+                      ))}
+                    </HStack>
+                  </Box>
+                )}
 
-        {/* Tableau */}
-        {personnel.length > 0 ? (
-          <Table variant="simple" size="sm">
+                {/* Bouton */}
+                <Button colorScheme="blue" onClick={onOpen} alignSelf="flex-start">
+                  + Assigner un Rôle
+                </Button>
+
+                {/* Tableau */}
+                {personnel.length > 0 ? (
+                  <Table variant="simple" size="sm">
             <Thead>
               <Tr>
                 <Th>Employé</Th>
@@ -237,13 +255,27 @@ export default function PersonnelDepot({ depotId, depotName }) {
                 </Tr>
               ))}
             </Tbody>
-          </Table>
-        ) : (
-          <Alert status="info">
-            <AlertIcon />
-            Aucun personnel assigné pour le moment
-          </Alert>
-        )}
+                  </Table>
+                ) : (
+                  <Alert status="info">
+                    <AlertIcon />
+                    Aucun personnel assigné pour le moment
+                  </Alert>
+                )}
+              </VStack>
+            </TabPanel>
+
+            {/* Onglet 2: Demandes personnelles d'immobilisation */}
+            <TabPanel>
+              <ImmobilisationByOthers poste="Planning" />
+            </TabPanel>
+
+            {/* Onglet 3: Approuver les demandes */}
+            <TabPanel>
+              <ImmobilisationRequests />
+            </TabPanel>
+          </TabPanels>
+        </Tabs>
       </Box>
 
       {/* Modal */}
