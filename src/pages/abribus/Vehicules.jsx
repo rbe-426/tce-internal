@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { FaWheelchair } from "react-icons/fa";
 import React, { useState, useEffect } from "react";
-import { useDisclosure } from "@chakra-ui/react";
+import { useDisclosure, useToast } from "@chakra-ui/react";
 import { vehiculesBase } from "../../data/vehiculesBase.js";
 import { API_URL } from "../../config";
 import ImportVehiclesCSV from "../../components/ImportVehiclesCSV";
@@ -36,6 +36,16 @@ const Vehicules = () => {
   const [vehicleTypes, setVehicleTypes] = useState([]);
   const [etablissements, setEtablissements] = useState([]);
   const { isOpen: isImportOpen, onOpen: onImportOpen, onClose: onImportClose } = useDisclosure();
+  const { isOpen: isMercatoOpen, onOpen: onMercatoOpen, onClose: onMercatoClose } = useDisclosure();
+  const toast = useToast();
+  
+  // State for mercato modal
+  const [mercatoModal, setMercatoModal] = useState({
+    vehicleParc: '',
+    depotDestinationId: '',
+    motif: ''
+  });
+  const [selectedVehicleForMercato, setSelectedVehicleForMercato] = useState(null);
 
   // Formulaire d'ajout (on garde tes champs, même si tous ne partent pas au backend)
   const [newVeh, setNewVeh] = useState({
@@ -84,6 +94,16 @@ const Vehicules = () => {
     let alive = true;
     (async () => {
       await fetchVehicles();
+      // Charger aussi les établissements pour le mercato
+      try {
+        const res = await fetch(`${API}/api/etablissements`);
+        if (res.ok) {
+          const data = await res.json();
+          setEtablissements(data.filter(d => d.type === 'Dépôt'));
+        }
+      } catch (e) {
+        console.error('Erreur chargement établissements:', e);
+      }
       if (alive) setLoading(false);
     })();
     return () => { alive = false; }

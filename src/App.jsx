@@ -29,6 +29,7 @@ import PersonnelDepot from './pages/abribus/PersonnelDepot';
 import VehicleMercatos from './pages/abribus/VehicleMercatos';
 import VehicleNeeds from './pages/abribus/VehicleNeeds';
 import InterDepotAuthorization from './pages/abribus/InterDepotAuthorization';
+import AssignLinesToDepot from './pages/abribus/AssignLinesToDepot';
 import ProtectedRoute from './components/ProtectedRoute';
 
 
@@ -62,6 +63,7 @@ function App() {
       <Route path="/abribus/mercatos" element={<ProtectedRoute><MainLayout><VehicleMercatos /></MainLayout></ProtectedRoute>} />
       <Route path="/abribus/besoins-vehicules" element={<ProtectedRoute><MainLayout><VehicleNeeds /></MainLayout></ProtectedRoute>} />
       <Route path="/abribus/autorisations-inter-depots" element={<ProtectedRoute><MainLayout><InterDepotAuthorization /></MainLayout></ProtectedRoute>} />
+      <Route path="/abribus/affecter-lignes" element={<ProtectedRoute><MainLayout><AssignLinesToDepot /></MainLayout></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
