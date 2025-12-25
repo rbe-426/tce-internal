@@ -78,8 +78,56 @@ export default function CampagnesMercatos() {
     depotDestinationId: '',
     description: ''
   });
+  const [mercatoType, setMercatoType] = useState('VEHICULE');
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
+
+  // Fonctions pour ouvrir le formulaire avec le type pré-sélectionné
+  const openVehiculeForm = () => {
+    setMercatoType('VEHICULE');
+    setFormData({
+      type: 'VEHICULE',
+      vehicleId: '',
+      ligneId: '',
+      agentId: '',
+      depotSourceId: '',
+      depotDestinationId: '',
+      description: ''
+    });
+    onOpen();
+  };
+
+  const openLigneForm = () => {
+    setMercatoType('LIGNE');
+    setFormData({
+      type: 'LIGNE',
+      vehicleId: '',
+      ligneId: '',
+      agentId: '',
+      depotSourceId: '',
+      depotDestinationId: '',
+      description: ''
+    });
+    onOpen();
+  };
+
+  const openPersonnelForm = () => {
+    setMercatoType('PERSONNEL');
+    setFormData({
+      type: 'PERSONNEL',
+      vehicleId: '',
+      ligneId: '',
+      agentId: '',
+      depotSourceId: '',
+      depotDestinationId: '',
+      description: ''
+    });
+    onOpen();
+  };
+
+  const handleCloseForm = () => {
+    onClose();
+  };
 
   useEffect(() => {
     loadData();
@@ -134,7 +182,7 @@ export default function CampagnesMercatos() {
 
   async function proposeMercato() {
     // Validation basée sur le type
-    if (formData.type === 'VEHICULE' && (!formData.vehicleId || !formData.depotDestinationId)) {
+    if (mercatoType === 'VEHICULE' && (!formData.vehicleId || !formData.depotDestinationId)) {
       toast({
         title: 'Données manquantes',
         description: 'Veuillez sélectionner un véhicule et un dépôt destination',
@@ -144,7 +192,7 @@ export default function CampagnesMercatos() {
       return;
     }
 
-    if (formData.type === 'LIGNE' && (!formData.ligneId || !formData.depotDestinationId)) {
+    if (mercatoType === 'LIGNE' && (!formData.ligneId || !formData.depotDestinationId)) {
       toast({
         title: 'Données manquantes',
         description: 'Veuillez sélectionner une ligne et un dépôt destination',
@@ -154,7 +202,7 @@ export default function CampagnesMercatos() {
       return;
     }
 
-    if (formData.type === 'PERSONNEL' && (!formData.agentId || !formData.depotDestinationId)) {
+    if (mercatoType === 'PERSONNEL' && (!formData.agentId || !formData.depotDestinationId)) {
       toast({
         title: 'Données manquantes',
         description: 'Veuillez sélectionner un agent et un dépôt destination',
@@ -166,18 +214,18 @@ export default function CampagnesMercatos() {
 
     try {
       const body = {
-        type: formData.type,
+        type: mercatoType,
         depotDestinationId: formData.depotDestinationId,
         description: formData.description,
         dateProposee: new Date().toISOString()
       };
 
-      if (formData.type === 'VEHICULE') {
+      if (mercatoType === 'VEHICULE') {
         body.vehicleId = formData.vehicleId;
         body.depotSourceId = depots[0]?.id;
-      } else if (formData.type === 'LIGNE') {
+      } else if (mercatoType === 'LIGNE') {
         body.ligneId = formData.ligneId;
-      } else if (formData.type === 'PERSONNEL') {
+      } else if (mercatoType === 'PERSONNEL') {
         body.agentId = formData.agentId;
       }
 
@@ -190,7 +238,7 @@ export default function CampagnesMercatos() {
       if (res.ok) {
         toast({
           title: 'Succès',
-          description: `Mercato ${formData.type === 'VEHICULE' ? 'véhicule' : formData.type === 'LIGNE' ? 'ligne' : 'personnel'} proposé`,
+          description: `Mercato ${mercatoType === 'VEHICULE' ? 'véhicule' : mercatoType === 'LIGNE' ? 'ligne' : 'personnel'} proposé`,
           status: 'success',
           duration: 3000
         });
@@ -203,7 +251,7 @@ export default function CampagnesMercatos() {
           depotDestinationId: '',
           description: ''
         });
-        onClose();
+        handleCloseForm();
         loadData();
       } else {
         const error = await res.json();
@@ -298,7 +346,9 @@ export default function CampagnesMercatos() {
               lignes={lignes}
               personnel={personnel}
               depots={depots}
-              onPropose={onOpen}
+              onProposeVehicule={openVehiculeForm}
+              onProposeLigne={openLigneForm}
+              onProposePersonnel={openPersonnelForm}
               onUpdateStatus={updateMercatoStatus}
             />
           </TabPanel>
@@ -318,38 +368,19 @@ export default function CampagnesMercatos() {
       </Tabs>
 
       {/* Modal Proposer Mercato */}
-      <Modal isOpen={isOpen} onClose={onClose} size="lg">
+      <Modal isOpen={isOpen} onClose={handleCloseForm} size="lg">
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Proposer un Mercato</ModalHeader>
+          <ModalHeader>
+            {mercatoType === 'VEHICULE' && '🚌 Proposer un Mercato Véhicule'}
+            {mercatoType === 'LIGNE' && '🛣️ Proposer un Mercato Ligne/Service'}
+            {mercatoType === 'PERSONNEL' && '👥 Proposer un Mercato Personnel'}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <VStack spacing={4}>
-              {/* Type de Mercato */}
-              <FormControl isRequired>
-                <FormLabel>Type de Mercato</FormLabel>
-                <Select
-                  value={formData.type}
-                  onChange={(e) =>
-                    setFormData({
-                      type: e.target.value,
-                      vehicleId: '',
-                      ligneId: '',
-                      agentId: '',
-                      depotSourceId: '',
-                      depotDestinationId: '',
-                      description: ''
-                    })
-                  }
-                >
-                  <option value="VEHICULE">🚌 Véhicule</option>
-                  <option value="LIGNE">🛣️ Ligne/Service</option>
-                  <option value="PERSONNEL">👥 Personnel</option>
-                </Select>
-              </FormControl>
-
               {/* Champs dynamiques selon le type */}
-              {formData.type === 'VEHICULE' && (
+              {mercatoType === 'VEHICULE' && (
                 <>
                   <FormControl isRequired>
                     <FormLabel>Véhicule</FormLabel>
@@ -370,7 +401,7 @@ export default function CampagnesMercatos() {
                 </>
               )}
 
-              {formData.type === 'LIGNE' && (
+              {mercatoType === 'LIGNE' && (
                 <>
                   <FormControl isRequired>
                     <FormLabel>Ligne/Service</FormLabel>
@@ -391,7 +422,7 @@ export default function CampagnesMercatos() {
                 </>
               )}
 
-              {formData.type === 'PERSONNEL' && (
+              {mercatoType === 'PERSONNEL' && (
                 <>
                   <FormControl isRequired>
                     <FormLabel>Agent</FormLabel>
@@ -445,7 +476,7 @@ export default function CampagnesMercatos() {
             </VStack>
           </ModalBody>
           <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onClose}>
+            <Button variant="ghost" mr={3} onClick={handleCloseForm}>
               Annuler
             </Button>
             <Button colorScheme="blue" onClick={proposeMercato}>
@@ -460,7 +491,7 @@ export default function CampagnesMercatos() {
 
 // ==================== COMPOSANTS ONGLETS ====================
 
-function PropositionsTab({ mercatos, vehicles, lignes, personnel, depots, onPropose, onUpdateStatus }) {
+function PropositionsTab({ mercatos, vehicles, lignes, personnel, depots, onProposeVehicule, onProposeLigne, onProposePersonnel, onUpdateStatus }) {
   return (
     <VStack align="stretch" spacing={6}>
       {/* Sous-onglets pour les propositions */}
@@ -479,19 +510,19 @@ function PropositionsTab({ mercatos, vehicles, lignes, personnel, depots, onProp
               mercatos={mercatos}
               vehicles={vehicles}
               depots={depots}
-              onPropose={onPropose}
+              onPropose={onProposeVehicule}
               onUpdateStatus={onUpdateStatus}
             />
           </TabPanel>
 
           {/* Propositions Lignes */}
           <TabPanel>
-            <PropositionsLignesTab mercatos={mercatos} lignes={lignes} depots={depots} onPropose={onPropose} />
+            <PropositionsLignesTab mercatos={mercatos} lignes={lignes} depots={depots} onPropose={onProposeLigne} />
           </TabPanel>
 
           {/* Propositions Personnel */}
           <TabPanel>
-            <PropositionsPersonnelTab mercatos={mercatos} personnel={personnel} depots={depots} onPropose={onPropose} />
+            <PropositionsPersonnelTab mercatos={mercatos} personnel={personnel} depots={depots} onPropose={onProposePersonnel} />
           </TabPanel>
 
           {/* Situation Actuelle */}
