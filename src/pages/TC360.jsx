@@ -54,8 +54,10 @@ const TC360 = () => {
 
   // États pour la modale de switch véhicule
   const [assignableVehicles, setAssignableVehicles] = useState([]);
+  const [assignableConductors, setAssignableConductors] = useState([]);
   const [switchingVehicleLoading, setSwitchingVehicleLoading] = useState(false);
   const [autoAssignLoading, setAutoAssignLoading] = useState(false);
+  const [autoAssignConductorLoading, setAutoAssignConductorLoading] = useState(false);
   const [switchForm, setSwitchForm] = useState({
     motif: '',
     selectedVehicle: null,
@@ -402,6 +404,72 @@ const TC360 = () => {
       });
     } finally {
       setAutoAssignLoading(false);
+    }
+  };
+
+  const autoAssignConductor = async () => {
+    if (!selectedService) return;
+    
+    setAutoAssignConductorLoading(true);
+    try {
+      // Récupérer les conducteurs assignables respectant les règles d'amplitude
+      const response = await fetch(`${API_URL}/api/services/${selectedService.id}/assignable-conductors`);
+      if (!response.ok) throw new Error('Impossible de charger les conducteurs');
+      
+      const data = await response.json();
+      const conductors = data.conductors || [];
+      
+      if (conductors.length === 0) {
+        toast({
+          title: 'Aucun conducteur disponible',
+          description: 'Aucun conducteur n\'est disponible respectant les règles d\'amplitude et les contraintes',
+          status: 'warning',
+          duration: 3000,
+        });
+        return;
+      }
+      
+      // Assigner le premier conducteur disponible
+      const conductorToAssign = conductors[0];
+      const assignResponse = await fetch(`${API_URL}/api/services/${selectedService.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conducteurAssigne: conductorToAssign.id
+        })
+      });
+      
+      if (!assignResponse.ok) throw new Error('Erreur lors de l\'assignation');
+      
+      const updated = await assignResponse.json();
+      setSelectedService(prev => ({
+        ...prev,
+        conducteurAssigne: conductorToAssign.id,
+        conducteur: {
+          id: conductorToAssign.id,
+          nom: conductorToAssign.nom,
+          prenom: conductorToAssign.prenom,
+          permis: conductorToAssign.permis
+        }
+      }));
+      
+      toast({
+        title: 'Succès',
+        description: `${conductorToAssign.prenom} ${conductorToAssign.nom} assigné automatiquement`,
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible d\'assigner un conducteur',
+        status: 'error',
+        duration: 3000,
+      });
+    } finally {
+      setAutoAssignConductorLoading(false);
     }
   };
 
@@ -1088,6 +1156,32 @@ const TC360 = () => {
                           </Box>
                         </Alert>
                       )}
+                      
+                      {!selectedService.conducteur && (
+                        <Alert status="warning" borderRadius="md">
+                          <AlertIcon />
+                          <Box>
+                            <HStack spacing={3} justify="space-between" w="full" align="start">
+                              <VStack align="start" spacing={1} flex="1">
+                                <Text fontWeight="bold" fontSize="md">⚠️ Pas de conducteur assigné</Text>
+                                <Text fontSize="sm" color="gray.700">Assignez un conducteur respectant les règles d'amplitude</Text>
+                              </VStack>
+                              <HStack spacing={2}>
+                                <Button
+                                  colorScheme="blue"
+                                  size="sm"
+                                  onClick={autoAssignConductor}
+                                  isLoading={autoAssignConductorLoading}
+                                  fontWeight="bold"
+                                >
+                                  👤 Auto-assigner
+                                </Button>
+                              </HStack>
+                            </HStack>
+                          </Box>
+                        </Alert>
+                      )}
+                      
                       <select
                         value={pointageForm.conducteurId}
                         onChange={(e) => setPointageForm({ ...pointageForm, conducteurId: e.target.value })}
