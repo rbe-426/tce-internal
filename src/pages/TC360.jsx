@@ -541,12 +541,13 @@ const TC360 = () => {
         return;
       }
 
-      // Vérifier si la carte chrono est obligatoire et cocher le checkbox
+      // Vérifier si la carte chrono est obligatoire pour TCP - Autocars BC/NOC/EXPRESS
       const ligne = getLigneById(selectedService.ligneId);
-      if (ligne?.demandeChrono && !pointageForm.chronometerChecked) {
+      const isTCPAutocars = ligne && JSON.parse(ligne.typesVehicules || '[]').includes('TCP - Autocars BC/NOC/EXPRESS');
+      if (isTCPAutocars && !pointageForm.chronometerChecked) {
         toast({
           title: 'Erreur',
-          description: 'La vérification de la carte chrono est obligatoire pour cette ligne',
+          description: 'La vérification de la carte chrono est obligatoire pour cette ligne TCP - Autocars',
           status: 'error',
           duration: 3000,
           isClosable: true,
@@ -1264,26 +1265,16 @@ const TC360 = () => {
                         </Checkbox>
                       </Box>
 
-                      {/* Chrono/Tachograph */}
-                      {ligne && (JSON.parse(ligne.typesVehicules || '[]').includes('TCP - Autocars BC/NOC/EXPRESS') || ligne?.demandeChrono) && (
+                      {/* Chrono/Tachograph - Only for TCP - Autocars BC/NOC/EXPRESS */}
+                      {ligne && JSON.parse(ligne.typesVehicules || '[]').includes('TCP - Autocars BC/NOC/EXPRESS') && (
                         <Box>
-                          {ligne?.demandeChrono && (
-                            <Alert status="warning" mb={2} borderRadius="md" fontSize="sm">
-                              <AlertIcon />
-                              <VStack align="start" spacing={0}>
-                                <Text fontWeight="bold">Carte chrono obligatoire</Text>
-                                <Text fontSize="xs">Cette ligne nécessite la vérification de la carte chrono</Text>
-                              </VStack>
-                            </Alert>
-                          )}
                           <Checkbox
                             isChecked={pointageForm.chronometerChecked}
                             onChange={(e) => setPointageForm({ ...pointageForm, chronometerChecked: e.target.checked })}
-                            isRequired={ligne?.demandeChrono}
                           >
                             <HStack spacing={2} ml={2}>
                               <FaClock color="purple" />
-                              <span>Chrono/Tachographe vérifié{ligne?.demandeChrono ? ' *' : ''}</span>
+                              <span>Chrono/Tachographe vérifié</span>
                             </HStack>
                           </Checkbox>
                         </Box>
