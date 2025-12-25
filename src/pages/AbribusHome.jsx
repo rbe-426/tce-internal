@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Heading, SimpleGrid, Button, Icon } from '@chakra-ui/react';
-import { FaCalendarAlt, FaClipboardList, FaChartBar, FaMapMarkerAlt, FaClock, FaUserTie, FaCog, FaBuilding, FaLink, FaMap } from 'react-icons/fa';
+import { FaCalendarAlt, FaClipboardList, FaChartBar, FaMapMarkerAlt, FaClock, FaUserTie, FaCog, FaBuilding, FaLink, FaMap, FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
 const AbribusHome = () => {
@@ -41,6 +41,11 @@ const AbribusHome = () => {
       label: 'Gestion SAEIV',
       icon: FaCog,
       route: '/abribus/saeiv',
+    },
+    {
+      label: 'Immobilisations',
+      icon: FaLock,
+      route: '/abribus/immobilisations',
     },
     {
       label: 'Établissements & Dépôts',
