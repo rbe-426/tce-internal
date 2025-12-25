@@ -27,6 +27,7 @@ import Etablissements from './pages/abribus/Etablissements';
 import EtablissementDetail from './pages/abribus/EtablissementDetail';
 import PersonnelDepot from './pages/abribus/PersonnelDepot';
 import VehicleMercatos from './pages/abribus/VehicleMercatos';
+import CampagnesMercatos from './pages/abribus/CampagnesMercatos';
 import VehicleNeeds from './pages/abribus/VehicleNeeds';
 import InterDepotAuthorization from './pages/abribus/InterDepotAuthorization';
 import AssignLinesToDepot from './pages/abribus/AssignLinesToDepot';
@@ -61,6 +62,7 @@ function App() {
       <Route path="/abribus/etablissement/:id" element={<ProtectedRoute><MainLayout><EtablissementDetail /></MainLayout></ProtectedRoute>} />
       <Route path="/abribus/personnel" element={<ProtectedRoute><MainLayout><PersonnelDepot /></MainLayout></ProtectedRoute>} />
       <Route path="/abribus/mercatos" element={<ProtectedRoute><MainLayout><VehicleMercatos /></MainLayout></ProtectedRoute>} />
+      <Route path="/abribus/campagnes-mercatos" element={<ProtectedRoute><MainLayout><CampagnesMercatos /></MainLayout></ProtectedRoute>} />
       <Route path="/abribus/besoins-vehicules" element={<ProtectedRoute><MainLayout><VehicleNeeds /></MainLayout></ProtectedRoute>} />
       <Route path="/abribus/autorisations-inter-depots" element={<ProtectedRoute><MainLayout><InterDepotAuthorization /></MainLayout></ProtectedRoute>} />
       <Route path="/abribus/affecter-lignes" element={<ProtectedRoute><MainLayout><AssignLinesToDepot /></MainLayout></ProtectedRoute>} />
