@@ -32,8 +32,8 @@ import {
   AlertIcon,
   Spinner,
 } from '@chakra-ui/react';
-import { API_URL } from '../../config';
-import { UserContext } from '../../context/UserContext';
+import { API_URL } from '../../../config';
+import { UserContext } from '../../../context/UserContext';
 
 const ImmobilisationRequests = () => {
   const [requests, setRequests] = useState([]);

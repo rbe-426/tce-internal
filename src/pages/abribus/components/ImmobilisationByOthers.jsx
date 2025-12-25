@@ -33,8 +33,8 @@ import {
   Input,
 } from '@chakra-ui/react';
 import { AddIcon } from '@chakra-ui/icons';
-import { API_URL } from '../../config';
-import { UserContext } from '../../context/UserContext';
+import { API_URL } from '../../../config';
+import { UserContext } from '../../../context/UserContext';
 
 const ImmobilisationByOthers = ({ poste = 'Autre' }) => {
   const [vehicles, setVehicles] = useState([]);
