@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Box,
   Button,
@@ -46,6 +46,7 @@ import {
   Text
 } from '@chakra-ui/react';
 import { API_URL } from '../../config';
+import { UserContext } from '../../context/UserContext';
 
 const STATUT_COLORS = {
   EN_ATTENTE: 'yellow',
@@ -57,7 +58,8 @@ const STATUT_COLORS = {
 export default function CampagnesMercatos() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
-  const [userRole, setUserRole] = useState(null);
+  const { user } = useContext(UserContext);
+  const userRole = user?.role || null;
   
   // Data
   const [mercatos, setMercatos] = useState([]);
@@ -68,31 +70,20 @@ export default function CampagnesMercatos() {
   
   // Form
   const [formData, setFormData] = useState({
+    type: 'VEHICULE',
     vehicleId: '',
+    ligneId: '',
+    agentId: '',
+    depotSourceId: '',
     depotDestinationId: '',
-    raison: ''
+    description: ''
   });
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
 
   useEffect(() => {
     loadData();
-    loadUserRole();
   }, []);
-
-  async function loadUserRole() {
-    try {
-      const response = await fetch(`${API_URL}/api/user`, {
-        credentials: 'include'
-      });
-      if (response.ok) {
-        const user = await response.json();
-        setUserRole(user.role);
-      }
-    } catch (error) {
-      console.log('Could not load user role');
-    }
-  }
 
   const isManager = ['DIRECTEUR_EXPLOITATION', 'RESPONSABLE_EXPLOITATION', 'DG_ENTREPRISE'].includes(userRole);
 
@@ -142,7 +133,8 @@ export default function CampagnesMercatos() {
   }
 
   async function proposeMercato() {
-    if (!formData.vehicleId || !formData.depotDestinationId) {
+    // Validation basée sur le type
+    if (formData.type === 'VEHICULE' && (!formData.vehicleId || !formData.depotDestinationId)) {
       toast({
         title: 'Données manquantes',
         description: 'Veuillez sélectionner un véhicule et un dépôt destination',
@@ -152,26 +144,65 @@ export default function CampagnesMercatos() {
       return;
     }
 
+    if (formData.type === 'LIGNE' && (!formData.ligneId || !formData.depotDestinationId)) {
+      toast({
+        title: 'Données manquantes',
+        description: 'Veuillez sélectionner une ligne et un dépôt destination',
+        status: 'warning',
+        duration: 3000
+      });
+      return;
+    }
+
+    if (formData.type === 'PERSONNEL' && (!formData.agentId || !formData.depotDestinationId)) {
+      toast({
+        title: 'Données manquantes',
+        description: 'Veuillez sélectionner un agent et un dépôt destination',
+        status: 'warning',
+        duration: 3000
+      });
+      return;
+    }
+
     try {
+      const body = {
+        type: formData.type,
+        depotDestinationId: formData.depotDestinationId,
+        description: formData.description,
+        dateProposee: new Date().toISOString()
+      };
+
+      if (formData.type === 'VEHICULE') {
+        body.vehicleId = formData.vehicleId;
+        body.depotSourceId = depots[0]?.id;
+      } else if (formData.type === 'LIGNE') {
+        body.ligneId = formData.ligneId;
+      } else if (formData.type === 'PERSONNEL') {
+        body.agentId = formData.agentId;
+      }
+
       const res = await fetch(`${API_URL}/api/mercatos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          vehicleId: formData.vehicleId,
-          depotSourceId: depots[0]?.id,
-          depotDestinationId: formData.depotDestinationId,
-          raison: formData.raison
-        })
+        body: JSON.stringify(body)
       });
 
       if (res.ok) {
         toast({
           title: 'Succès',
-          description: 'Mercato proposé',
+          description: `Mercato ${formData.type === 'VEHICULE' ? 'véhicule' : formData.type === 'LIGNE' ? 'ligne' : 'personnel'} proposé`,
           status: 'success',
           duration: 3000
         });
-        setFormData({ vehicleId: '', depotDestinationId: '', raison: '' });
+        setFormData({
+          type: 'VEHICULE',
+          vehicleId: '',
+          ligneId: '',
+          agentId: '',
+          depotSourceId: '',
+          depotDestinationId: '',
+          description: ''
+        });
         onClose();
         loadData();
       } else {
@@ -287,30 +318,101 @@ export default function CampagnesMercatos() {
       </Tabs>
 
       {/* Modal Proposer Mercato */}
-      <Modal isOpen={isOpen} onClose={onClose}>
+      <Modal isOpen={isOpen} onClose={onClose} size="lg">
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Proposer un Mercato Véhicule</ModalHeader>
+          <ModalHeader>Proposer un Mercato</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <VStack spacing={4}>
+              {/* Type de Mercato */}
               <FormControl isRequired>
-                <FormLabel>Véhicule</FormLabel>
+                <FormLabel>Type de Mercato</FormLabel>
                 <Select
-                  placeholder="Sélectionner un véhicule"
-                  value={formData.vehicleId}
+                  value={formData.type}
                   onChange={(e) =>
-                    setFormData({ ...formData, vehicleId: e.target.value })
+                    setFormData({
+                      type: e.target.value,
+                      vehicleId: '',
+                      ligneId: '',
+                      agentId: '',
+                      depotSourceId: '',
+                      depotDestinationId: '',
+                      description: ''
+                    })
                   }
                 >
-                  {vehicles.map((v) => (
-                    <option key={v.id} value={v.id}>
-                      {v.numero} - {v.type}
-                    </option>
-                  ))}
+                  <option value="VEHICULE">🚌 Véhicule</option>
+                  <option value="LIGNE">🛣️ Ligne/Service</option>
+                  <option value="PERSONNEL">👥 Personnel</option>
                 </Select>
               </FormControl>
 
+              {/* Champs dynamiques selon le type */}
+              {formData.type === 'VEHICULE' && (
+                <>
+                  <FormControl isRequired>
+                    <FormLabel>Véhicule</FormLabel>
+                    <Select
+                      placeholder="Sélectionner un véhicule"
+                      value={formData.vehicleId}
+                      onChange={(e) =>
+                        setFormData({ ...formData, vehicleId: e.target.value })
+                      }
+                    >
+                      {vehicles.map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.numero} - {v.type}
+                        </option>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </>
+              )}
+
+              {formData.type === 'LIGNE' && (
+                <>
+                  <FormControl isRequired>
+                    <FormLabel>Ligne/Service</FormLabel>
+                    <Select
+                      placeholder="Sélectionner une ligne"
+                      value={formData.ligneId}
+                      onChange={(e) =>
+                        setFormData({ ...formData, ligneId: e.target.value })
+                      }
+                    >
+                      {lignes.map((l) => (
+                        <option key={l.id} value={l.id}>
+                          {l.numero} - {l.nom}
+                        </option>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </>
+              )}
+
+              {formData.type === 'PERSONNEL' && (
+                <>
+                  <FormControl isRequired>
+                    <FormLabel>Agent</FormLabel>
+                    <Select
+                      placeholder="Sélectionner un agent"
+                      value={formData.agentId}
+                      onChange={(e) =>
+                        setFormData({ ...formData, agentId: e.target.value })
+                      }
+                    >
+                      {personnel.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.nom} {p.prenom} - {p.poste}
+                        </option>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </>
+              )}
+
+              {/* Dépôt Destination (commun à tous) */}
               <FormControl isRequired>
                 <FormLabel>Dépôt Destination</FormLabel>
                 <Select
@@ -328,14 +430,16 @@ export default function CampagnesMercatos() {
                 </Select>
               </FormControl>
 
+              {/* Description/Raison */}
               <FormControl>
-                <FormLabel>Raison</FormLabel>
+                <FormLabel>Description</FormLabel>
                 <Textarea
-                  placeholder="Raison du mercato"
-                  value={formData.raison}
+                  placeholder="Décrivez la raison et les détails du mercato"
+                  value={formData.description}
                   onChange={(e) =>
-                    setFormData({ ...formData, raison: e.target.value })
+                    setFormData({ ...formData, description: e.target.value })
                   }
+                  rows={4}
                 />
               </FormControl>
             </VStack>
@@ -382,12 +486,12 @@ function PropositionsTab({ mercatos, vehicles, lignes, personnel, depots, onProp
 
           {/* Propositions Lignes */}
           <TabPanel>
-            <PropositionsLignesTab mercatos={mercatos} lignes={lignes} depots={depots} />
+            <PropositionsLignesTab mercatos={mercatos} lignes={lignes} depots={depots} onPropose={onPropose} />
           </TabPanel>
 
           {/* Propositions Personnel */}
           <TabPanel>
-            <PropositionsPersonnelTab mercatos={mercatos} personnel={personnel} depots={depots} />
+            <PropositionsPersonnelTab mercatos={mercatos} personnel={personnel} depots={depots} onPropose={onPropose} />
           </TabPanel>
 
           {/* Situation Actuelle */}
@@ -732,6 +836,127 @@ function GestionRejeteTab({ mercatos, vehicles, depots }) {
         <Alert status="info">
           <AlertIcon />
           Aucun mercato rejeté
+        </Alert>
+      )}
+    </VStack>
+  );
+}
+
+function PropositionsLignesTab({ mercatos, lignes, depots, onPropose }) {
+  const lignesMercatos = mercatos.filter((m) => m.type === 'LIGNE');
+
+  return (
+    <VStack align="stretch" spacing={4}>
+      <HStack justify="space-between">
+        <Box>
+          <Heading size="md" mb={4}>
+            🛣️ Propositions de Mercatos pour Lignes/Services
+          </Heading>
+          <Text color="gray.600" fontSize="sm" mb={4}>
+            Proposez des modifications sur les lignes ou services de transport
+          </Text>
+        </Box>
+        <Button colorScheme="blue" onClick={onPropose}>
+          + Proposer
+        </Button>
+      </HStack>
+
+      <Alert status="info">
+        <AlertIcon />
+        {lignesMercatos.length} proposition(s) pour les lignes en cours
+      </Alert>
+
+      {lignesMercatos.length > 0 ? (
+        <Table variant="simple" size="sm">
+          <Thead>
+            <Tr>
+              <Th>Ligne</Th>
+              <Th>Type de modification</Th>
+              <Th>Statut</Th>
+              <Th>Date</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {lignesMercatos.map((mercato) => (
+              <Tr key={mercato.id}>
+                <Td fontWeight="bold">{mercato.ligneId || 'N/A'}</Td>
+                <Td>{mercato.description || 'Modification'}</Td>
+                <Td>
+                  <Badge colorScheme={mercato.statut === 'APPROUVÉ' ? 'green' : 'yellow'}>
+                    {mercato.statut || 'PROPOSÉ'}
+                  </Badge>
+                </Td>
+                <Td fontSize="sm" color="gray.500">{new Date(mercato.dateProposition).toLocaleDateString()}</Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      ) : (
+        <Alert status="info">
+          <AlertIcon />
+          Aucune proposition pour les lignes actuellement
+        </Alert>
+      )}
+    </VStack>
+  );
+}
+
+function PropositionsPersonnelTab({ mercatos, personnel, depots, onPropose }) {
+  const personnelMercatos = mercatos.filter((m) => m.type === 'PERSONNEL');
+
+  return (
+    <VStack align="stretch" spacing={4}>
+      <HStack justify="space-between">
+        <Box>
+          <Heading size="md" mb={4}>
+            👥 Propositions de Mercatos pour Personnel
+          </Heading>
+          <Text color="gray.600" fontSize="sm" mb={4}>
+            Proposez des réaffectations ou modifications de personnel
+          </Text>
+        </Box>
+        <Button colorScheme="blue" onClick={onPropose}>
+          + Proposer
+        </Button>
+      </HStack>
+
+      <Alert status="info">
+        <AlertIcon />
+        {personnelMercatos.length} proposition(s) pour le personnel en cours
+      </Alert>
+
+      {personnelMercatos.length > 0 ? (
+        <Table variant="simple" size="sm">
+          <Thead>
+            <Tr>
+              <Th>Agent</Th>
+              <Th>Type de changement</Th>
+              <Th>Dépôt cible</Th>
+              <Th>Statut</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {personnelMercatos.map((mercato) => {
+              const depot = depots.find((d) => d.id === mercato.depotId);
+              return (
+                <Tr key={mercato.id}>
+                  <Td fontWeight="bold">{mercato.agentId || 'Agent N/A'}</Td>
+                  <Td>{mercato.description || 'Réaffectation'}</Td>
+                  <Td>{depot?.nom || 'Dépôt inconnu'}</Td>
+                  <Td>
+                    <Badge colorScheme={mercato.statut === 'APPROUVÉ' ? 'green' : 'yellow'}>
+                      {mercato.statut || 'PROPOSÉ'}
+                    </Badge>
+                  </Td>
+                </Tr>
+              );
+            })}
+          </Tbody>
+        </Table>
+      ) : (
+        <Alert status="info">
+          <AlertIcon />
+          Aucune proposition pour le personnel actuellement
         </Alert>
       )}
     </VStack>
