@@ -37,6 +37,8 @@ export default function VehiculeDetail() {
   const [showEtat, setShowEtat] = useState(false);
   const [newStatut, setNewStatut] = useState("");
   const [raison, setRaison] = useState("");
+
+  useEffect(() => {
     (async () => {
       try {
         const r = await fetch(`${API}/api/vehicles/${parc}`);
