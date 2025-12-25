@@ -254,44 +254,35 @@ export default function CampagnesMercatos() {
         onChange={setActiveTab}
       >
         <TabList mb="1em" borderBottomWidth="2px">
-          <Tab fontWeight="bold">📊 Situation Actuelle</Tab>
-          <Tab fontWeight="bold">🚌 Mercatos Véhicules</Tab>
-          <Tab fontWeight="bold">🛣️ Mercatos Lignes/Services</Tab>
-          <Tab fontWeight="bold">👥 Mercatos Personnel</Tab>
-          <Tab fontWeight="bold">📈 Simulation Probabilités</Tab>
+          <Tab fontWeight="bold">� Propositions de Mercatos</Tab>
+          {isManager && <Tab fontWeight="bold">📋 Gérer les Propositions</Tab>}
         </TabList>
 
         <TabPanels>
-          {/* TAB 1: Situation Actuelle */}
+          {/* TAB 1: Propositions */}
           <TabPanel>
-            <SituationActuelleTab depots={depots} vehicles={vehicles} lignes={lignes} personnel={personnel} />
-          </TabPanel>
-
-          {/* TAB 2: Mercatos Véhicules */}
-          <TabPanel>
-            <MercatosVehiculesTab
+            <PropositionsTab
               mercatos={mercatos}
               vehicles={vehicles}
+              lignes={lignes}
+              personnel={personnel}
               depots={depots}
               onPropose={onOpen}
               onUpdateStatus={updateMercatoStatus}
             />
           </TabPanel>
 
-          {/* TAB 3: Mercatos Lignes */}
-          <TabPanel>
-            <MercatosLignesTab mercatos={mercatos} lignes={lignes} depots={depots} />
-          </TabPanel>
-
-          {/* TAB 4: Mercatos Personnel */}
-          <TabPanel>
-            <MercatosPersonnelTab mercatos={mercatos} personnel={personnel} depots={depots} />
-          </TabPanel>
-
-          {/* TAB 5: Simulation */}
-          <TabPanel>
-            <SimulationProbabilitesTab mercatos={mercatos} vehicles={vehicles} personnel={personnel} />
-          </TabPanel>
+          {/* TAB 2: Gérer les Propositions (Manager only) */}
+          {isManager && (
+            <TabPanel>
+              <GererPropositionsTab
+                mercatos={mercatos}
+                vehicles={vehicles}
+                depots={depots}
+                onUpdateStatus={updateMercatoStatus}
+              />
+            </TabPanel>
+          )}
         </TabPanels>
       </Tabs>
 
@@ -365,6 +356,181 @@ export default function CampagnesMercatos() {
 
 // ==================== COMPOSANTS ONGLETS ====================
 
+function PropositionsTab({ mercatos, vehicles, lignes, personnel, depots, onPropose, onUpdateStatus }) {
+  return (
+    <VStack align="stretch" spacing={6}>
+      {/* Sous-onglets pour les propositions */}
+      <Tabs variant="soft-rounded" colorScheme="blue">
+        <TabList>
+          <Tab>🚌 Véhicules</Tab>
+          <Tab>🛣️ Lignes/Services</Tab>
+          <Tab>👥 Personnel</Tab>
+          <Tab>📊 Situation Actuelle</Tab>
+        </TabList>
+
+        <TabPanels>
+          {/* Propositions Véhicules */}
+          <TabPanel>
+            <PropositionsVehiculesTab
+              mercatos={mercatos}
+              vehicles={vehicles}
+              depots={depots}
+              onPropose={onPropose}
+              onUpdateStatus={onUpdateStatus}
+            />
+          </TabPanel>
+
+          {/* Propositions Lignes */}
+          <TabPanel>
+            <PropositionsLignesTab mercatos={mercatos} lignes={lignes} depots={depots} />
+          </TabPanel>
+
+          {/* Propositions Personnel */}
+          <TabPanel>
+            <PropositionsPersonnelTab mercatos={mercatos} personnel={personnel} depots={depots} />
+          </TabPanel>
+
+          {/* Situation Actuelle */}
+          <TabPanel>
+            <SituationActuelleTab depots={depots} vehicles={vehicles} lignes={lignes} personnel={personnel} />
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
+    </VStack>
+  );
+}
+
+function GererPropositionsTab({ mercatos, vehicles, depots, onUpdateStatus }) {
+  return (
+    <VStack align="stretch" spacing={6}>
+      <Alert status="warning" borderRadius="md">
+        <AlertIcon />
+        <Box>
+          <Text fontWeight="bold">Gestion des propositions de mercatos</Text>
+          <Text fontSize="sm">Vous avez accès à l'approbation et au rejet des mercatos proposés</Text>
+        </Box>
+      </Alert>
+
+      {/* Sous-onglets pour la gestion */}
+      <Tabs variant="soft-rounded" colorScheme="green">
+        <TabList>
+          <Tab>⏳ En Attente</Tab>
+          <Tab>✅ Approuvés</Tab>
+          <Tab>✕ Rejetés</Tab>
+          <Tab>📈 Simulation</Tab>
+        </TabList>
+
+        <TabPanels>
+          {/* En Attente */}
+          <TabPanel>
+            <GestionEnAttenteTab mercatos={mercatos} vehicles={vehicles} depots={depots} onUpdateStatus={onUpdateStatus} />
+          </TabPanel>
+
+          {/* Approuvés */}
+          <TabPanel>
+            <GestionApprouveTab mercatos={mercatos} vehicles={vehicles} depots={depots} onUpdateStatus={onUpdateStatus} />
+          </TabPanel>
+
+          {/* Rejetés */}
+          <TabPanel>
+            <GestionRejeteTab mercatos={mercatos} vehicles={vehicles} depots={depots} />
+          </TabPanel>
+
+          {/* Simulation */}
+          <TabPanel>
+            <SimulationProbabilitesTab mercatos={mercatos} vehicles={vehicles} />
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
+    </VStack>
+  );
+}
+
+function PropositionsVehiculesTab({ mercatos, vehicles, depots, onPropose, onUpdateStatus }) {
+  const vehiculeMercatos = mercatos.filter((m) => m.type === 'VEHICULE' || !m.type);
+  const myPropositions = vehiculeMercatos.filter((m) => m.statut === 'EN_ATTENTE');
+
+  return (
+    <VStack align="stretch" spacing={4}>
+      <Button colorScheme="blue" onClick={onPropose} width="fit-content">
+        + Proposer un Mercato Véhicule
+      </Button>
+
+      <Box>
+        <Heading size="sm" mb={3}>Mes propositions en attente</Heading>
+        {myPropositions.length > 0 ? (
+          <Table variant="simple" size="sm">
+            <Thead>
+              <Tr>
+                <Th>Véhicule</Th>
+                <Th>De</Th>
+                <Th>Vers</Th>
+                <Th>Raison</Th>
+                <Th>Statut</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {myPropositions.map((m) => (
+                <Tr key={m.id}>
+                  <Td fontWeight="bold">{m.vehicleNumber || 'N/A'}</Td>
+                  <Td>{m.depotSourceName}</Td>
+                  <Td>{m.depotDestinationName}</Td>
+                  <Td>{m.raison || '-'}</Td>
+                  <Td>
+                    <Badge colorScheme="yellow">EN ATTENTE</Badge>
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        ) : (
+          <Alert status="info">
+            <AlertIcon />
+            Aucune proposition en attente
+          </Alert>
+        )}
+      </Box>
+
+      <Divider />
+
+      <Box>
+        <Heading size="sm" mb={3}>Tous les mercatos véhicules</Heading>
+        {vehiculeMercatos.length > 0 ? (
+          <Table variant="simple" size="sm">
+            <Thead>
+              <Tr>
+                <Th>Véhicule</Th>
+                <Th>De</Th>
+                <Th>Vers</Th>
+                <Th>Statut</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {vehiculeMercatos.map((m) => (
+                <Tr key={m.id}>
+                  <Td fontWeight="bold">{m.vehicleNumber || 'N/A'}</Td>
+                  <Td>{m.depotSourceName}</Td>
+                  <Td>{m.depotDestinationName}</Td>
+                  <Td>
+                    <Badge colorScheme={STATUT_COLORS[m.statut]}>
+                      {m.statut}
+                    </Badge>
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        ) : (
+          <Alert status="info">
+            <AlertIcon />
+            Aucun mercato véhicule
+          </Alert>
+        )}
+      </Box>
+    </VStack>
+  );
+}
+
 function SituationActuelleTab({ depots, vehicles, lignes, personnel }) {
   return (
     <VStack align="stretch" spacing={6}>
@@ -422,69 +588,100 @@ function StatCard({ title, value, color }) {
   );
 }
 
-function MercatosVehiculesTab({ mercatos, vehicles, depots, onPropose, onUpdateStatus }) {
-  const vehiculeMercatos = mercatos.filter((m) => m.type === 'VEHICULE' || !m.type);
+function GestionEnAttenteTab({ mercatos, vehicles, depots, onUpdateStatus }) {
+  const enAttenteList = mercatos.filter((m) => m.statut === 'EN_ATTENTE');
 
   return (
     <VStack align="stretch" spacing={4}>
-      <Button colorScheme="blue" onClick={onPropose} width="fit-content">
-        + Proposer un Mercato Véhicule
-      </Button>
+      <Alert status="warning">
+        <AlertIcon />
+        {enAttenteList.length} mercato(s) en attente de votre décision
+      </Alert>
 
-      {vehiculeMercatos.length > 0 ? (
+      {enAttenteList.length > 0 ? (
         <Table variant="simple" size="sm">
           <Thead>
             <Tr>
               <Th>Véhicule</Th>
               <Th>De</Th>
               <Th>Vers</Th>
-              <Th>Statut</Th>
               <Th>Raison</Th>
               <Th>Actions</Th>
             </Tr>
           </Thead>
           <Tbody>
-            {vehiculeMercatos.map((m) => (
+            {enAttenteList.map((m) => (
+              <Tr key={m.id}>
+                <Td fontWeight="bold">{m.vehicleNumber || 'N/A'}</Td>
+                <Td>{m.depotSourceName}</Td>
+                <Td>{m.depotDestinationName}</Td>
+                <Td>{m.raison || '-'}</Td>
+                <Td>
+                  <HStack spacing={2}>
+                    <Button
+                      size="sm"
+                      colorScheme="green"
+                      onClick={() => onUpdateStatus(m.id, 'approve')}
+                    >
+                      Approuver
+                    </Button>
+                    <Button
+                      size="sm"
+                      colorScheme="red"
+                      onClick={() => onUpdateStatus(m.id, 'reject')}
+                    >
+                      Refuser
+                    </Button>
+                  </HStack>
+                </Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      ) : (
+        <Alert status="success">
+          <AlertIcon />
+          Aucun mercato en attente
+        </Alert>
+      )}
+    </VStack>
+  );
+}
+
+function GestionApprouveTab({ mercatos, vehicles, depots, onUpdateStatus }) {
+  const approuveList = mercatos.filter((m) => m.statut === 'APPROUVÉ');
+
+  return (
+    <VStack align="stretch" spacing={4}>
+      <Alert status="success">
+        <AlertIcon />
+        {approuveList.length} mercato(s) approuvé(s)
+      </Alert>
+
+      {approuveList.length > 0 ? (
+        <Table variant="simple" size="sm">
+          <Thead>
+            <Tr>
+              <Th>Véhicule</Th>
+              <Th>De</Th>
+              <Th>Vers</Th>
+              <Th>Actions</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {approuveList.map((m) => (
               <Tr key={m.id}>
                 <Td fontWeight="bold">{m.vehicleNumber || 'N/A'}</Td>
                 <Td>{m.depotSourceName}</Td>
                 <Td>{m.depotDestinationName}</Td>
                 <Td>
-                  <Badge colorScheme={STATUT_COLORS[m.statut]}>
-                    {m.statut}
-                  </Badge>
-                </Td>
-                <Td>{m.raison || '-'}</Td>
-                <Td>
-                  <HStack spacing={1}>
-                    {m.statut === 'EN_ATTENTE' && (
-                      <>
-                        <Button
-                          size="xs"
-                          colorScheme="green"
-                          onClick={() => onUpdateStatus(m.id, 'approve')}
-                        >
-                          ✓
-                        </Button>
-                        <Button
-                          size="xs"
-                          colorScheme="red"
-                          onClick={() => onUpdateStatus(m.id, 'reject')}
-                        >
-                          ✕
-                        </Button>
-                      </>
-                    )}
-                    {m.statut === 'APPROUVÉ' && (
-                      <Button
-                        size="xs"
-                        colorScheme="blue"
-                        onClick={() => onUpdateStatus(m.id, 'complete')}
-                      >
-                        Transport
-                      </Button>
-                    )}
-                  </HStack>
+                  <Button
+                    size="sm"
+                    colorScheme="blue"
+                    onClick={() => onUpdateStatus(m.id, 'complete')}
+                  >
+                    Marquer Transporté
+                  </Button>
                 </Td>
               </Tr>
             ))}
@@ -493,49 +690,64 @@ function MercatosVehiculesTab({ mercatos, vehicles, depots, onPropose, onUpdateS
       ) : (
         <Alert status="info">
           <AlertIcon />
-          Aucun mercato véhicule
+          Aucun mercato approuvé
         </Alert>
       )}
     </VStack>
   );
 }
 
-function MercatosLignesTab({ mercatos, lignes, depots }) {
+function GestionRejeteTab({ mercatos, vehicles, depots }) {
+  const rejeteList = mercatos.filter((m) => m.statut === 'REJETÉ');
+
   return (
     <VStack align="stretch" spacing={4}>
-      <Alert status="info">
+      <Alert status="error">
         <AlertIcon />
-        Gestion des mercatos de lignes et services (à configurer)
+        {rejeteList.length} mercato(s) rejeté(s)
       </Alert>
-      <Text fontSize="sm" color="gray.600">
-        Mercatos disponibles: {mercatos.filter((m) => m.type === 'LIGNE').length}
-      </Text>
+
+      {rejeteList.length > 0 ? (
+        <Table variant="simple" size="sm">
+          <Thead>
+            <Tr>
+              <Th>Véhicule</Th>
+              <Th>De</Th>
+              <Th>Vers</Th>
+              <Th>Raison du rejet</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {rejeteList.map((m) => (
+              <Tr key={m.id}>
+                <Td fontWeight="bold">{m.vehicleNumber || 'N/A'}</Td>
+                <Td>{m.depotSourceName}</Td>
+                <Td>{m.depotDestinationName}</Td>
+                <Td>{m.rejectionReason || '-'}</Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      ) : (
+        <Alert status="info">
+          <AlertIcon />
+          Aucun mercato rejeté
+        </Alert>
+      )}
     </VStack>
   );
 }
 
-function MercatosPersonnelTab({ mercatos, personnel, depots }) {
-  return (
-    <VStack align="stretch" spacing={4}>
-      <Alert status="info">
-        <AlertIcon />
-        Gestion des mercatos de personnel (à configurer)
-      </Alert>
-      <Text fontSize="sm" color="gray.600">
-        Personnel disponible: {personnel.length}
-      </Text>
-    </VStack>
-  );
-}
-
-function SimulationProbabilitesTab({ mercatos, vehicles, personnel }) {
+function SimulationProbabilitesTab({ mercatos, vehicles }) {
   const totalMercatos = mercatos.length;
-  const acceptedMercatos = mercatos.filter((m) => m.statut === 'APPROUVÉ').length;
-  const tauxAcceptation = totalMercatos > 0 ? ((acceptedMercatos / totalMercatos) * 100).toFixed(1) : 0;
+  const enAttente = mercatos.filter((m) => m.statut === 'EN_ATTENTE').length;
+  const approuves = mercatos.filter((m) => m.statut === 'APPROUVÉ').length;
+  const rejetes = mercatos.filter((m) => m.statut === 'REJETÉ').length;
+  const tauxAcceptation = totalMercatos > 0 ? ((approuves / totalMercatos) * 100).toFixed(1) : 0;
 
   return (
     <VStack align="stretch" spacing={6}>
-      <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
+      <SimpleGrid columns={{ base: 1, md: 4 }} spacing={4}>
         <Card>
           <CardBody>
             <Stat>
@@ -546,20 +758,29 @@ function SimulationProbabilitesTab({ mercatos, vehicles, personnel }) {
           </CardBody>
         </Card>
 
-        <Card>
+        <Card bg="yellow.50">
           <CardBody>
             <Stat>
-              <StatLabel>Mercatos en Attente</StatLabel>
-              <StatNumber>{mercatos.filter((m) => m.statut === 'EN_ATTENTE').length}</StatNumber>
+              <StatLabel>En Attente</StatLabel>
+              <StatNumber color="yellow.600">{enAttente}</StatNumber>
             </Stat>
           </CardBody>
         </Card>
 
-        <Card>
+        <Card bg="green.50">
           <CardBody>
             <Stat>
-              <StatLabel>Mercatos Rejetés</StatLabel>
-              <StatNumber>{mercatos.filter((m) => m.statut === 'REJETÉ').length}</StatNumber>
+              <StatLabel>Approuvés</StatLabel>
+              <StatNumber color="green.600">{approuves}</StatNumber>
+            </Stat>
+          </CardBody>
+        </Card>
+
+        <Card bg="red.50">
+          <CardBody>
+            <Stat>
+              <StatLabel>Rejetés</StatLabel>
+              <StatNumber color="red.600">{rejetes}</StatNumber>
             </Stat>
           </CardBody>
         </Card>
@@ -569,12 +790,18 @@ function SimulationProbabilitesTab({ mercatos, vehicles, personnel }) {
 
       <Box>
         <Heading size="md" mb={4}>
-          Prédictions
+          Analyse des Propositions
         </Heading>
-        <Text fontSize="sm" color="gray.600">
-          Basées sur les données actuelles de {totalMercatos} mercatos proposés
+        <Text fontSize="sm" color="gray.600" mb={4}>
+          Basée sur {totalMercatos} mercato(s) proposé(s)
         </Text>
+        <VStack align="start" spacing={2}>
+          <Text>📊 Taux d'acceptation estimé: <strong>{tauxAcceptation}%</strong></Text>
+          <Text>⏳ Mercatos en attente de décision: <strong>{enAttente}</strong></Text>
+          <Text>✅ Mercatos susceptibles d'être approuvés: <strong>{approuves + enAttente}</strong></Text>
+        </VStack>
       </Box>
     </VStack>
   );
 }
+
