@@ -392,8 +392,8 @@ export default function CampagnesMercatos() {
                       }
                     >
                       {vehicles.map((v) => (
-                        <option key={v.id} value={v.id}>
-                          {v.numero} - {v.type}
+                        <option key={v.parc} value={v.parc}>
+                          {v.parc} - {v.type} ({v.modele})
                         </option>
                       ))}
                     </Select>
@@ -607,10 +607,10 @@ function PropositionsVehiculesTab({ mercatos, vehicles, depots, onPropose, onUpd
             <Tbody>
               {myPropositions.map((m) => (
                 <Tr key={m.id}>
-                  <Td fontWeight="bold">{m.vehicleNumber || 'N/A'}</Td>
-                  <Td>{m.depotSourceName}</Td>
-                  <Td>{m.depotDestinationName}</Td>
-                  <Td>{m.raison || '-'}</Td>
+                  <Td fontWeight="bold">{m.vehicle?.parc || 'N/A'}</Td>
+                  <Td>{m.depotSource?.nom || 'N/A'}</Td>
+                  <Td>{m.depotDestination?.nom || 'N/A'}</Td>
+                  <Td>{m.description || '-'}</Td>
                   <Td>
                     <Badge colorScheme="yellow">EN ATTENTE</Badge>
                   </Td>
@@ -643,9 +643,9 @@ function PropositionsVehiculesTab({ mercatos, vehicles, depots, onPropose, onUpd
             <Tbody>
               {vehiculeMercatos.map((m) => (
                 <Tr key={m.id}>
-                  <Td fontWeight="bold">{m.vehicleNumber || 'N/A'}</Td>
-                  <Td>{m.depotSourceName}</Td>
-                  <Td>{m.depotDestinationName}</Td>
+                  <Td fontWeight="bold">{m.vehicle?.parc || 'N/A'}</Td>
+                  <Td>{m.depotSource?.nom || 'N/A'}</Td>
+                  <Td>{m.depotDestination?.nom || 'N/A'}</Td>
                   <Td>
                     <Badge colorScheme={STATUT_COLORS[m.statut]}>
                       {m.statut}
@@ -747,10 +747,10 @@ function GestionEnAttenteTab({ mercatos, vehicles, depots, onUpdateStatus }) {
           <Tbody>
             {enAttenteList.map((m) => (
               <Tr key={m.id}>
-                <Td fontWeight="bold">{m.vehicleNumber || 'N/A'}</Td>
-                <Td>{m.depotSourceName}</Td>
-                <Td>{m.depotDestinationName}</Td>
-                <Td>{m.raison || '-'}</Td>
+                <Td fontWeight="bold">{m.vehicle?.parc || 'N/A'}</Td>
+                <Td>{m.depotSource?.nom || 'N/A'}</Td>
+                <Td>{m.depotDestination?.nom || 'N/A'}</Td>
+                <Td>{m.description || '-'}</Td>
                 <Td>
                   <HStack spacing={2}>
                     <Button
@@ -806,9 +806,9 @@ function GestionApprouveTab({ mercatos, vehicles, depots, onUpdateStatus }) {
           <Tbody>
             {approuveList.map((m) => (
               <Tr key={m.id}>
-                <Td fontWeight="bold">{m.vehicleNumber || 'N/A'}</Td>
-                <Td>{m.depotSourceName}</Td>
-                <Td>{m.depotDestinationName}</Td>
+                <Td fontWeight="bold">{m.vehicle?.parc || 'N/A'}</Td>
+                <Td>{m.depotSource?.nom || 'N/A'}</Td>
+                <Td>{m.depotDestination?.nom || 'N/A'}</Td>
                 <Td>
                   <Button
                     size="sm"
@@ -855,10 +855,10 @@ function GestionRejeteTab({ mercatos, vehicles, depots }) {
           <Tbody>
             {rejeteList.map((m) => (
               <Tr key={m.id}>
-                <Td fontWeight="bold">{m.vehicleNumber || 'N/A'}</Td>
-                <Td>{m.depotSourceName}</Td>
-                <Td>{m.depotDestinationName}</Td>
-                <Td>{m.rejectionReason || '-'}</Td>
+                <Td fontWeight="bold">{m.vehicle?.parc || 'N/A'}</Td>
+                <Td>{m.depotSource?.nom || 'N/A'}</Td>
+                <Td>{m.depotDestination?.nom || 'N/A'}</Td>
+                <Td>{m.description || '-'}</Td>
               </Tr>
             ))}
           </Tbody>
