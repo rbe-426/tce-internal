@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import { API_URL } from "../config";
 import "./pages/style/VehiculeDetail.css";
@@ -27,16 +27,16 @@ const Bar = ({ label, value, onClick, actionLabel }) => (
 
 export default function VehiculeDetail() {
   const { parc } = useParams();
+  const navigate = useNavigate();
   const { user } = useContext(UserContext) || {};
   const [veh, setVeh] = useState(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+  const [showConfirmBack, setShowConfirmBack] = useState(false);
 
   const [showEtat, setShowEtat] = useState(false);
   const [newStatut, setNewStatut] = useState("");
   const [raison, setRaison] = useState("");
-
-  useEffect(() => {
     (async () => {
       try {
         const r = await fetch(`${API}/api/vehicles/${parc}`);
@@ -92,7 +92,16 @@ export default function VehiculeDetail() {
 
   return (
     <div style={{ padding: 24, maxWidth: 1100, margin: "0 auto", fontFamily: "Montserrat" }}>
-      <h1 style={{ marginBottom: 16 }}>VÉHICULE N°{veh.parc}</h1>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+        <h1 style={{ margin: 0 }}>VÉHICULE N°{veh.parc}</h1>
+        <button 
+          className="btn" 
+          onClick={() => setShowConfirmBack(true)}
+          style={{ display: "flex", alignItems: "center", gap: 8 }}
+        >
+          ← Retour
+        </button>
+      </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
         {/* colonne gauche */}
@@ -195,6 +204,20 @@ export default function VehiculeDetail() {
           <button className="btn" onClick={() => toggleOption("saeiv","Pupitre conducteur")}>+ Ajouter “Pupitre conducteur”</button>
         </div>
       </div>
+
+      {/* modale retour */}
+      {showConfirmBack && (
+        <div className="modalOverlay" onClick={() => setShowConfirmBack(false)}>
+          <div className="modal" onClick={(e)=>e.stopPropagation()} style={{ maxWidth: 400 }}>
+            <h2>Retour à la liste</h2>
+            <p style={{ opacity: 0.8, marginBottom: 16 }}>Voulez-vous retourner à la liste des véhicules ?</p>
+            <div style={{display:"flex",justifyContent:"flex-end",gap:8}}>
+              <button className="btn" onClick={()=>setShowConfirmBack(false)}>Continuer</button>
+              <button className="btn primary" onClick={() => navigate("/vehicules")}>Retour</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* modale état */}
       {showEtat && (
