@@ -31,9 +31,15 @@ import {
   useToast,
   Spinner,
   Select,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
 } from '@chakra-ui/react';
 import { AddIcon, EditIcon, DeleteIcon } from '@chakra-ui/icons';
 import { API_URL } from '../../config';
+import ImmobilisationVehicles from './components/ImmobilisationVehicles';
 
 const SAEIV = () => {
   const [saeivs, setSaeivs] = useState([]);
@@ -304,33 +310,44 @@ const SAEIV = () => {
           </Heading>
         </Box>
 
-        {/* Statistiques et Actions */}
-        <HStack justify="space-between">
-          <Box>
-            Total : <strong>{saeivs.length}</strong> équipements 
-            ({saeivs.filter(s => s.statut === 'Actif').length} actifs)
-          </Box>
-          <Button
-            leftIcon={<AddIcon />}
-            colorScheme="blue"
-            onClick={onOpen}
-          >
-            Ajouter un équipement
-          </Button>
-        </HStack>
+        {/* Onglets */}
+        <Tabs variant="enclosed">
+          <TabList>
+            <Tab>Équipements SAEIV</Tab>
+            <Tab>Immobilisation véhicules</Tab>
+          </TabList>
 
-        {/* Recherche */}
-        <Input
-          placeholder="Rechercher par numéro ou libellé..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          size="lg"
-        />
+          <TabPanels>
+            {/* Onglet 1: Équipements SAEIV */}
+            <TabPanel>
+              <VStack spacing={6} align="stretch">
+                {/* Statistiques et Actions */}
+                <HStack justify="space-between">
+                  <Box>
+                    Total : <strong>{saeivs.length}</strong> équipements 
+                    ({saeivs.filter(s => s.statut === 'Actif').length} actifs)
+                  </Box>
+                  <Button
+                    leftIcon={<AddIcon />}
+                    colorScheme="blue"
+                    onClick={onOpen}
+                  >
+                    Ajouter un équipement
+                  </Button>
+                </HStack>
 
-        {/* Tableau des équipements SAEIV */}
-        <Card>
-          <CardBody>
-            <Table variant="simple">
+                {/* Recherche */}
+                <Input
+                  placeholder="Rechercher par numéro ou libellé..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  size="lg"
+                />
+
+                {/* Tableau des équipements SAEIV */}
+                <Card>
+                  <CardBody>
+                    <Table variant="simple">
               <Thead>
                 <Tr>
                   <Th>Numéro</Th>
@@ -387,8 +404,17 @@ const SAEIV = () => {
                 ))}
               </Tbody>
             </Table>
-          </CardBody>
-        </Card>
+                  </CardBody>
+                </Card>
+              </VStack>
+            </TabPanel>
+
+            {/* Onglet 2: Immobilisation véhicules */}
+            <TabPanel>
+              <ImmobilisationVehicles />
+            </TabPanel>
+          </TabPanels>
+        </Tabs>
       </VStack>
 
       {/* Modal d'ajout */}
