@@ -57,6 +57,7 @@ const STATUT_COLORS = {
 export default function CampagnesMercatos() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
+  const [userRole, setUserRole] = useState(null);
   
   // Data
   const [mercatos, setMercatos] = useState([]);
@@ -76,7 +77,24 @@ export default function CampagnesMercatos() {
 
   useEffect(() => {
     loadData();
+    loadUserRole();
   }, []);
+
+  async function loadUserRole() {
+    try {
+      const response = await fetch(`${API_URL}/api/user`, {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const user = await response.json();
+        setUserRole(user.role);
+      }
+    } catch (error) {
+      console.log('Could not load user role');
+    }
+  }
+
+  const isManager = ['DIRECTEUR_EXPLOITATION', 'RESPONSABLE_EXPLOITATION', 'DG_ENTREPRISE'].includes(userRole);
 
   async function loadData() {
     try {
