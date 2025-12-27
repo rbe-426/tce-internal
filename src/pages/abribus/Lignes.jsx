@@ -31,6 +31,7 @@ import {
   Divider,
   useToast,
   Spinner,
+  Text,
 } from '@chakra-ui/react';
 import { AddIcon, DeleteIcon, EditIcon } from '@chakra-ui/icons';
 import { API_URL } from '../../config';
@@ -527,7 +528,40 @@ const Lignes = () => {
       <Modal isOpen={isEditOpen} onClose={onEditClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Modifier la ligne</ModalHeader>
+          <ModalHeader>
+            <HStack justify="space-between" w="100%">
+              <Box>Modifier la ligne</Box>
+              <Button 
+                size="sm" 
+                colorScheme="orange" 
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    const res = await fetch(`${API_URL}/api/admin/fix-vehicle-types`, { method: 'POST' });
+                    const data = await res.json();
+                    toast({
+                      title: 'Types corrigés',
+                      description: `${data.fixed} ligne(s) mise(s) à jour`,
+                      status: 'success',
+                      duration: 3000,
+                      isClosable: true,
+                    });
+                    await fetchLignes();
+                  } catch (e) {
+                    toast({
+                      title: 'Erreur',
+                      description: 'Erreur lors de la correction',
+                      status: 'error',
+                      duration: 3000,
+                      isClosable: true,
+                    });
+                  }
+                }}
+              >
+                🔧 Corriger les types
+              </Button>
+            </HStack>
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             {editingLigne && (
@@ -550,12 +584,27 @@ const Lignes = () => {
                 </FormControl>
                 <FormControl>
                   <FormLabel>Types d'autobus autorisés</FormLabel>
+                  <Box mb={2}>
+                    <Text fontSize="sm" color="gray.600" mb={2}>Actuellement sélectionnés :</Text>
+                    <HStack spacing={2} flexWrap="wrap">
+                      {editingLigne.typesVehicules.length > 0 ? (
+                        editingLigne.typesVehicules.map(type => (
+                          <Badge key={type} colorScheme="blue">
+                            {type}
+                          </Badge>
+                        ))
+                      ) : (
+                        <Text fontSize="sm" color="orange.500">Aucun type sélectionné</Text>
+                      )}
+                    </HStack>
+                  </Box>
                   {typesAutobus.length === 0 ? (
                     <Box color="orange.500" fontSize="sm">
                       Chargement des types de véhicules... ({typesAutobus.length})
                     </Box>
                   ) : (
-                    <Stack spacing={2}>
+                    <Stack spacing={2} p={3} borderWidth="1px" borderRadius="md" bg="gray.50">
+                      <Text fontSize="sm" fontWeight="bold">Cocher/décocher les types :</Text>
                       {typesAutobus.map((type) => (
                         <Checkbox
                           key={type}

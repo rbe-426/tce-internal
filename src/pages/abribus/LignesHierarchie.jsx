@@ -1312,6 +1312,65 @@ const LignesHierarchie = () => {
                 </FormControl>
               )}
 
+              {/* Types de véhicules - For both create and edit */}
+              <FormControl>
+                <FormLabel>🚌 Types de véhicules autorisés</FormLabel>
+                {editingLigne && (
+                  <Box mb={2}>
+                    <Text fontSize="sm" color="gray.600" mb={2}>Actuellement sélectionnés :</Text>
+                    <HStack spacing={2} flexWrap="wrap">
+                      {editingLigne.typesVehicules && editingLigne.typesVehicules.length > 0 ? (
+                        editingLigne.typesVehicules.map(type => (
+                          <Badge key={type} colorScheme="blue">
+                            {type}
+                          </Badge>
+                        ))
+                      ) : (
+                        <Text fontSize="sm" color="orange.500">Aucun type sélectionné</Text>
+                      )}
+                    </HStack>
+                  </Box>
+                )}
+                <Stack spacing={2} p={3} borderWidth="1px" borderRadius="md" bg="gray.50">
+                  <Text fontSize="sm" fontWeight="bold">Cocher/décocher les types :</Text>
+                  {typesVehicules.map((type) => (
+                    <Checkbox
+                      key={type}
+                      isChecked={editingLigne ? editingLigne.typesVehicules.includes(type) : newLigne.typesVehicules.includes(type)}
+                      onChange={(e) => {
+                        if (editingLigne) {
+                          if (e.target.checked) {
+                            setEditingLigne({
+                              ...editingLigne,
+                              typesVehicules: [...editingLigne.typesVehicules, type],
+                            });
+                          } else {
+                            setEditingLigne({
+                              ...editingLigne,
+                              typesVehicules: editingLigne.typesVehicules.filter(t => t !== type),
+                            });
+                          }
+                        } else {
+                          if (e.target.checked) {
+                            setNewLigne({
+                              ...newLigne,
+                              typesVehicules: [...newLigne.typesVehicules, type],
+                            });
+                          } else {
+                            setNewLigne({
+                              ...newLigne,
+                              typesVehicules: newLigne.typesVehicules.filter(t => t !== type),
+                            });
+                          }
+                        }
+                      }}
+                    >
+                      {type}
+                    </Checkbox>
+                  ))}
+                </Stack>
+              </FormControl>
+
               {!editingLigne && (
                 <FormControl>
                   <FormLabel>Types de véhicules</FormLabel>
