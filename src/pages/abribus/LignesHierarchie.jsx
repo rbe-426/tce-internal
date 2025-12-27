@@ -33,6 +33,16 @@ import { API_URL } from '../../config';
 
 const typesVehicules = ['TCP - Autocars BC/NOC/EXPRESS', 'TCP - Autobus Standard', 'TCP - Autobus articulé', 'TCP - Autobus Standard BHNS', 'TCP - Autobus articulé BHNS', 'TCP - Midibus', 'TCP - Midibus L (Heuliez)', 'TCP - Minibus'];
 
+// Composant checkbox mémorisé pour éviter les re-rendus
+const TypeVehiculeCheckbox = React.memo(({ type, isChecked, onChange }) => (
+  <Checkbox
+    isChecked={isChecked}
+    onChange={(e) => onChange(type, e.target.checked)}
+  >
+    {type}
+  </Checkbox>
+));
+
 const LignesHierarchie = () => {
   const [lignes, setLignes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1362,15 +1372,17 @@ const LignesHierarchie = () => {
                 )}
                 <Stack spacing={2} p={3} borderWidth="1px" borderRadius="md" bg="gray.50">
                   <Text fontSize="sm" fontWeight="bold">Cocher/décocher les types :</Text>
-                  {typesVehicules.map((type) => (
-                    <Checkbox
-                      key={type}
-                      isChecked={editingLigne ? editingLigne.typesVehicules.includes(type) : newLigne.typesVehicules.includes(type)}
-                      onChange={(e) => handleTypeVehiculeChange(type, e.target.checked)}
-                    >
-                      {type}
-                    </Checkbox>
-                  ))}
+                  {(() => {
+                    const selectedTypes = new Set(editingLigne ? editingLigne.typesVehicules : newLigne.typesVehicules);
+                    return typesVehicules.map((type) => (
+                      <TypeVehiculeCheckbox
+                        key={type}
+                        type={type}
+                        isChecked={selectedTypes.has(type)}
+                        onChange={handleTypeVehiculeChange}
+                      />
+                    ));
+                  })()}
                 </Stack>
               </FormControl>
             </VStack>
