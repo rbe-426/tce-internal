@@ -1,10 +1,56 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Heading, SimpleGrid, Button, Icon, Card, CardBody, VStack, HStack, Text, Badge } from '@chakra-ui/react';
 import { FaCalendarAlt, FaClipboardList, FaChartBar, FaMapMarkerAlt, FaClock, FaUserTie, FaCog, FaBuilding, FaLink, FaMap, FaLock, FaTasks, FaArrowRight } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { API_URL } from '../../config';
 
 const AbribusHome = () => {
   const navigate = useNavigate();
+  const [campaignsStats, setCampaignsStats] = useState({
+    active: 0,
+    progress: 0,
+    delayed: 0
+  });
+
+  useEffect(() => {
+    loadCampaignsStats();
+  }, []);
+
+  const loadCampaignsStats = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/campagnes-abribus`);
+      if (!response.ok) throw new Error('Erreur chargement campagnes');
+      
+      const campagnes = await response.json();
+      
+      // Compter les campagnes actives
+      const activeCampaigns = campagnes.filter(c => c.statut === 'EN_COURS').length;
+      
+      // Calculer la progression moyenne
+      let totalProgress = 0;
+      let progressCount = 0;
+      
+      for (const campagne of campagnes) {
+        if (campagne.statut === 'EN_COURS') {
+          const verifications = campagne._count?.verifications || 0;
+          const total = verifications + 5; // Estimation: 5 buses par campagne
+          const progress = total > 0 ? Math.round((verifications / total) * 100) : 0;
+          totalProgress += progress;
+          progressCount++;
+        }
+      }
+      
+      const avgProgress = progressCount > 0 ? Math.round(totalProgress / progressCount) : 0;
+      
+      setCampaignsStats({
+        active: activeCampaigns,
+        progress: avgProgress,
+        delayed: 0 // À implémenter selon votre logique
+      });
+    } catch (err) {
+      console.error('Erreur chargement stats campagnes:', err);
+    }
+  };
 
   const MARQUE_BLEU = '#053bff';
   const MARQUE_ROSE = '#fe8987';
@@ -109,15 +155,15 @@ const AbribusHome = () => {
                 
                 <HStack spacing={4} pt={4}>
                   <Box>
-                    <Text color={MARQUE_ROSE} fontWeight="bold" fontSize="lg">0</Text>
+                    <Text color={MARQUE_ROSE} fontWeight="bold" fontSize="lg">{campaignsStats.active}</Text>
                     <Text color="white" fontSize="xs" opacity={0.8}>Campagnes actives</Text>
                   </Box>
                   <Box>
-                    <Text color={MARQUE_ROSE} fontWeight="bold" fontSize="lg">0%</Text>
+                    <Text color={MARQUE_ROSE} fontWeight="bold" fontSize="lg">{campaignsStats.progress}%</Text>
                     <Text color="white" fontSize="xs" opacity={0.8}>Progression</Text>
                   </Box>
                   <Box>
-                    <Text color={MARQUE_ROSE} fontWeight="bold" fontSize="lg">0</Text>
+                    <Text color={MARQUE_ROSE} fontWeight="bold" fontSize="lg">{campaignsStats.delayed}</Text>
                     <Text color="white" fontSize="xs" opacity={0.8}>En retard</Text>
                   </Box>
                 </HStack>

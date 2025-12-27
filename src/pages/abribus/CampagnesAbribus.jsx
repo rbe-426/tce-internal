@@ -574,37 +574,44 @@ export default function CampagnesAbribus() {
 
   return (
     <Box p={6} maxW="100%" mx="auto">
-      <VStack align="stretch" spacing={6}>
-        {/* Sélection de la campagne */}
-        <Box>
-          <Heading size="lg" mb={4}>Campagnes ABRIBUS</Heading>
-          <SimpleGrid columns={{ base: 1, md: 3 }} gap={4} mb={6}>
-            {CAMPAGNES.map((campagne) => (
-              <Card
-                key={campagne.id}
-                bg={campagneActive.id === campagne.id ? 'blue.50' : 'white'}
-                borderWidth={campagneActive.id === campagne.id ? '2px' : '1px'}
-                borderColor={campagneActive.id === campagne.id ? 'blue.500' : 'gray.200'}
-                cursor="pointer"
-                onClick={() => handleChangerCampagne(campagne)}
-                _hover={{ boxShadow: 'md' }}
-              >
-                <CardHeader py={3}>
-                  <HStack>
-                    <Icon as={campagne.icon} boxSize={6} color="blue.500" />
-                    <Heading size="sm">{campagne.nom}</Heading>
-                  </HStack>
-                </CardHeader>
-                <CardBody pt={0}>
-                  <Text fontSize="sm" color="gray.600">{campagne.description}</Text>
-                  <Badge colorScheme="green" mt={2}>En cours</Badge>
-                </CardBody>
-              </Card>
-            ))}
-          </SimpleGrid>
-        </Box>
+      {loading ? (
+        <VStack spacing={4} align="center" justify="center" minH="400px">
+          <Text fontSize="lg" fontWeight="bold">Chargement des campagnes...</Text>
+        </VStack>
+      ) : !campagneActive ? (
+        <Text color="red.500">Aucune campagne disponible</Text>
+      ) : (
+        <VStack align="stretch" spacing={6}>
+          {/* Sélection de la campagne */}
+          <Box>
+            <Heading size="lg" mb={4}>Campagnes ABRIBUS</Heading>
+            <SimpleGrid columns={{ base: 1, md: 3 }} gap={4} mb={6}>
+              {campagnes.map((campagne) => (
+                <Card
+                  key={campagne.id}
+                  bg={campagneActive.id === campagne.id ? 'blue.50' : 'white'}
+                  borderWidth={campagneActive.id === campagne.id ? '2px' : '1px'}
+                  borderColor={campagneActive.id === campagne.id ? 'blue.500' : 'gray.200'}
+                  cursor="pointer"
+                  onClick={() => handleChangerCampagne(campagne)}
+                  _hover={{ boxShadow: 'md' }}
+                >
+                  <CardHeader py={3}>
+                    <HStack>
+                      <Icon as={campagne.icon} boxSize={6} color="blue.500" />
+                      <Heading size="sm">{campagne.nom}</Heading>
+                    </HStack>
+                  </CardHeader>
+                  <CardBody pt={0}>
+                    <Text fontSize="sm" color="gray.600">{campagne.description}</Text>
+                    <Badge colorScheme="green" mt={2}>En cours</Badge>
+                  </CardBody>
+                </Card>
+              ))}
+            </SimpleGrid>
+          </Box>
 
-        <Divider />
+          <Divider />
 
         {/* Contenu de la campagne active */}
         <Box>
@@ -759,6 +766,8 @@ export default function CampagnesAbribus() {
           </ModalFooter>
         </ModalContent>
       </Modal>
+        </VStack>
+      )}
     </Box>
   );
 }
