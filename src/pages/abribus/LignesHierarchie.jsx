@@ -77,29 +77,23 @@ const LignesHierarchie = () => {
   // Handlers optimisés avec useCallback
   const handleTypeVehiculeChange = useCallback((type, checked) => {
     if (editingLigne) {
-      if (checked) {
-        setEditingLigne(prev => ({
-          ...prev,
-          typesVehicules: [...prev.typesVehicules, type],
-        }));
-      } else {
-        setEditingLigne(prev => ({
-          ...prev,
-          typesVehicules: prev.typesVehicules.filter(t => t !== type),
-        }));
-      }
+      const newTypes = checked 
+        ? [...editingLigne.typesVehicules, type]
+        : editingLigne.typesVehicules.filter(t => t !== type);
+      console.log(`[TYPE CHANGE] Type: ${type}, Checked: ${checked}, Total types: ${newTypes.length}`, newTypes);
+      setEditingLigne(prev => ({
+        ...prev,
+        typesVehicules: newTypes,
+      }));
     } else {
-      if (checked) {
-        setNewLigne(prev => ({
-          ...prev,
-          typesVehicules: [...prev.typesVehicules, type],
-        }));
-      } else {
-        setNewLigne(prev => ({
-          ...prev,
-          typesVehicules: prev.typesVehicules.filter(t => t !== type),
-        }));
-      }
+      const newTypes = checked 
+        ? [...newLigne.typesVehicules, type]
+        : newLigne.typesVehicules.filter(t => t !== type);
+      console.log(`[TYPE CHANGE] Type: ${type}, Checked: ${checked}, Total types: ${newTypes.length}`, newTypes);
+      setNewLigne(prev => ({
+        ...prev,
+        typesVehicules: newTypes,
+      }));
     }
   }, [editingLigne]);
 
