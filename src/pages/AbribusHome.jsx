@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Heading, SimpleGrid, Button, Icon, Card, CardBody, VStack, HStack, Text, Badge } from '@chakra-ui/react';
 import { FaCalendarAlt, FaClipboardList, FaChartBar, FaMapMarkerAlt, FaClock, FaUserTie, FaCog, FaBuilding, FaLink, FaMap, FaLock, FaTasks, FaArrowRight } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { API_URL } from '../../config';
+import { API_URL } from '../config';
 
 const AbribusHome = () => {
   const navigate = useNavigate();
