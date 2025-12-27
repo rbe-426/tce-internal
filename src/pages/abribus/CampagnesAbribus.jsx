@@ -713,65 +713,65 @@ export default function CampagnesAbribus() {
             </TabPanels>
           </Tabs>
         </Box>
+
+        {/* Modal de vérification */}
+        <Modal isOpen={isOpen} onClose={onClose} size="3xl">
+          <ModalOverlay />
+          <ModalContent maxH="90vh" overflowY="auto">
+            <ModalHeader>Vérification - Bus {busEnCours?.parc}</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody pb={6}>
+              {busEnCours && (
+                <VStack spacing={6} align="stretch">
+                  <Card bg="blue.50">
+                    <CardBody>
+                      <SimpleGrid columns={{ base: 1, md: 4 }} gap={4}>
+                        <Box>
+                          <Text fontSize="sm" color="gray.600">Bus</Text>
+                          <Text fontWeight="bold">{busEnCours.parc}</Text>
+                        </Box>
+                        <Box>
+                          <Text fontSize="sm" color="gray.600">Date</Text>
+                          <Input 
+                            type="date" 
+                            size="sm" 
+                            value={detailsVerification.date}
+                            onChange={(e) => setDetailsVerification({...detailsVerification, date: e.target.value})}
+                          />
+                        </Box>
+                        <Box>
+                          <Text fontSize="sm" color="gray.600">Heure</Text>
+                          <Input 
+                            type="time" 
+                            size="sm" 
+                            value={detailsVerification.heure}
+                            onChange={(e) => setDetailsVerification({...detailsVerification, heure: e.target.value})}
+                          />
+                        </Box>
+                        <Box>
+                          <Text fontSize="sm" color="gray.600">Agent</Text>
+                          <Text fontWeight="bold">{detailsVerification.agent}</Text>
+                        </Box>
+                      </SimpleGrid>
+                    </CardBody>
+                  </Card>
+
+                  <CarrosserieMaquette />
+                </VStack>
+              )}
+            </ModalBody>
+
+            <ModalFooter>
+              <HStack spacing={3}>
+                <Button variant="ghost" onClick={onClose}>Annuler</Button>
+                <Button colorScheme="green" leftIcon={<FaCheckCircle />} onClick={handleValidateBus}>
+                  Valider la vérification
+                </Button>
+              </HStack>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
       </VStack>
-
-      {/* Modal de vérification */}
-      <Modal isOpen={isOpen} onClose={onClose} size="3xl">
-        <ModalOverlay />
-        <ModalContent maxH="90vh" overflowY="auto">
-          <ModalHeader>Vérification - Bus {busEnCours?.parc}</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody pb={6}>
-            {busEnCours && (
-              <VStack spacing={6} align="stretch">
-                <Card bg="blue.50">
-                  <CardBody>
-                    <SimpleGrid columns={{ base: 1, md: 4 }} gap={4}>
-                      <Box>
-                        <Text fontSize="sm" color="gray.600">Bus</Text>
-                        <Text fontWeight="bold">{busEnCours.parc}</Text>
-                      </Box>
-                      <Box>
-                        <Text fontSize="sm" color="gray.600">Date</Text>
-                        <Input 
-                          type="date" 
-                          size="sm" 
-                          value={detailsVerification.date}
-                          onChange={(e) => setDetailsVerification({...detailsVerification, date: e.target.value})}
-                        />
-                      </Box>
-                      <Box>
-                        <Text fontSize="sm" color="gray.600">Heure</Text>
-                        <Input 
-                          type="time" 
-                          size="sm" 
-                          value={detailsVerification.heure}
-                          onChange={(e) => setDetailsVerification({...detailsVerification, heure: e.target.value})}
-                        />
-                      </Box>
-                      <Box>
-                        <Text fontSize="sm" color="gray.600">Agent</Text>
-                        <Text fontWeight="bold">{detailsVerification.agent}</Text>
-                      </Box>
-                    </SimpleGrid>
-                  </CardBody>
-                </Card>
-
-                <CarrosserieMaquette />
-              </VStack>
-            )}
-          </ModalBody>
-
-          <ModalFooter>
-            <HStack spacing={3}>
-              <Button variant="ghost" onClick={onClose}>Annuler</Button>
-              <Button colorScheme="green" leftIcon={<FaCheckCircle />} onClick={handleValidateBus}>
-                Valider la vérification
-              </Button>
-            </HStack>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
       )}
     </Box>
   );
