@@ -4,6 +4,9 @@ import { FaCalendarAlt, FaClipboardList, FaChartBar, FaMapMarkerAlt, FaClock, Fa
 import { useNavigate } from 'react-router-dom';
 import { API_URL } from '../config';
 import iconeVehicules from '../assets/icons/icone_abvehicules.png';
+import iconeAteliers from '../assets/icons/icone_abateliers.png';
+import iconeStatistiques from '../assets/icons/icone_statistiques.png';
+import iconeTrajet from '../assets/icons/icone_abtrajet.png';
 import iconeFlèche from '../assets/icons/flèche d\'accès.png';
 import iconeAccesInterdit from '../assets/icons/accès interdit.png';
 
@@ -63,21 +66,28 @@ const AbribusHome = () => {
       label: 'Véhicules',
       icon: null,
       image: iconeVehicules,
+      subtitle: 'Gestionnaire du parc',
       route: '/abribus/vehicules',
     },
     {
       label: 'Ateliers',
-      icon: FaClipboardList,
+      icon: null,
+      image: iconeAteliers,
+      subtitle: 'Gestionnaire flux de réparation',
       route: '/abribus/atelier',
     },
     {
       label: 'Statistiques',
-      icon: FaChartBar,
+      icon: null,
+      image: iconeStatistiques,
+      subtitle: 'Gestionnaire des statistiques',
       route: '/abribus/statistiques',
     },
     {
       label: 'Gestion des Lignes',
-      icon: FaMapMarkerAlt,
+      icon: null,
+      image: iconeTrajet,
+      subtitle: 'Gestionnaire des lignes',
       route: '/abribus/lignes-hierarchie',
     },
     {
@@ -238,7 +248,7 @@ const AbribusHome = () => {
                       {btn.label}
                     </Heading>
                     <Text fontSize="sm" color="white" fontStyle="italic" opacity={0.85} mt={1}>
-                      Gestionnaire du parc
+                      {btn.subtitle || 'Gestionnaire du parc'}
                     </Text>
                   </Box>
                   <HStack spacing={2} ml="auto" w="fit-content">
