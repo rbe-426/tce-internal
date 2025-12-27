@@ -733,13 +733,19 @@ export default function CampagnesAbribus() {
                       </Box>
                       <Box>
                         <Text fontSize="sm" color="gray.600">Date</Text>
-                        <Input type="date" size="sm" value={detailsVerification.date}
+                        <Input 
+                          type="date" 
+                          size="sm" 
+                          value={detailsVerification.date}
                           onChange={(e) => setDetailsVerification({...detailsVerification, date: e.target.value})}
                         />
                       </Box>
                       <Box>
                         <Text fontSize="sm" color="gray.600">Heure</Text>
-                        <Input type="time" size="sm" value={detailsVerification.heure}
+                        <Input 
+                          type="time" 
+                          size="sm" 
+                          value={detailsVerification.heure}
                           onChange={(e) => setDetailsVerification({...detailsVerification, heure: e.target.value})}
                         />
                       </Box>
@@ -766,8 +772,8 @@ export default function CampagnesAbribus() {
           </ModalFooter>
         </ModalContent>
       </Modal>
-        </VStack>
-      )}
+    </Box>
+    )}
     </Box>
   );
 }
