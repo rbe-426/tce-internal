@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Heading, SimpleGrid, Button, Icon, Card, CardBody, VStack, HStack, Text, Badge } from '@chakra-ui/react';
+import { Box, Heading, SimpleGrid, Button, Icon, Card, CardBody, VStack, HStack, Text, Badge, Image } from '@chakra-ui/react';
 import { FaCalendarAlt, FaClipboardList, FaChartBar, FaMapMarkerAlt, FaClock, FaUserTie, FaCog, FaBuilding, FaLink, FaMap, FaLock, FaTasks, FaArrowRight } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { API_URL } from '../config';
+import iconeVehicules from '../assets/icons/icone_abvehicules.png';
 
 const AbribusHome = () => {
   const navigate = useNavigate();
@@ -53,12 +54,13 @@ const AbribusHome = () => {
   };
 
   const MARQUE_BLEU = '#053bff';
-  const MARQUE_ROSE = '#fe8987';
+  const MARQUE_ROSE = '#ff8887';
 
   const boutons = [
     {
       label: 'Véhicules',
-      icon: FaCalendarAlt,
+      icon: null,
+      image: iconeVehicules,
       route: '/abribus/vehicules',
     },
     {
@@ -191,28 +193,58 @@ const AbribusHome = () => {
       </Box>
 
       {/* Autres cartes */}
-      <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={10} maxW="1200px" mx="auto">
+      <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={6} maxW="1200px" mx="auto">
         {boutons.map((btn) => (
-          <Button
+          <Card
             key={btn.label}
+            bg={`linear-gradient(135deg, ${MARQUE_BLEU} 0%, #0525cc 100%)`}
+            borderColor={MARQUE_BLEU}
+            borderWidth="1px"
+            cursor="pointer"
             onClick={() => navigate(btn.route)}
-            leftIcon={<Icon as={btn.icon} boxSize={6} />}
-            height="120px"
-            fontSize="xl"
-            variant="outline"
-            borderWidth={2}
-            borderColor="gray.700"
-            color="gray.800"
+            transition="all 0.3s ease"
             _hover={{
-              bg: 'gray.800',
-              color: 'white',
-              borderColor: 'gray.800',
+              boxShadow: `0 8px 20px rgba(5, 59, 255, 0.3)`,
+              borderColor: '#ffffff',
+              transform: 'translateY(-2px)',
             }}
-            flexDirection="column"
-            justifyContent="center"
           >
-            {btn.label}
-          </Button>
+            {btn.image ? (
+              <CardBody p={0} display="flex" alignItems="stretch" minH="140px">
+                {/* Colonne gauche - Icône */}
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  p={4}
+                  flex="0 0 auto"
+                  minW="140px"
+                >
+                  <Image src={btn.image} alt={btn.label} boxSize="120px" objectFit="contain" />
+                </Box>
+                {/* Colonne droite - Texte */}
+                <Box
+                  display="flex"
+                  flexDirection="column"
+                  justifyContent="center"
+                  p={6}
+                  flex="1"
+                >
+                  <Heading size="lg" color="white" mb={1}>
+                    {btn.label}
+                  </Heading>
+                  <Text fontSize="sm" color="white" fontStyle="italic" opacity={0.85}>
+                    Gestionnaire du parc
+                  </Text>
+                </Box>
+              </CardBody>
+            ) : (
+              <CardBody p={6} display="flex" flexDirection="column" alignItems="center" justifyContent="center" textAlign="center" minH="140px">
+                <Icon as={btn.icon} boxSize={8} color="white" mb={3} />
+                <Heading size="md" color="white">{btn.label}</Heading>
+              </CardBody>
+            )}
+          </Card>
         ))}
       </SimpleGrid>
     </Box>

@@ -507,8 +507,8 @@ export default function CampagnesAbribus() {
   };
 
   const TableauBus = ({ buses, titre, estAVerifier = true }) => (
-    <Card>
-      <CardHeader bg="gray.100" py={4}>
+    <Card bg="blue.50" borderColor="blue.200" borderWidth="1px">
+      <CardHeader bg="blue.100" py={4}>
         <Heading size="sm">{titre}</Heading>
       </CardHeader>
       <CardBody>
@@ -633,7 +633,7 @@ export default function CampagnesAbribus() {
           </HStack>
 
           <SimpleGrid columns={{ base: 1, md: 4 }} gap={4} mb={6}>
-            <Card>
+            <Card bg="blue.50" borderColor="blue.200" borderWidth="1px">
               <CardBody>
                 <Stat>
                   <StatLabel>À vérifier</StatLabel>
@@ -641,7 +641,7 @@ export default function CampagnesAbribus() {
                 </Stat>
               </CardBody>
             </Card>
-            <Card>
+            <Card bg="blue.50" borderColor="blue.200" borderWidth="1px">
               <CardBody>
                 <Stat>
                   <StatLabel>Vérifiés</StatLabel>
@@ -649,7 +649,7 @@ export default function CampagnesAbribus() {
                 </Stat>
               </CardBody>
             </Card>
-            <Card>
+            <Card bg="blue.50" borderColor="blue.200" borderWidth="1px">
               <CardBody>
                 <Stat>
                   <StatLabel>Total</StatLabel>
@@ -657,7 +657,7 @@ export default function CampagnesAbribus() {
                 </Stat>
               </CardBody>
             </Card>
-            <Card>
+            <Card bg="blue.50" borderColor="blue.200" borderWidth="1px">
               <CardBody>
                 <Stat>
                   <StatLabel>Progression</StatLabel>
@@ -687,8 +687,8 @@ export default function CampagnesAbribus() {
 
               <TabPanel>
                 <VStack align="stretch" spacing={6}>
-                  <Card>
-                    <CardHeader bg="gray.100" py={4}>
+                  <Card bg="blue.50" borderColor="blue.200" borderWidth="1px">
+                    <CardHeader bg="blue.100" py={4}>
                       <Heading size="md">Anomalies les plus fréquentes</Heading>
                     </CardHeader>
                     <CardBody>
@@ -698,8 +698,8 @@ export default function CampagnesAbribus() {
                     </CardBody>
                   </Card>
 
-                  <Card>
-                    <CardHeader bg="gray.100" py={4}>
+                  <Card bg="blue.50" borderColor="blue.200" borderWidth="1px">
+                    <CardHeader bg="blue.100" py={4}>
                       <Heading size="md">Agents actifs</Heading>
                     </CardHeader>
                     <CardBody>
@@ -723,7 +723,7 @@ export default function CampagnesAbribus() {
             <ModalBody pb={6}>
               {busEnCours && (
                 <VStack spacing={6} align="stretch">
-                  <Card bg="blue.50">
+                  <Card bg="blue.50" borderColor="blue.200" borderWidth="1px">
                     <CardBody>
                       <SimpleGrid columns={{ base: 1, md: 4 }} gap={4}>
                         <Box>
