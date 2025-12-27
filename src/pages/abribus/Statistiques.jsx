@@ -32,10 +32,27 @@ const Statistiques = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [campaignsStats, setCampaignsStats] = useState([]);
+  const [campaignsLoading, setCampaignsLoading] = useState(false);
 
   useEffect(() => {
     fetchStats();
+    fetchCampaignsStats();
   }, []);
+
+  const fetchCampaignsStats = async () => {
+    try {
+      setCampaignsLoading(true);
+      const response = await fetch(`${API}/api/campagnes-abribus`);
+      if (!response.ok) throw new Error('Erreur chargement campagnes');
+      const campagnes = await response.json();
+      setCampaignsStats(campagnes);
+    } catch (err) {
+      console.error('Erreur stats campagnes:', err);
+    } finally {
+      setCampaignsLoading(false);
+    }
+  };
 
   const fetchStats = async () => {
     try {
@@ -123,6 +140,7 @@ const Statistiques = () => {
           <TabList>
             <Tab>📦 Parc Véhicules</Tab>
             <Tab>🎯 TC 360+ Pointages</Tab>
+            <Tab>📊 Stats Campagnes</Tab>
           </TabList>
 
           <TabPanels>
@@ -267,6 +285,66 @@ const Statistiques = () => {
             {/* TAB 2 : TC 360+ POINTAGES */}
             <TabPanel>
               <TC360Stats />
+            </TabPanel>
+
+            {/* TAB 3 : STATS CAMPAGNES */}
+            <TabPanel>
+              <VStack spacing={6} align="stretch" pt={6}>
+                {campaignsLoading ? (
+                  <Box display="flex" justifyContent="center" alignItems="center" minH="400px">
+                    <Spinner size="lg" color="blue.500" />
+                  </Box>
+                ) : campaignsStats.length === 0 ? (
+                  <Box bg="gray.100" p={6} borderRadius="md" textAlign="center">
+                    <Text color="gray.600">Aucune campagne disponible</Text>
+                  </Box>
+                ) : (
+                  <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+                    {campaignsStats.map(campagne => (
+                      <Card key={campagne.id} borderLeft="4px" borderLeftColor={
+                        campagne.statut === 'EN_COURS' ? 'green.500' : 
+                        campagne.statut === 'TERMINÉE' ? 'blue.500' : 'gray.500'
+                      }>
+                        <CardBody>
+                          <VStack align="start" spacing={3}>
+                            <HStack justify="space-between" w="100%">
+                              <Heading size="md">{campagne.nom}</Heading>
+                              <Badge colorScheme={
+                                campagne.statut === 'EN_COURS' ? 'green' : 
+                                campagne.statut === 'TERMINÉE' ? 'blue' : 'gray'
+                              }>
+                                {campagne.statut}
+                              </Badge>
+                            </HStack>
+                            
+                            <Text fontSize="sm" color="gray.600">
+                              {campagne.description}
+                            </Text>
+                            
+                            <Box w="100%" pt={2} borderTop="1px" borderTopColor="gray.200">
+                              <SimpleGrid columns={2} spacing={3}>
+                                <Box>
+                                  <Text fontSize="xs" color="gray.500">Vérifications</Text>
+                                  <StatNumber fontSize="lg">{campagne._count?.verifications || 0}</StatNumber>
+                                </Box>
+                                <Box>
+                                  <Text fontSize="xs" color="gray.500">Indisponibilités</Text>
+                                  <StatNumber fontSize="lg">{campagne._count?.indisponibilites || 0}</StatNumber>
+                                </Box>
+                              </SimpleGrid>
+                            </Box>
+
+                            <Box w="100%" fontSize="xs" color="gray.500">
+                              <Text>Début: {new Date(campagne.dateDebut).toLocaleDateString('fr-FR')}</Text>
+                              <Text>Fin: {new Date(campagne.dateFin).toLocaleDateString('fr-FR')}</Text>
+                            </Box>
+                          </VStack>
+                        </CardBody>
+                      </Card>
+                    ))}
+                  </SimpleGrid>
+                )}
+              </VStack>
             </TabPanel>
           </TabPanels>
         </Tabs>
