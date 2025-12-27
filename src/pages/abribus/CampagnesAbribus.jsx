@@ -772,8 +772,7 @@ export default function CampagnesAbribus() {
           </ModalFooter>
         </ModalContent>
       </Modal>
-    </Box>
-    )}
+      )}
     </Box>
   );
 }
