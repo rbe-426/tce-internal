@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Heading,
@@ -63,6 +63,35 @@ const LignesHierarchie = () => {
   const [trajets, setTrajets] = useState({});
   
   const toast = useToast();
+
+  // Handlers optimisés avec useCallback
+  const handleTypeVehiculeChange = useCallback((type, checked) => {
+    if (editingLigne) {
+      if (checked) {
+        setEditingLigne(prev => ({
+          ...prev,
+          typesVehicules: [...prev.typesVehicules, type],
+        }));
+      } else {
+        setEditingLigne(prev => ({
+          ...prev,
+          typesVehicules: prev.typesVehicules.filter(t => t !== type),
+        }));
+      }
+    } else {
+      if (checked) {
+        setNewLigne(prev => ({
+          ...prev,
+          typesVehicules: [...prev.typesVehicules, type],
+        }));
+      } else {
+        setNewLigne(prev => ({
+          ...prev,
+          typesVehicules: prev.typesVehicules.filter(t => t !== type),
+        }));
+      }
+    }
+  }, [editingLigne]);
 
   // Fetch lignes with sens
   useEffect(() => {
@@ -1337,33 +1366,7 @@ const LignesHierarchie = () => {
                     <Checkbox
                       key={type}
                       isChecked={editingLigne ? editingLigne.typesVehicules.includes(type) : newLigne.typesVehicules.includes(type)}
-                      onChange={(e) => {
-                        if (editingLigne) {
-                          if (e.target.checked) {
-                            setEditingLigne({
-                              ...editingLigne,
-                              typesVehicules: [...editingLigne.typesVehicules, type],
-                            });
-                          } else {
-                            setEditingLigne({
-                              ...editingLigne,
-                              typesVehicules: editingLigne.typesVehicules.filter(t => t !== type),
-                            });
-                          }
-                        } else {
-                          if (e.target.checked) {
-                            setNewLigne({
-                              ...newLigne,
-                              typesVehicules: [...newLigne.typesVehicules, type],
-                            });
-                          } else {
-                            setNewLigne({
-                              ...newLigne,
-                              typesVehicules: newLigne.typesVehicules.filter(t => t !== type),
-                            });
-                          }
-                        }
-                      }}
+                      onChange={(e) => handleTypeVehiculeChange(type, e.target.checked)}
                     >
                       {type}
                     </Checkbox>
