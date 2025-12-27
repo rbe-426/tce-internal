@@ -1370,35 +1370,6 @@ const LignesHierarchie = () => {
                   ))}
                 </Stack>
               </FormControl>
-
-              {!editingLigne && (
-                <FormControl>
-                  <FormLabel>Types de véhicules</FormLabel>
-                  <Stack spacing={2}>
-                    {typesVehicules.map((type) => (
-                      <Checkbox
-                        key={type}
-                        isChecked={newLigne.typesVehicules.includes(type)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setNewLigne({
-                              ...newLigne,
-                              typesVehicules: [...newLigne.typesVehicules, type],
-                            });
-                          } else {
-                            setNewLigne({
-                              ...newLigne,
-                              typesVehicules: newLigne.typesVehicules.filter(t => t !== type),
-                            });
-                          }
-                        }}
-                      >
-                        {type}
-                      </Checkbox>
-                    ))}
-                  </Stack>
-                </FormControl>
-              )}
             </VStack>
           </ModalBody>
           <ModalFooter>
