@@ -17,9 +17,6 @@ import { API_URL } from '../config';
 function parseMarkdown(text) {
   if (!text) return text;
   
-  const parts = [];
-  let lastIndex = 0;
-
   // Regex pour tous les patterns Markdown
   const patterns = [
     { regex: /\*\*(.*?)\*\*/g, type: 'bold', pattern: '**' },
@@ -32,6 +29,8 @@ function parseMarkdown(text) {
   const matches = [];
   patterns.forEach(p => {
     let match;
+    // Réinitialiser lastIndex à chaque boucle pour éviter les conflits
+    p.regex.lastIndex = 0;
     while ((match = p.regex.exec(text)) !== null) {
       matches.push({
         start: match.index,
@@ -44,36 +43,69 @@ function parseMarkdown(text) {
     }
   });
 
-  // Trier les matches par position
+  // Si pas de matches, retourner le texte tel quel
+  if (matches.length === 0) {
+    return text;
+  }
+
+  // Trier les matches par position et éliminer les chevauchements
   matches.sort((a, b) => a.start - b.start);
+  
+  // Filtre pour éliminer les matches qui se chevauchent
+  const filteredMatches = [];
+  let lastEnd = 0;
+  matches.forEach(m => {
+    if (m.start >= lastEnd) {
+      filteredMatches.push(m);
+      lastEnd = m.end;
+    }
+  });
 
   // Construire les éléments
+  const elements = [];
   let currentIndex = 0;
-  return matches.map((m, i) => {
-    const before = text.substring(currentIndex, m.start);
-    currentIndex = m.end;
+  
+  filteredMatches.forEach((m, i) => {
+    // Ajouter le texte avant le match
+    if (m.start > currentIndex) {
+      elements.push(text.substring(currentIndex, m.start));
+    }
     
-    const element = (() => {
-      switch (m.type) {
-        case 'bold':
-          return <strong key={`m-${i}`}>{m.content}</strong>;
-        case 'italic':
-          return <em key={`m-${i}`}>{m.content}</em>;
-        case 'code':
-          return <code key={`m-${i}`} style={{backgroundColor: 'rgba(255,255,255,0.2)', padding: '0 4px', borderRadius: '3px', fontFamily: 'monospace'}}>{m.content}</code>;
-        case 'link':
-          return <Link key={`m-${i}`} href={m.href} isExternal style={{textDecoration: 'underline'}}>{m.content}</Link>;
-        default:
-          return null;
-      }
-    })();
+    // Créer l'élément pour le match
+    switch (m.type) {
+      case 'bold':
+        elements.push(<strong key={`bold-${i}`}>{m.content}</strong>);
+        break;
+      case 'italic':
+        elements.push(<em key={`italic-${i}`}>{m.content}</em>);
+        break;
+      case 'code':
+        elements.push(
+          <code key={`code-${i}`} style={{backgroundColor: 'rgba(255,255,255,0.2)', padding: '0 4px', borderRadius: '3px', fontFamily: 'monospace'}}>
+            {m.content}
+          </code>
+        );
+        break;
+      case 'link':
+        elements.push(
+          <Link key={`link-${i}`} href={m.href} isExternal style={{textDecoration: 'underline'}}>
+            {m.content}
+          </Link>
+        );
+        break;
+      default:
+        break;
+    }
+    
+    currentIndex = m.end;
+  });
 
-    return (
-      <React.Fragment key={`f-${i}`}>
-        {before}{element}
-      </React.Fragment>
-    );
-  }).concat(text.substring(currentIndex));
+  // Ajouter le texte restant après le dernier match
+  if (currentIndex < text.length) {
+    elements.push(text.substring(currentIndex));
+  }
+
+  return elements;
 }
 
 export default function NotificationBanner() {
