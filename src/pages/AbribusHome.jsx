@@ -4,6 +4,8 @@ import { FaCalendarAlt, FaClipboardList, FaChartBar, FaMapMarkerAlt, FaClock, Fa
 import { useNavigate } from 'react-router-dom';
 import { API_URL } from '../config';
 import iconeVehicules from '../assets/icons/icone_abvehicules.png';
+import iconeFlèche from '../assets/icons/flèche d\'accès.png';
+import iconeAccesInterdit from '../assets/icons/accès interdit.png';
 
 const AbribusHome = () => {
   const navigate = useNavigate();
@@ -226,16 +228,32 @@ const AbribusHome = () => {
                 <Box
                   display="flex"
                   flexDirection="column"
-                  justifyContent="center"
-                  p={6}
+                  justifyContent="space-between"
+                  p={4}
+                  py={3}
                   flex="1"
                 >
-                  <Heading size="lg" color="white" mb={1}>
-                    {btn.label}
-                  </Heading>
-                  <Text fontSize="sm" color="white" fontStyle="italic" opacity={0.85}>
-                    Gestionnaire du parc
-                  </Text>
+                  <Box mt={2}>
+                    <Heading size="lg" color="white" mb={0}>
+                      {btn.label}
+                    </Heading>
+                    <Text fontSize="sm" color="white" fontStyle="italic" opacity={0.85} mt={1}>
+                      Gestionnaire du parc
+                    </Text>
+                  </Box>
+                  <HStack spacing={2} ml="auto" w="fit-content">
+                    <Image 
+                      src={iconeFlèche} 
+                      alt="Accéder" 
+                      boxSize="56px" 
+                      objectFit="contain"
+                      cursor="pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(btn.route);
+                      }}
+                    />
+                  </HStack>
                 </Box>
               </CardBody>
             ) : (
