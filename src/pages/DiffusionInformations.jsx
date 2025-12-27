@@ -29,7 +29,7 @@ import {
   FormLabel,
 } from '@chakra-ui/react';
 import { AddIcon, DeleteIcon, EditIcon, WarningIcon, CheckCircleIcon } from '@chakra-ui/icons';
-import { FaExclamationCircle, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
+import { FaExclamationCircle, FaCheckCircle, FaExclamationTriangle, FaBold, FaItalic, FaList, FaHeading, FaLink, FaCode } from 'react-icons/fa';
 import { API_URL } from '../config';
 
 export default function DiffusionInformations() {
@@ -47,6 +47,29 @@ export default function DiffusionInformations() {
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
+
+  // Helper pour insérer du Markdown
+  const insertMarkdown = (before, after = '') => {
+    const textarea = document.getElementById('message-textarea');
+    if (!textarea) return;
+    
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = formData.message.substring(start, end) || 'texte';
+    const newMessage = 
+      formData.message.substring(0, start) + 
+      before + selected + after + 
+      formData.message.substring(end);
+    
+    setFormData({...formData, message: newMessage});
+    
+    // Repositionner le curseur
+    setTimeout(() => {
+      textarea.focus();
+      textarea.selectionStart = start + before.length;
+      textarea.selectionEnd = start + before.length + selected.length;
+    }, 0);
+  };
 
   // Charger les notifications
   const fetchNotifications = async () => {
@@ -408,15 +431,64 @@ export default function DiffusionInformations() {
                 />
               </FormControl>
 
-              {/* Message */}
+              {/* Message avec Markdown */}
               <FormControl>
-                <FormLabel fontWeight="bold">Message *</FormLabel>
+                <FormLabel fontWeight="bold">Message * (Markdown supporté)</FormLabel>
+                
+                {/* Barre de formatage */}
+                <Box mb={2} p={2} bg="gray.50" borderRadius="md" border="1px solid" borderColor="gray.300">
+                  <HStack spacing={1} wrap="wrap">
+                    <Button size="xs" leftIcon={<FaBold />} onClick={() => insertMarkdown('**', '**')} title="Gras">Gras</Button>
+                    <Button size="xs" leftIcon={<FaItalic />} onClick={() => insertMarkdown('*', '*')} title="Italique">Italique</Button>
+                    <Button size="xs" leftIcon={<FaCode />} onClick={() => insertMarkdown('`', '`')} title="Code">Code</Button>
+                    <Button size="xs" leftIcon={<FaHeading />} onClick={() => insertMarkdown('# ', '')} title="Titre">Titre H1</Button>
+                    <Button size="xs" leftIcon={<FaList />} onClick={() => insertMarkdown('- ', '')} title="Liste">Liste</Button>
+                    <Button size="xs" leftIcon={<FaLink />} onClick={() => insertMarkdown('[', '](https://)')} title="Lien">Lien</Button>
+                  </HStack>
+                  <Text fontSize="xs" color="gray.600" mt={2}>
+                    💡 Utilisez **gras**, *italique*, ou [liens](url)
+                  </Text>
+                </Box>
+
+                {/* Textarea */}
                 <Textarea
-                  placeholder="ex: Le serveur sera indisponible de 22h à 23h..."
+                  id="message-textarea"
+                  placeholder="Entrez votre message en Markdown...&#10;**Gras** pour l'important&#10;*Italique* pour l'emphasis"
                   value={formData.message}
                   onChange={(e) => setFormData({...formData, message: e.target.value})}
-                  minH="120px"
+                  minH="150px"
+                  fontFamily="monospace"
+                  fontSize="sm"
                 />
+
+                {/* Aperçu */}
+                {formData.message && (
+                  <Box mt={3} p={3} bg="blue.50" borderRadius="md" border="1px solid" borderColor="blue.200">
+                    <Text fontSize="xs" fontWeight="bold" mb={2}>Aperçu:</Text>
+                    <Box fontSize="sm" color="gray.800">
+                      {formData.message.split('\n').map((line, idx) => {
+                        // Simple Markdown rendering
+                        let rendered = line;
+                        rendered = rendered.replace(/\*\*(.*?)\*\*/g, (_, text) => `[BOLD:${text}]`);
+                        rendered = rendered.replace(/\*(.*?)\*/g, (_, text) => `[ITALIC:${text}]`);
+                        rendered = rendered.replace(/\[(.*?)\]\((.*?)\)/g, (_, text, url) => `[LINK:${text}:${url}]`);
+                        return (
+                          <Box key={idx} mb={1}>
+                            {rendered.split(/(\[BOLD:.*?\]|\[ITALIC:.*?\]|\[LINK:.*?\])/).map((part, i) => {
+                              if (part.startsWith('[BOLD:')) return <strong key={i}>{part.slice(6, -1)}</strong>;
+                              if (part.startsWith('[ITALIC:')) return <em key={i}>{part.slice(8, -1)}</em>;
+                              if (part.startsWith('[LINK:')) {
+                                const [text, url] = part.slice(6, -1).split(':');
+                                return <a key={i} href={url} style={{color: 'blue', textDecoration: 'underline'}}>{text}</a>;
+                              }
+                              return <span key={i}>{part}</span>;
+                            })}
+                          </Box>
+                        );
+                      })}
+                    </Box>
+                  </Box>
+                )}
               </FormControl>
 
               {/* Date d'expiration */}

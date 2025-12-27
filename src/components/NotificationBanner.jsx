@@ -7,10 +7,74 @@ import {
   IconButton,
   Collapse,
   Badge,
+  Link,
 } from '@chakra-ui/react';
 import { CloseIcon } from '@chakra-ui/icons';
 import { FaExclamationCircle, FaCheckCircle, FaExclamationTriangle, FaServerSlash } from 'react-icons/fa';
 import { API_URL } from '../config';
+
+// Parser Markdown simple
+function parseMarkdown(text) {
+  if (!text) return text;
+  
+  const parts = [];
+  let lastIndex = 0;
+
+  // Regex pour tous les patterns Markdown
+  const patterns = [
+    { regex: /\*\*(.*?)\*\*/g, type: 'bold', pattern: '**' },
+    { regex: /\*(.*?)\*/g, type: 'italic', pattern: '*' },
+    { regex: /`(.*?)`/g, type: 'code', pattern: '`' },
+    { regex: /\[(.*?)\]\((.*?)\)/g, type: 'link', pattern: '[]()' },
+  ];
+
+  // Créer une liste de tous les matches
+  const matches = [];
+  patterns.forEach(p => {
+    let match;
+    while ((match = p.regex.exec(text)) !== null) {
+      matches.push({
+        start: match.index,
+        end: match.index + match[0].length,
+        type: p.type,
+        fullMatch: match[0],
+        content: match[1],
+        href: match[2],
+      });
+    }
+  });
+
+  // Trier les matches par position
+  matches.sort((a, b) => a.start - b.start);
+
+  // Construire les éléments
+  let currentIndex = 0;
+  return matches.map((m, i) => {
+    const before = text.substring(currentIndex, m.start);
+    currentIndex = m.end;
+    
+    const element = (() => {
+      switch (m.type) {
+        case 'bold':
+          return <strong key={`m-${i}`}>{m.content}</strong>;
+        case 'italic':
+          return <em key={`m-${i}`}>{m.content}</em>;
+        case 'code':
+          return <code key={`m-${i}`} style={{backgroundColor: 'rgba(255,255,255,0.2)', padding: '0 4px', borderRadius: '3px', fontFamily: 'monospace'}}>{m.content}</code>;
+        case 'link':
+          return <Link key={`m-${i}`} href={m.href} isExternal style={{textDecoration: 'underline'}}>{m.content}</Link>;
+        default:
+          return null;
+      }
+    })();
+
+    return (
+      <React.Fragment key={`f-${i}`}>
+        {before}{element}
+      </React.Fragment>
+    );
+  }).concat(text.substring(currentIndex));
+}
 
 export default function NotificationBanner() {
   const [notifications, setNotifications] = useState([]);
@@ -205,10 +269,10 @@ export default function NotificationBanner() {
                 <Box fontSize="xl">{styles.icon}</Box>
                 <VStack align="start" spacing={0}>
                   <Text fontWeight="bold" fontSize="sm">
-                    {notif.titre}
+                    {parseMarkdown(notif.titre)}
                   </Text>
                   <Text fontSize="xs" opacity={0.9}>
-                    {notif.message}
+                    {parseMarkdown(notif.message)}
                   </Text>
                   {serverStatus === 'offline' && (
                     <Badge
